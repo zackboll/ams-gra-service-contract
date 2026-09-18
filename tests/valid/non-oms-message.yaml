@@ -1,0 +1,22 @@
+contract_version: "0.1"
+service:
+  name: legacy-interface-example
+  version: "0.1"
+  kind: service
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+functions:
+  - id: legacy-input-example
+    name: Legacy Input Example
+    category: specific
+    applicability: applicable
+    exchanges:
+      - id: legacy-input
+        kind: non_oms_message
+        direction: input
+        mandate: optional
+        name: ExampleLegacyMessage
+        reference: Non-OMS Messages table entry
+        timing:
+          kind: asynchronous

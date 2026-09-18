@@ -1,0 +1,26 @@
+contract_version: "0.1"
+
+service:
+  name: example-service
+  version: "0.1.0"
+  kind: service
+  description: Minimal example used to demonstrate the v0.1 authoring surface.
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+functions:
+  - id: position-input-example
+    name: Position Input Example
+    category: specific
+    applicability: applicable
+    exchanges:
+      - id: position-report-input
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: PositionReport
+        topic: PositionReport
+        timing:
+          kind: asynchronous

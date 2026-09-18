@@ -1,0 +1,16 @@
+contract_version: "0.1"
+service:
+  name: n-a-example
+  version: "0.1"
+  kind: subsystem
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+functions:
+  - id: example-na
+    name: Example Not Applicable Function
+    category: required
+    required_group: subsystem
+    applicability: not_applicable
+    not_applicable_reason: Not applicable to this illustrative subsystem.
+    exchanges: []

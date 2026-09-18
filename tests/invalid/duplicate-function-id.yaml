@@ -1,0 +1,19 @@
+contract_version: "0.1"
+service:
+  name: duplicate-function
+  version: "0.1"
+  kind: service
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+functions:
+  - id: same
+    name: First
+    category: specific
+    applicability: applicable
+    exchanges: []
+  - id: same
+    name: Second
+    category: specific
+    applicability: applicable
+    exchanges: []

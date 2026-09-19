@@ -54,10 +54,16 @@ Initialization inventory: optional asynchronous `FileMetadata` and
 Data Transfer input. Required profile rows still exist when their LoM is
 optional. Service Initialization matching does not fix Data Transfer protocol,
 data type, data format, sharing pattern, topics, SOAC, numerical timing,
-Appendix C, or primitives. It does not yet validate Required Subsystem
-Functions, Required Capability-related Functions, workflow/state behavior, or
-other OMS-version profiles. Subsystem applicability is conditional upstream and
-is not inferred.
+Appendix C, or primitives. For `subsystem`, it requires the Section 3.2
+inventory **Subsystem Startup**, **Subsystem Status**, **Subsystem State Command
+Processing**, **Subsystem Built-In Test (BIT)**, **Subsystem Calibration**, and
+**Subsystem Shutdown**. Required inventory/section presence is distinct from
+`applicability: applicable`: State Command Processing, BIT, and Calibration may
+be explicitly `not_applicable` with the portable-contract rationale and empty
+exchange requirements. This does not yet validate Section 3.2 exchange
+inventories, Subsystem workflow/state behavior, Required Capability-related
+Functions, or conditional Section 3.1 Service Functions for Platform-hosted
+Adapters; it does not claim full OMS Subsystem compliance.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).

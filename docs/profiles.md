@@ -6,7 +6,7 @@ profile version are independent. OMS-specific requirements therefore live in
 opt-in, machine-readable profile manifests rather than in
 `schema/v0.1/service-contract.schema.json`.
 
-## OMS 2.5 required-service profile
+## OMS 2.5 required-function profile
 
 `profiles/oms/2.5/profile.yaml` is profile format version `0.1`, profile ID
 `oms-2.5`, and supports contract version `0.1`. Its source is OMSC-INS-003
@@ -21,10 +21,25 @@ one function with each exact name for `service` and `isolator`, with
 `category: required`, `required_group: service`, and
 `applicability: applicable`.
 
-Subsystem applicability is conditional on a Platform-hosted Adapter and other
-upstream facts unavailable in v0.1 contracts. This initial profile does not
-infer those facts and does not unconditionally enforce these functions for
-`subsystem`.
+Section 3.2 says every OMS Subsystem must provide the Required Subsystem
+Functions and that the section is required for Subsystems (Services and
+Isolators mark it Not Applicable). The profile therefore requires exactly one
+function by each canonical name for `subsystem`: **Subsystem Startup**,
+**Subsystem Status**, **Subsystem State Command Processing**, **Subsystem
+Built-In Test (BIT)**, **Subsystem Calibration**, and **Subsystem Shutdown**.
+All have `category: required` and `required_group: subsystem`.
+
+Required inventory/section presence is not always `applicability: applicable`.
+Startup, Status, and Shutdown must be applicable. State Command Processing,
+BIT, and Calibration remain required inventory entries, but each permits either
+`applicable` or `not_applicable`; ordinary v0.1 validation requires a non-empty
+`not_applicable_reason` and zero exchanges for the latter. The profile format
+expresses that narrow conditional rule with `allowed_applicability`, mutually
+exclusive with scalar `applicability`.
+
+Section 3.1 Service Function applicability for Subsystems remains conditional
+on Platform-hosted Adapter facts unavailable in v0.1 contracts; this profile
+does not infer it.
 
 Use it explicitly:
 
@@ -66,8 +81,10 @@ fix Service Initialization Data Transfer protocol, data type, data format, or
 sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
 subscription groups, numerical timing values, Appendix C content, contract
 traceability, or UCI message primitives. It does not yet validate complete
-Required Subsystem Function inventory, Required Capability-related Function
-inventory, workflow/state behavior, or other OMS-version profiles.
+Section 3.2 Inputs/Outputs exchange inventories, Subsystem workflow/state
+behavior, Required Capability-related Function inventory, conditional Section
+3.1 Service Functions for Platform-hosted Adapters, or other OMS-version
+profiles. It does not claim full OMS Subsystem compliance.
 
 ## Partial reference examples
 

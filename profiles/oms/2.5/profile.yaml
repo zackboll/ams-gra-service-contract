@@ -77,3 +77,51 @@ required_functions:
         traceability:
           - source: oms-service-contract-instructions-v25
             locator: 3.1.2.4 / Table 3.1-2 / ServiceStatusDataRequestStatus
+  - name: Subsystem Startup
+    applies_to: [subsystem]
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.1 Subsystem Startup
+  - name: Subsystem Status
+    applies_to: [subsystem]
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.2 Subsystem Status
+  - name: Subsystem State Command Processing
+    applies_to: [subsystem]
+    category: required
+    required_group: subsystem
+    allowed_applicability: [applicable, not_applicable]
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.3 Subsystem State Command Processing
+  - name: Subsystem Built-In Test (BIT)
+    applies_to: [subsystem]
+    category: required
+    required_group: subsystem
+    allowed_applicability: [applicable, not_applicable]
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.4 Subsystem Built-In Test (BIT)
+  - name: Subsystem Calibration
+    applies_to: [subsystem]
+    category: required
+    required_group: subsystem
+    allowed_applicability: [applicable, not_applicable]
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.5 Subsystem Calibration
+  - name: Subsystem Shutdown
+    applies_to: [subsystem]
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.6 Subsystem Shutdown

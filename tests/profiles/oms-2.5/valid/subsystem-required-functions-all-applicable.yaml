@@ -1,0 +1,46 @@
+# Complete Subsystem fixture with local IDs and deliberately noncanonical order.
+contract_version: "0.1"
+service:
+  name: profile-subsystem-all-applicable
+  version: "0.1.0"
+  kind: subsystem
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+functions:
+  - id: local-subsystem-shutdown
+    name: Subsystem Shutdown
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    exchanges: []
+  - id: local-subsystem-bit
+    name: Subsystem Built-In Test (BIT)
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    exchanges: []
+  - id: local-subsystem-startup
+    name: Subsystem Startup
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    exchanges: []
+  - id: local-subsystem-calibration
+    name: Subsystem Calibration
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    exchanges: []
+  - id: local-subsystem-status
+    name: Subsystem Status
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    exchanges: []
+  - id: local-subsystem-state-command
+    name: Subsystem State Command Processing
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    exchanges: []

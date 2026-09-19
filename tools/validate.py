@@ -338,7 +338,7 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
             )
             continue
         index, function = matches[0]
-        for field in ("category", "required_group", "applicability"):
+        for field in ("category", "required_group"):
             if function.get(field) != requirement[field]:
                 diagnostics.append(
                     Diagnostic(
@@ -347,6 +347,23 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
                         f"{field} {requirement[field]!r} for {kind}",
                     )
                 )
+        if "applicability" in requirement:
+            if function.get("applicability") != requirement["applicability"]:
+                diagnostics.append(
+                    Diagnostic(
+                        f"$.functions[{index}].applicability",
+                        f"OMS profile {profile_id!r} requires applicability {requirement['applicability']!r} "
+                        f"for {requirement['name']!r} for {kind}",
+                    )
+                )
+        elif function.get("applicability") not in requirement["allowed_applicability"]:
+            diagnostics.append(
+                Diagnostic(
+                    f"$.functions[{index}].applicability",
+                    f"OMS profile {profile_id!r} requires {requirement['name']!r} applicability to be one of "
+                    f"{requirement['allowed_applicability']!r} for {kind}",
+                )
+            )
         for exchange_requirement in requirement.get("required_exchanges", []):
             if any(
                 required_exchange_matches(exchange, exchange_requirement)

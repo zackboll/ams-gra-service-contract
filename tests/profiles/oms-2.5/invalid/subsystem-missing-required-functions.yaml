@@ -1,7 +1,7 @@
-# Subsystem applicability is conditional upstream and is not inferred here.
+# Valid v0.1, but incomplete for the OMS 2.5 Required Subsystem Function inventory.
 contract_version: "0.1"
 service:
-  name: profile-subsystem
+  name: incomplete-profile-subsystem
   version: "0.1.0"
   kind: subsystem
 standards:

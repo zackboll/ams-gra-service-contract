@@ -4,6 +4,11 @@
 
 This repository defines a small, language-neutral, machine-readable representation of the **service interface information that is otherwise captured in an OMS Service Contract**. Its primary purpose is to make that information usable as an input to code generators, validators, test generators, deployment tooling, and documentation tooling. It also includes non-normative reference tooling needed to exercise the specification against real upstream material while keeping the portable format language-neutral.
 
+Completion tooling supports explicit Capability inventories. Omitted inventory
+means unknown, an empty inventory means explicitly zero, and declared portable
+Capability values remain explicit author decisions; no Capability is inferred
+from names or messages.
+
 The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**

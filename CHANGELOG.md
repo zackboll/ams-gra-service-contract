@@ -6,6 +6,9 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Explicit Capability completion artifacts, typed mappings, fail-closed
+  materialization, and profile-derived OMS 2.5 Section 3.3 functions.
+
 - Explicit tooling-only specific-function structural authoring, typed mapping,
   scaffold, and fail-closed materialization. Structure never infers grouping or
   portable IDs/names; Capability and standard-role inference remain absent.

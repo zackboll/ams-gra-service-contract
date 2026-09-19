@@ -1,3 +1,10 @@
+# Capability completion boundary
+
+Capability facts are never inferred from completion evidence, message names, or
+function names. Optional Capability structure and typed author decisions are
+consumed by the scaffold/materializer; omission remains unknown rather than an
+empty portable inventory.
+
 # Completion assistant
 
 `tools/completion_assistant.py` renders a deterministic, non-normative authoring

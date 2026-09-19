@@ -105,6 +105,12 @@ validation runs before profile application, so invalid portable documents yield
 use `CA_*`; materialized-contract validation surfaces `SC_*` and selected OMS
 profile validation surfaces `OP_*` unchanged.
 
+Capability completion also reports `CA_CAPABILITY_SCHEMA` (invalid artifact),
+`CA_DUPLICATE_CAPABILITY_KEY`, `CA_UNKNOWN_CAPABILITY_KEY`,
+`CA_UNKNOWN_CAPABILITY_ROLE`, and `CA_INACTIVE_CAPABILITY_FUNCTION`. Typed
+Capability fields reuse `CA_MAPPING_VALUE_TYPE`, including strict Boolean
+validation for `requires_position_information`.
+
 ## Schema source (`SS_*`)
 
 `SS_*` means the failure is owned by schema-source manifest, composition, or

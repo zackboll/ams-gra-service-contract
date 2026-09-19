@@ -10,11 +10,11 @@ from typing import Any
 
 try:
     from tools.completion_assistant import load_completion_path, load_decisions_path
-    from tools.completion_scaffold import build_scaffold, load_mapping_path, load_specific_functions_path
+    from tools.completion_scaffold import build_scaffold, load_capabilities_path, load_mapping_path, load_specific_functions_path
     from tools.validate import Diagnostic, profile_diagnostics, validate_document, validate_profile_path
 except ModuleNotFoundError:  # Support direct execution as ``python tools/completion_materialize.py``.
     from completion_assistant import load_completion_path, load_decisions_path
-    from completion_scaffold import build_scaffold, load_mapping_path, load_specific_functions_path
+    from completion_scaffold import build_scaffold, load_capabilities_path, load_mapping_path, load_specific_functions_path
     from validate import Diagnostic, profile_diagnostics, validate_document, validate_profile_path
 
 CA_MATERIALIZATION_INCOMPLETE = "CA_MATERIALIZATION_INCOMPLETE"
@@ -88,6 +88,8 @@ def materialize_contract(scaffold: dict[str, Any]) -> tuple[dict[str, Any] | Non
         item = {"id": _resolved(function["id"]), "name": _resolved(function["name"]), "category": _resolved(function["category"])}
         if "required_group" in function:
             item["required_group"] = _resolved(function["required_group"])
+        _optional(function, "standard_role", item)
+        _optional(function, "capability", item)
         item["applicability"] = _resolved(function["applicability"])
         _optional(function, "description", item)
         if item["applicability"] == "not_applicable":
@@ -96,7 +98,10 @@ def materialize_contract(scaffold: dict[str, Any]) -> tuple[dict[str, Any] | Non
         else:
             item["exchanges"] = [_exchange(exchange) for exchange in function["exchanges"] if exchange["active"]]
         functions.append(item)
-    return {"contract_version": _resolved(scaffold["target"]["contract_version"]), "service": service, "standards": standards, "functions": functions}, []
+    contract = {"contract_version": _resolved(scaffold["target"]["contract_version"]), "service": service, "standards": standards, "functions": functions}
+    if scaffold["capability_inventory_state"] != "unknown":
+        contract["capabilities"] = [{field: _resolved(capability[field]) for field in ("id", "name", "requires_position_information")} for capability in scaffold["capabilities"]]
+    return contract, []
 
 
 def render_json(contract: dict[str, Any]) -> str:
@@ -109,17 +114,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--decisions", type=Path, required=True)
     parser.add_argument("--mapping", type=Path, required=True)
     parser.add_argument("--specific-functions", type=Path)
+    parser.add_argument("--capabilities", type=Path)
     parser.add_argument("--profile", type=Path, required=True)
     args = parser.parse_args(argv)
     completion, diagnostics = load_completion_path(args.input.resolve())
     if not diagnostics: decisions, diagnostics = load_decisions_path(args.decisions.resolve(), completion)
     specific = None
+    capabilities = None
     if not diagnostics and args.specific_functions: specific, diagnostics = load_specific_functions_path(args.specific_functions.resolve())
+    if not diagnostics and args.capabilities: capabilities, diagnostics = load_capabilities_path(args.capabilities.resolve())
     if not diagnostics: profile, diagnostics = validate_profile_path(args.profile.resolve())
-    if not diagnostics: mapping, diagnostics = load_mapping_path(args.mapping.resolve(), completion, decisions, profile, specific)
+    if not diagnostics: mapping, diagnostics = load_mapping_path(args.mapping.resolve(), completion, decisions, profile, specific, capabilities)
     contract = None
     if not diagnostics:
-        contract, diagnostics = materialize_contract(build_scaffold(completion, decisions, mapping, profile, specific))
+        contract, diagnostics = materialize_contract(build_scaffold(completion, decisions, mapping, profile, specific, capabilities))
     if not diagnostics:
         diagnostics = validate_document(contract)
     if not diagnostics:

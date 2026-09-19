@@ -22,8 +22,10 @@ validates its candidate contract with `SC_*` validation and the selected OMS
 profile with `OP_*` validation before emission. Lower-layer diagnostics retain
 their original identity.
 
-Only resolved author-owned values are emitted; no IDs, topics, functions, or
-defaults are generated. Declared specific functions follow profile-required
-functions in structure order. Capability declarations, sources,
-and traceability are omitted. Completion candidate provenance is audit evidence,
-not automatically authored portable traceability.
+Only resolved author-owned values are emitted; no IDs, topics, names, functions,
+or defaults are generated. Optional `--capabilities` preserves unknown versus
+explicit-zero Capability inventory semantics and emits only explicit portable
+Capability values. Function order is ordinary profile requirements, Capability
+profile requirements, then declared specific functions. Capability Section 3.3
+functions have no generated exchanges. Completion candidate provenance is audit
+evidence, not automatically authored portable traceability.

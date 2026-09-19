@@ -1,0 +1,4 @@
+capabilities_version: "0.1"
+capabilities:
+  - key: esm
+  - key: radar

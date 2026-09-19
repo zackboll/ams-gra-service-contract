@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Five-contract published OMS 2.5 evidence survey spanning RF FM Demod,
+  Graupel, IR Search and Track, Supercell, and Squall OMS Adapters. It records
+  pinned sources, provenance, profile and UCI resolver evidence, and selects an
+  author-confirmed completion assistant as the next direction. No real-world
+  YAML, schema/profile semantic change, Capability inference, or component-kind
+  inference was added.
 - Evidence-driven exercise of two published OMS 2.5 Service Contracts (RF FM
   Demod and Graupel), including field-level provenance/representability matrices,
   independent profile comparison, and real UCI 2.5 resolver results. Neither

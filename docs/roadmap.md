@@ -90,11 +90,12 @@ Potential goals driven by real implementation experience:
 - real Service Contract exercises, mature diagnostics, and first independent
   downstream consumers. An initial real UCI 2.5 -> 2.6 resolver/schema
   transition has been exercised; broader upstream-version mapping remains.
-  Published real-world OMS 2.5 Service Contract exercises have begun with RF FM
-  Demod and Graupel. Both show that published Markdown can be insufficient for a
-  faithful complete authored-v0.1 transcription; broader examples are still
-  needed before choosing between source-documentation/completion tooling and a
-  separate partial-observation model.
+  Published real-world OMS 2.5 Service Contract evidence now covers five
+  artifacts: RF FM Demod, Graupel, IR Search and Track, Supercell, and Squall
+  OMS Adapters. The survey favors author-confirmed source-documentation/
+  completion assistance; it does not weaken authored-contract semantics or mark
+  the independent-consumer 1.0 criterion complete. Broader examples are still
+  needed before introducing a separate partial-observation model.
 
 A full UCI type-layout parser is not an implied next milestone. It would require
 substantial XSD support (content models, inheritance, members, cardinality,

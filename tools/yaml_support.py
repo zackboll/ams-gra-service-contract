@@ -21,13 +21,13 @@ class JsonCompatibleYamlLoader(yaml.SafeLoader):
 # Do not inherit PyYAML's YAML 1.1 implicit resolver table.
 JsonCompatibleYamlLoader.yaml_implicit_resolvers = {}
 JsonCompatibleYamlLoader.add_implicit_resolver(
-    "tag:yaml.org,2002:null", re.compile(r"^(?:~|null|Null|NULL)$"), ["~", "n", "N"]
+    "tag:yaml.org,2002:null", re.compile(r"^(?:~|null|Null|NULL|)$"), ["~", "n", "N", ""]
 )
 JsonCompatibleYamlLoader.add_implicit_resolver(
     "tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF")
 )
 JsonCompatibleYamlLoader.add_implicit_resolver(
-    "tag:yaml.org,2002:int", re.compile(r"^[-+]?(?:0o[0-7]+|[0-9]+)$"), list("-+0123456789")
+    "tag:yaml.org,2002:int", re.compile(r"^[-+]?(?:0o[0-7]+|0x[0-9a-fA-F]+|[0-9]+)$"), list("-+0123456789")
 )
 JsonCompatibleYamlLoader.add_implicit_resolver(
     "tag:yaml.org,2002:float",
@@ -40,10 +40,13 @@ JsonCompatibleYamlLoader.add_implicit_resolver(
 
 def _construct_yaml_int(loader: JsonCompatibleYamlLoader, node: yaml.Node) -> int:
     value = loader.construct_scalar(node).replace("_", "")
-    sign = -1 if value.startswith("-") else 1
-    if value[0] in "-+":
-        value = value[1:]
-    return sign * int(value[2:], 8) if value.startswith("0o") else sign * int(value, 10)
+    match = re.fullmatch(r"(?P<sign>[-+]?)(?P<number>0o[0-7]+|0x[0-9a-fA-F]+|[0-9]+)", value)
+    if match is None:
+        raise YamlInputError(f"invalid YAML 1.2 integer {value!r}")
+    number = match.group("number")
+    base = 8 if number.startswith("0o") else 16 if number.startswith("0x") else 10
+    result = int(number[2:] if base != 10 else number, base)
+    return -result if match.group("sign") == "-" else result
 
 
 def _construct_mapping(loader: JsonCompatibleYamlLoader, node: yaml.MappingNode, deep: bool = False) -> dict[str, Any]:
@@ -97,6 +100,8 @@ def load_text(text: str, source: str = "input") -> Any:
         raise
     except yaml.YAMLError as exc:
         raise YamlInputError(f"malformed YAML/JSON in {source}: {exc.problem or str(exc)}") from exc
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise YamlInputError(f"invalid YAML/JSON value in {source}: {exc}") from exc
     _validate_json_compatible(value)
     return value
 

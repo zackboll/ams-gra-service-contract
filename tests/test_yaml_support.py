@@ -21,8 +21,12 @@ ROOT = Path(__file__).resolve().parents[1]
         ("FALSE", False),
         ("2026-01-22", "2026-01-22"),
         ("1:20", "1:20"),
+        ("+12", 12),
+        ("-12", -12),
         ("012", 12),
         ("0o12", 10),
+        ("0x3A", 58),
+        ("0xff", 255),
     ],
 )
 def test_yaml_12_core_scalar_behavior(scalar: str, expected: object) -> None:
@@ -48,6 +52,20 @@ def test_non_json_or_unsafe_yaml_is_rejected(text: str) -> None:
 def test_duplicate_mapping_key_is_rejected() -> None:
     with pytest.raises(YamlInputError, match="duplicate mapping key 'oms_version'"):
         load_text('standards:\n  oms_version: "2.5"\n  oms_version: "2.6"\n')
+
+
+def test_empty_scalar_is_null_but_quoted_empty_scalar_is_a_string() -> None:
+    assert load_text("example:\n") == {"example": None}
+    assert load_text('example: ""\n') == {"example": ""}
+
+
+def test_explicit_yaml_12_hexadecimal_integer_tag() -> None:
+    assert load_text("value: !!int 0x3A\n") == {"value": 58}
+
+
+def test_malformed_explicit_integer_tag_is_a_yaml_input_error() -> None:
+    with pytest.raises(YamlInputError, match="invalid YAML 1.2 integer"):
+        load_text("value: !!int not-an-integer\n")
 
 
 def test_normal_json_document_loads() -> None:

@@ -48,8 +48,12 @@ Potential goals driven by real implementation experience:
    Calibration exchange minimum); Subsystem Startup Table 3.2-1 source
    classification completed (all five substantive rows and all three MDF
    acquisition examples are removable green guidance, so no Startup exchange
-   minimum or fixed alternative-set rule); Required Capability-related Functions,
-   broader profile coverage, and real Service Contract exercises remain);
+    minimum or fixed alternative-set rule); Required Capability-related Function
+    Section 3.3 inventory semantics classified, with explicit Capability
+    identity/presence, function ownership, and position-dependency facts needed
+    before exact per-Capability function validation; exchange-table
+    classification, broader profile coverage, and real Service Contract exercises
+    remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

@@ -52,8 +52,14 @@ Potential goals driven by real implementation experience:
     Section 3.3 inventory semantics classified, with explicit Capability
     identity/presence, function ownership, and position-dependency facts needed
     before exact per-Capability function validation; exchange-table
-    classification, broader profile coverage, and real Service Contract exercises
-    remain);
+    classification completed: both Table 3.3-1 position-report rows are
+    removable green guidance in all matcher-owned fields, while fixed prose
+    establishes only a conceptual alternative without machine-checkable
+    cardinality; Capability identity/presence/ownership and position-dependency
+    facts remain needed for conditional function validation; deliberately
+    designed conditional-function and alternative-exchange semantics remain
+    pending only if later fixed evidence requires them; Tables 3.3-2 through
+    3.3-4, broader profile coverage, and real Service Contract exercises remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

@@ -163,6 +163,28 @@ def test_oms_25_profile_does_not_infer_capability_inventory_from_missing_functio
 
 @pytest.mark.parametrize(
     "path",
+    [
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "service-required-functions.yaml",
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-all-applicable.yaml",
+    ],
+)
+def test_oms_25_profile_does_not_require_position_information_exchanges_without_conditional_function_facts(path: Path) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+
+    document = load_document(path)
+    messages = {
+        exchange.get("message")
+        for function in document["functions"]
+        for exchange in function["exchanges"]
+    }
+    assert "PositionReport" not in messages
+    assert "PositionReportDetailed" not in messages
+    assert validate_path(path, profile) == []
+
+
+@pytest.mark.parametrize(
+    "path",
     sorted((ROOT / "tests" / "profiles" / "oms-2.5" / "invalid").glob("*.yaml")),
 )
 def test_oms_25_profile_invalid_contracts(path: Path) -> None:

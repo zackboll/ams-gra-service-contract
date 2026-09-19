@@ -6,6 +6,14 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Position Information Processing (Section 3.3.1/Table 3.3-1) OOXML
+  exchange classification. `PositionReport` and `PositionReportDetailed` are
+  green removable guidance in every matcher-owned table field, including LoM;
+  black Description/Workflow prose establishes only a conceptual periodic input
+  alternative, not machine-checkable cardinality or individual mandatory shapes.
+  No universal Position Information function, exchange rule, schema, validator,
+  diagnostic, or alternative DSL was added. Conditional Capability/function and
+  possible alternative-exchange modeling remain deliberate future-design gaps.
 - OMS 2.5 Required Capability-related Function (Section 3.3) OOXML inventory
   classification. The parent Capability-provider statement is fixed black, while
   Table 3.0-1 capability rows, applicability/N/A directions, Position

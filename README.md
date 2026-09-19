@@ -46,6 +46,13 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 
 ## Profile validation
 
+OMS 2.5 Capability and Capability Status evidence is classified but not
+profile-enforced. Table 3.3-2's `ESM_Capability` and
+`ESM_CapabilityStatus` rows are removable green examples. Mixed generic prose
+establishes only Capability-relative output/periodic message-family semantics;
+v0.1 lacks Capability identity and ownership to instantiate exact selectors.
+See [Task 028 evidence](docs/task-028-oms25-capability-status.md).
+
 OMS 2.5 Position Information Processing exchange evidence is classified but not
 profile-enforced. Table 3.3-1's `PositionReport` and
 `PositionReportDetailed` rows are green removable guidance in every matcher-owned

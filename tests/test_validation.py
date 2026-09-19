@@ -259,6 +259,24 @@ def _subsystem_status(document: dict) -> dict:
     return _subsystem_function(document, "Subsystem Status")
 
 
+@pytest.mark.parametrize("document_factory", [_complete_service_status_document, _complete_subsystem_document])
+@pytest.mark.parametrize("selector", ["ESM_Capability", "ESM_CapabilityStatus"])
+def test_oms_25_profile_capability_status_esm_examples_are_not_required(
+    document_factory, selector: str
+) -> None:
+    """Table 3.3-2 ESM rows are removable green examples, not profile requirements."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = document_factory()
+
+    assert all(
+        exchange.get("message") != selector
+        for function in document["functions"]
+        for exchange in function["exchanges"]
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
 @pytest.mark.parametrize(
     "name",
     [

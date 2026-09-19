@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate v0.1 AMS GRA machine-readable service contracts.
+"""Validate v0.1 AMS GRA machine-readable service contracts and opt-in profiles.
 
 This validator intentionally performs only:
   1. JSON Schema structural validation; and
@@ -23,6 +23,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "v0.1" / "service-contract.schema.json"
+PROFILE_SCHEMA_PATH = ROOT / "schema" / "profile" / "v0.1" / "oms-profile.schema.json"
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,10 @@ class Diagnostic:
 
 def load_schema() -> dict[str, Any]:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def load_profile_schema() -> dict[str, Any]:
+    return json.loads(PROFILE_SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
 def load_document(path: Path) -> Any:
@@ -59,6 +64,14 @@ def schema_diagnostics(document: Any) -> list[Diagnostic]:
     for error in sorted(validator.iter_errors(document), key=lambda e: list(e.absolute_path)):
         diagnostics.append(Diagnostic(_format_json_path(error.absolute_path), error.message))
     return diagnostics
+
+
+def profile_schema_diagnostics(profile: Any) -> list[Diagnostic]:
+    validator = Draft202012Validator(load_profile_schema(), format_checker=FormatChecker())
+    return [
+        Diagnostic(_format_json_path(error.absolute_path), error.message)
+        for error in sorted(validator.iter_errors(profile), key=lambda e: list(e.absolute_path))
+    ]
 
 
 def _duplicates(values: list[str]) -> set[str]:
@@ -133,16 +146,148 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
     return diagnostics
 
 
+def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
+    """Validate source references and uniqueness required by the current profile model."""
+    if not isinstance(profile, dict):
+        return []
+
+    diagnostics: list[Diagnostic] = []
+    sources = profile.get("sources", [])
+    source_ids = [
+        source.get("id")
+        for source in sources
+        if isinstance(source, dict) and isinstance(source.get("id"), str)
+    ]
+    for duplicate in sorted(_duplicates(source_ids)):
+        diagnostics.append(Diagnostic("$.sources", f"duplicate source id {duplicate!r}"))
+    source_id_set = set(source_ids)
+
+    functions = profile.get("required_functions", [])
+    function_names = [
+        function.get("name")
+        for function in functions
+        if isinstance(function, dict) and isinstance(function.get("name"), str)
+    ]
+    for duplicate in sorted(_duplicates(function_names)):
+        diagnostics.append(Diagnostic("$.required_functions", f"duplicate required function name {duplicate!r}"))
+
+    for index, function in enumerate(functions):
+        if not isinstance(function, dict):
+            continue
+        applies_to = function.get("applies_to", [])
+        if not isinstance(applies_to, list):
+            applies_to = []
+        applies_to = [kind for kind in applies_to if isinstance(kind, str)]
+        for duplicate in sorted(_duplicates(applies_to)):
+            diagnostics.append(
+                Diagnostic(f"$.required_functions[{index}].applies_to", f"duplicate component kind {duplicate!r}")
+            )
+        for trace_index, trace in enumerate(function.get("traceability", [])):
+            if isinstance(trace, dict) and trace.get("source") not in source_id_set:
+                diagnostics.append(
+                    Diagnostic(
+                        f"$.required_functions[{index}].traceability[{trace_index}].source",
+                        f"unknown source id {trace.get('source')!r}",
+                    )
+                )
+    return diagnostics
+
+
+def validate_profile_document(profile: Any) -> list[Diagnostic]:
+    return profile_schema_diagnostics(profile) + profile_semantic_diagnostics(profile)
+
+
+def validate_profile_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
+    try:
+        profile = load_document(path)
+    except (OSError, yaml.YAMLError) as exc:
+        return None, [Diagnostic("", f"could not parse {path}: {exc}")]
+    return profile, validate_profile_document(profile)
+
+
 def validate_document(document: Any) -> list[Diagnostic]:
     return schema_diagnostics(document) + semantic_diagnostics(document)
 
 
-def validate_path(path: Path) -> list[Diagnostic]:
+def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
+    """Apply a validated OMS profile to a structurally valid contract."""
+    if not isinstance(document, dict) or not isinstance(profile, dict):
+        return []
+
+    compatibility_diagnostics: list[Diagnostic] = []
+    profile_id = profile["id"]
+    contract_version = document.get("contract_version")
+    if contract_version not in profile["contract_versions"]:
+        compatibility_diagnostics.append(
+            Diagnostic(
+                "$.contract_version",
+                f"profile {profile_id!r} does not support contract version {contract_version!r}",
+            )
+        )
+
+    contract_oms_version = document.get("standards", {}).get("oms_version")
+    if contract_oms_version != profile["oms_version"]:
+        compatibility_diagnostics.append(
+            Diagnostic(
+                "$.standards.oms_version",
+                f"profile {profile_id!r} requires OMS version {profile['oms_version']!r}, "
+                f"contract declares {contract_oms_version!r}",
+            )
+        )
+
+    if compatibility_diagnostics:
+        return compatibility_diagnostics
+
+    diagnostics: list[Diagnostic] = []
+    kind = document.get("service", {}).get("kind")
+    functions = document.get("functions", [])
+    for requirement in profile["required_functions"]:
+        if kind not in requirement["applies_to"]:
+            continue
+        matches = [
+            (index, function)
+            for index, function in enumerate(functions)
+            if function.get("name") == requirement["name"]
+        ]
+        if not matches:
+            diagnostics.append(
+                Diagnostic(
+                    "$.functions",
+                    f"OMS profile {profile_id!r} requires function {requirement['name']!r} for {kind}",
+                )
+            )
+            continue
+        if len(matches) > 1:
+            diagnostics.append(
+                Diagnostic(
+                    "$.functions",
+                    f"OMS profile {profile_id!r} found multiple matches for required function "
+                    f"{requirement['name']!r} for {kind}",
+                )
+            )
+            continue
+        index, function = matches[0]
+        for field in ("category", "required_group", "applicability"):
+            if function.get(field) != requirement[field]:
+                diagnostics.append(
+                    Diagnostic(
+                        f"$.functions[{index}].{field}",
+                        f"OMS profile {profile_id!r} requires {requirement['name']!r} to have "
+                        f"{field} {requirement[field]!r} for {kind}",
+                    )
+                )
+    return diagnostics
+
+
+def validate_path(path: Path, profile: Any | None = None) -> list[Diagnostic]:
     try:
         document = load_document(path)
     except (OSError, yaml.YAMLError) as exc:
         return [Diagnostic("", f"could not parse {path}: {exc}")]
-    return validate_document(document)
+    diagnostics = validate_document(document)
+    if diagnostics or profile is None:
+        return diagnostics
+    return profile_diagnostics(document, profile)
 
 
 def _default_all_paths() -> list[Path]:
@@ -157,6 +302,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="validate all examples and tests/valid fixtures",
     )
+    parser.add_argument("--profile", type=Path, help="OMS profile YAML/JSON file to apply after normal validation")
     args = parser.parse_args(argv)
 
     paths = list(args.paths)
@@ -165,6 +311,16 @@ def main(argv: list[str] | None = None) -> int:
     if not paths:
         parser.error("provide one or more paths, or use --all")
 
+    profile: Any | None = None
+    if args.profile is not None:
+        profile_path = args.profile.resolve()
+        profile, diagnostics = validate_profile_path(profile_path)
+        if diagnostics:
+            print(f"FAIL {profile_path}")
+            for diagnostic in diagnostics:
+                print(f"  {diagnostic}")
+            return 1
+
     failed = False
     seen: set[Path] = set()
     for path in paths:
@@ -172,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
         if path in seen:
             continue
         seen.add(path)
-        diagnostics = validate_path(path)
+        diagnostics = validate_path(path, profile)
         if diagnostics:
             failed = True
             print(f"FAIL {path}")

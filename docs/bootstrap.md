@@ -141,4 +141,4 @@ schema unless the missing field is required for deterministic generation
 or round-trip traceability.
 ```
 
-Once that exercise is stable, add contract-aware resolution to the code-generator project rather than embedding a UCI parser into this specification repository.
+This is historical bootstrap guidance. The repository now includes non-normative reference contract-aware resolution to exercise specification semantics against immutable verified UCI snapshots. It stops at message/type declaration identity and does not replace a downstream binding or code-generator type-layout implementation.

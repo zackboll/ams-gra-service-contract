@@ -20,6 +20,14 @@ A **resolved contract** additionally has all OMS Message references resolved aga
 
 Resolution consumes only the immutable verified schema-byte snapshot. It indexes direct global message and type declarations, resolves each primitive-tagged message's XSD `type` QName using the containing element's in-scope XML namespace bindings, and requires exactly one global type declaration with the resulting expanded QName. This identifies declaration identity only; type content/layout interpretation remains out of scope.
 
+Document conformance, resolved-contract semantics, and a resolver implementation
+are distinct. This document and the JSON Schema define document conformance; the
+preceding resolution rules define resolved-contract semantics. The Python tooling
+under `tools/` is a non-normative reference implementation, not a required
+language, public generator API, or normative serialized IR. Its implementation
+models are not portable contract fields, and another conforming consumer MAY
+implement the same semantics independently.
+
 Conformance of this file format does **not** imply conformance of a Service to AMS GRA, OMS, UCI, a platform, a mission package, or any acquisition/compliance requirement.
 
 ## 2. Source model and design boundary

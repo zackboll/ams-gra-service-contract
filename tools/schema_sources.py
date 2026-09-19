@@ -11,13 +11,14 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
-import yaml
 from jsonschema import Draft202012Validator, FormatChecker
 
 try:
     from tools.validate import validate_document
+    from tools.yaml_support import YamlInputError, load_path
 except ModuleNotFoundError:  # Support direct execution as ``python tools/schema_sources.py``.
     from validate import validate_document
+    from yaml_support import YamlInputError, load_path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "schema-source" / "v0.1" / "schema-source-manifest.schema.json"
@@ -70,8 +71,7 @@ def load_schema() -> dict[str, Any]:
 
 
 def load_manifest(path: Path) -> Any:
-    with path.open("r", encoding="utf-8") as stream:
-        return yaml.safe_load(stream)
+    return load_path(path)
 
 
 def _format_json_path(parts: Iterable[Any]) -> str:
@@ -139,7 +139,7 @@ def validate_manifest(manifest: Any) -> list[Diagnostic]:
 def validate_manifest_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
     try:
         manifest = load_manifest(path)
-    except (OSError, yaml.YAMLError) as exc:
+    except YamlInputError as exc:
         return None, [Diagnostic("", f"could not parse {path}: {exc}")]
     return manifest, validate_manifest(manifest)
 
@@ -301,9 +301,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "compose":
         try:
-            with args.contract.open("r", encoding="utf-8") as stream:
-                contract = yaml.safe_load(stream)
-        except (OSError, yaml.YAMLError) as exc:
+            contract = load_path(args.contract)
+        except YamlInputError as exc:
             print(f"FAIL {args.contract.resolve()}\n  could not parse contract: {exc}")
             return 1
         baseline_path = args.baseline_manifest.resolve()

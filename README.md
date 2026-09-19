@@ -2,13 +2,13 @@
 
 > **Status:** experimental specification draft (`contract_version: "0.1"`). This repository is independent work. It is **not** an official AMS GRA, OMS, UCI, Open Architecture Management Office, or U.S. Government artifact, and it does not replace the official OMS Service Contract.
 
-This repository defines a small, language-neutral, machine-readable representation of the **service interface information that is otherwise captured in an OMS Service Contract**. Its primary purpose is to make that information usable as an input to code generators, validators, test generators, deployment tooling, and documentation tooling.
+This repository defines a small, language-neutral, machine-readable representation of the **service interface information that is otherwise captured in an OMS Service Contract**. Its primary purpose is to make that information usable as an input to code generators, validators, test generators, deployment tooling, and documentation tooling. It also includes non-normative reference tooling needed to exercise the specification against real upstream material while keeping the portable format language-neutral.
 
 The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**
 
-The format deliberately does **not** copy UCI message layouts or message primitive metadata. The included offline resolver verifies selected external UCI schema bytes, indexes global declarations, and derives message QNames, UCI primitives, and exact global message type QNames for the message names declared by the contract. It identifies type declarations only; it does not yet model type contents or layouts.
+The format deliberately does **not** copy UCI message layouts or message primitive metadata. The included offline resolver is a non-normative Python reference implementation: it verifies selected external UCI schema bytes, indexes global declarations, and derives message QNames, UCI primitives, and exact global message type QNames for the message names declared by the contract. It identifies type declarations only; it does not model type contents or layouts, and its Python models are not a standardized generator API or portable resolved-contract IR.
 
 ## Schema-source manifests
 

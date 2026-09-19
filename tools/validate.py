@@ -5,8 +5,8 @@ This validator intentionally performs only:
   1. JSON Schema structural validation; and
   2. local cross-field semantic validation.
 
-It does not load or resolve UCI XSDs. UCI resolution belongs to a
-contract-aware resolver/code-generator in v0.1.
+It does not load or resolve UCI XSDs. The separate non-normative reference
+resolver exercises that behavior against manifest-verified snapshots.
 """
 
 from __future__ import annotations
@@ -18,8 +18,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-import yaml
 from jsonschema import Draft202012Validator, FormatChecker
+
+try:
+    from tools.yaml_support import YamlInputError, load_path
+except ModuleNotFoundError:  # Support direct execution as ``python tools/validate.py``.
+    from yaml_support import YamlInputError, load_path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "v0.1" / "service-contract.schema.json"
@@ -44,8 +48,7 @@ def load_profile_schema() -> dict[str, Any]:
 
 
 def load_document(path: Path) -> Any:
-    with path.open("r", encoding="utf-8") as stream:
-        return yaml.safe_load(stream)
+    return load_path(path)
 
 
 def _format_json_path(parts: Iterable[Any]) -> str:
@@ -200,7 +203,7 @@ def validate_profile_document(profile: Any) -> list[Diagnostic]:
 def validate_profile_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
     try:
         profile = load_document(path)
-    except (OSError, yaml.YAMLError) as exc:
+    except YamlInputError as exc:
         return None, [Diagnostic("", f"could not parse {path}: {exc}")]
     return profile, validate_profile_document(profile)
 
@@ -282,7 +285,7 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
 def validate_path(path: Path, profile: Any | None = None) -> list[Diagnostic]:
     try:
         document = load_document(path)
-    except (OSError, yaml.YAMLError) as exc:
+    except YamlInputError as exc:
         return [Diagnostic("", f"could not parse {path}: {exc}")]
     diagnostics = validate_document(document)
     if diagnostics or profile is None:

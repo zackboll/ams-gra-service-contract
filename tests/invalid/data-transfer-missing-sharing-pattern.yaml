@@ -1,0 +1,27 @@
+contract_version: "0.1"
+
+service:
+  name: invalid-data-transfer-service
+  version: "0.1.0"
+  kind: service
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+functions:
+  - id: invalid-data-transfer
+    name: Invalid Data Transfer
+    category: specific
+    applicability: applicable
+    exchanges:
+      - id: service-config-file-input
+        kind: data_transfer
+        direction: input
+        mandate: optional
+        name: ServiceConfigFile
+        protocol: NFS
+        data_type: Configuration File
+        data_format: Custom Text
+        timing:
+          kind: asynchronous

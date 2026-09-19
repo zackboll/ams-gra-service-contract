@@ -1,0 +1,81 @@
+contract_version: "0.1"
+
+service:
+  name: example-initialization-service
+  version: "0.1.0"
+  kind: service
+  description: >-
+    Illustrative machine-readable representation of the OMS v2.5
+    Service Initialization Inputs and Outputs example, including an
+    OMS Data Transfer input. This is an example of this independent
+    format, not an official OMS artifact.
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+sources:
+  - id: oms-service-contract-instructions-v25
+    title: OMS Service Contract Instructions v2.5
+    document_number: OMSC-INS-003
+    revision: M
+    date: "2026-01-22"
+    uri: https://github.com/open-arsenal/oms/blob/726272bd0390982a759c91a9cf4e13b81c2b510b/docs_official/14_2_OMSC-INS-003_RevM_ServiceContractInstructions_DandD_v2_5.docx
+
+functions:
+  - id: service-initialization
+    name: Service Initialization
+    category: required
+    required_group: service
+    applicability: applicable
+    description: >-
+      Required Service Initialization example containing both OMS
+      Message and Data Transfer inputs.
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: >-
+          3.1.1 Service Initialization /
+          Table 3.1-1 Service Initialization Inputs and Outputs
+    exchanges:
+      - id: file-metadata-input
+        kind: oms_message
+        direction: input
+        mandate: optional
+        message: FileMetadata
+        topic: FileMetadata
+        operational_attribute: SOAC-1
+        appendix_c_mapping: FileMetadata
+        timing:
+          kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: Table 3.1-1 / FileMetadata
+
+      - id: file-location-input
+        kind: oms_message
+        direction: input
+        mandate: optional
+        message: FileLocation
+        topic: FileLocation
+        operational_attribute: SOAC-2
+        appendix_c_mapping: FileLocation
+        timing:
+          kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: Table 3.1-1 / FileLocation
+
+      - id: service-config-file-input
+        kind: data_transfer
+        direction: input
+        mandate: optional
+        name: ServiceConfigFile
+        protocol: NFS
+        data_type: Configuration File
+        data_format: Custom Text
+        sharing_pattern: Exclusive Use
+        timing:
+          kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: Table 3.1-1 / ServiceConfigFile

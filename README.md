@@ -129,6 +129,8 @@ Version 0.1 focuses on the parts of the OMS Service Contract Inputs and Outputs 
 
 The upstream Service Contract instructions state that the Message Primitive column corresponds to the UCI schema's `PRIMITIVE_TYPE` annotation. Therefore **v0.1 intentionally does not store message primitive in the contract**. It is resolved from UCI.
 
+The v0.1 `data_transfer` exchange models the Data Transfer information carried by a function Inputs/Outputs row. It does not yet attempt to model the complete Section 1.6 Data Transfer inventory.
+
 ## What v0.1 does not attempt
 
 Version 0.1 is deliberately not a full executable specification of an OMS Service Contract. It does not yet formalize:
@@ -139,7 +141,7 @@ Version 0.1 is deliberately not a full executable specification of an OMS Servic
 - error-handling behavior;
 - Service Level Agreements;
 - security policy semantics beyond identifying a Security Exchange;
-- full Data Transfer protocol semantics;
+- complete Section 1.6 Data Transfer inventory semantics;
 - MEL/MFA APIs;
 - Skill composition;
 - resource-management policy;
@@ -178,9 +180,11 @@ The following are source-backed mappings of upstream OMS examples, not official
 generated OMS Service Contracts:
 
 - [`examples/service-status.yaml`](examples/service-status.yaml): Required
-  Service Function example.
+  Service Function / status example.
 - [`examples/capability-enable-disable.yaml`](examples/capability-enable-disable.yaml):
   Required Capability-related Command / Command Status example.
+- [`examples/service-initialization.yaml`](examples/service-initialization.yaml):
+  Required Service Function containing both OMS Message and Data Transfer inputs.
 
 ## Minimal example
 
@@ -371,7 +375,8 @@ The deployment configuration is not the Service Contract itself. It is one imple
 ├── examples/
 │   ├── minimal.yaml
 │   ├── service-status.yaml
-│   └── capability-enable-disable.yaml
+│   ├── capability-enable-disable.yaml
+│   └── service-initialization.yaml
 ├── tests/
 │   ├── valid/
 │   ├── invalid/

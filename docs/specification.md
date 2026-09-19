@@ -285,11 +285,21 @@ A `not_applicable` function MUST include `not_applicable_reason` and MUST contai
 
 This permits a machine-readable document to preserve an explicit N/A decision when useful. A producer MAY omit unrelated functions entirely if its workflow does not require round-trip regeneration of template sections.
 
-### 9.6 `description`
+### 9.6 `standard_role`
+
+Optional portable standardized semantic identity. The initial bounded values are
+`capability_status`, `capability_enable_disable`, `capability_operations`, and
+`position_information_processing`. It is distinct from the human-readable
+`name` and local `id`; consumers MUST NOT infer it from names, IDs, exchanges,
+descriptions, or declaration order. Profiles may require a role where their
+independent applicability facts establish one. Unrelated functions need not have
+this member.
+
+### 9.7 `description`
 
 Optional prose. It is informative to machines unless a future specification explicitly defines a behavioral language.
 
-### 9.7 `exchanges`
+### 9.8 `exchanges`
 
 An ordered list of input/output exchanges associated with the function. Ordering is for stable display/diff generation and MUST NOT be interpreted as runtime execution order.
 

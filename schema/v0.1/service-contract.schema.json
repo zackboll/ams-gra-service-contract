@@ -222,6 +222,14 @@
         "capability": {
           "$ref": "#/$defs/identifier"
         },
+        "standard_role": {
+          "enum": [
+            "capability_status",
+            "capability_enable_disable",
+            "capability_operations",
+            "position_information_processing"
+          ]
+        },
         "applicability": {
           "enum": [
             "applicable",

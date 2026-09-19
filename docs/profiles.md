@@ -19,12 +19,23 @@ Required Subsystem Function inventory, Subsystem Status exchange surface, and
 the completed Startup, State Command Processing, BIT, Calibration, Shutdown,
 and Required Capability-related Function source classifications.
 
-Task 031 adds portable Capability identity, explicit presence, ownership, and
-position-dependency facts, but the OMS 2.5 profile still does **not** enforce the
-deferred Section 3.3 Capability family. In particular, it adds no per-Capability
-function inventory, conditional Position Information Processing, Capability
-Status, Enable/Disable, Operations, alternative-exchange, or response-relationship
-rules. Those require Task 032 or later profile-model work.
+Section 3.3 uses `required_capability_functions`, a reusable role selector rather
+than a display-name template. `functions[].capability` supplies ownership and
+optional `functions[].standard_role` supplies the distinct standardized role;
+neither is inferred from a name, ID, exchange, description, or order. When
+`capabilities` is omitted, facts are unknown and no Section 3.3 requirement is
+applied. `capabilities: []` declares no Capability. For a non-empty inventory,
+Services and Subsystems require exactly one owned, applicable, required
+Capability Status, Enable/Disable, and Operations role per Capability; Isolators
+do not receive Section 3.3 rules. When any Capability explicitly requires
+position information, exactly one component-level applicable Position Information
+Processing role is required; source evidence does not establish ownership or one
+such function per Capability.
+
+No Section 3.3 exchange rule is encoded. Tasks 027–030 classify the table rows
+as removable guidance or otherwise insufficient for a universal portable minimum;
+alternative exchanges, response relationships, and behavior remain out of scope.
+See [Task 032 evidence](task-032-oms25-capability-function-profile.md).
 
 Section 3.1 says every OMS Service must provide the Required Service Functions
 and that the section also applies to Isolators. Sections 3.1.1 and 3.1.2 say

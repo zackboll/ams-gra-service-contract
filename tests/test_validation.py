@@ -8,6 +8,7 @@ import pytest
 
 from tools.validate import (
     OP_AMBIGUOUS_REQUIRED_FUNCTION,
+    OP_AMBIGUOUS_CAPABILITY_FUNCTION,
     OP_DUPLICATE_APPLIES_TO,
     OP_DUPLICATE_EXCHANGE_RULE,
     OP_DUPLICATE_FUNCTION,
@@ -16,6 +17,7 @@ from tools.validate import (
     OP_FUNCTION_METADATA,
     OP_MISSING_REQUIRED_EXCHANGE,
     OP_MISSING_REQUIRED_FUNCTION,
+    OP_MISSING_CAPABILITY_FUNCTION,
     OP_OMS_VERSION_MISMATCH,
     OP_SCHEMA,
     OP_UNKNOWN_TRACE_SOURCE,
@@ -320,6 +322,107 @@ def test_oms_25_profile_valid_contracts_without_capabilities_retain_their_result
 
     assert "capabilities" not in document
     assert all("capability" not in function for function in document["functions"])
+    assert profile_diagnostics(document, profile) == []
+
+
+CAPABILITY_ROLES = ["capability_status", "capability_enable_disable", "capability_operations"]
+
+
+def _capability_profile_document(kind: str = "service", position: bool = False, capabilities: int = 1) -> dict:
+    document = _complete_service_status_document() if kind == "service" else _complete_subsystem_document()
+    document["service"]["kind"] = kind
+    document["capabilities"] = [
+        {"id": f"capability-{index}", "name": f"Capability {index}", "requires_position_information": position and index == 0}
+        for index in range(capabilities)
+    ]
+    for index in range(capabilities):
+        for role in CAPABILITY_ROLES:
+            document["functions"].append({
+                "id": f"{role}-{index}", "name": "Deliberately local display text", "category": "required",
+                "required_group": "capability", "capability": f"capability-{index}", "standard_role": role,
+                "applicability": "applicable", "exchanges": [],
+            })
+    if position:
+        document["functions"].append({
+            "id": "position-information", "name": "Position information local display", "category": "required",
+            "required_group": "capability", "standard_role": "position_information_processing",
+            "applicability": "applicable", "exchanges": [],
+        })
+    return document
+
+
+@pytest.mark.parametrize("kind", ["service", "subsystem"])
+@pytest.mark.parametrize("capabilities", [1, 2])
+def test_oms_25_profile_accepts_complete_capability_role_families(kind: str, capabilities: int) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    assert profile_diagnostics(_capability_profile_document(kind, capabilities=capabilities), profile) == []
+
+
+def test_oms_25_profile_empty_capabilities_and_isolator_do_not_apply_section_33() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["capabilities"] = []
+    assert profile_diagnostics(document, profile) == []
+    document["service"]["kind"] = "isolator"
+    document["functions"] = _complete_service_status_document()["functions"]
+    document["capabilities"] = [{"id": "esm", "name": "ESM", "requires_position_information": True}]
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize("role", CAPABILITY_ROLES)
+def test_oms_25_profile_reports_each_missing_capability_role(role: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _capability_profile_document()
+    document["functions"] = [function for function in document["functions"] if function.get("standard_role") != role]
+    diagnostics = profile_diagnostics(document, profile)
+    assert [(item.code, item.message) for item in diagnostics] == [
+        (OP_MISSING_CAPABILITY_FUNCTION, f"OMS profile 'oms-2.5' requires role {role!r} for capability 'capability-0' for service")
+    ]
+
+
+def test_oms_25_profile_capability_role_identity_is_not_name_id_or_order() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _capability_profile_document(capabilities=2)
+    operations = next(item for item in document["functions"] if item.get("standard_role") == "capability_operations" and item.get("capability") == "capability-0")
+    operations.pop("standard_role")
+    operations["id"] = "capability-operations-misleading-id"
+    operations["name"] = "Capability 0 Capability Operations"
+    document["functions"].reverse()
+    diagnostics = profile_diagnostics(document, profile)
+    assert [item.code for item in diagnostics] == [OP_MISSING_CAPABILITY_FUNCTION]
+    assert "capability 'capability-0'" in diagnostics[0].message
+
+
+def test_oms_25_profile_checks_capability_role_ownership_duplicates_and_metadata() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _capability_profile_document(capabilities=2)
+    operation = next(item for item in document["functions"] if item.get("standard_role") == "capability_operations" and item.get("capability") == "capability-0")
+    operation["capability"] = "capability-1"
+    diagnostics = profile_diagnostics(document, profile)
+    assert [item.code for item in diagnostics] == [OP_MISSING_CAPABILITY_FUNCTION, OP_AMBIGUOUS_CAPABILITY_FUNCTION]
+    document = _capability_profile_document()
+    operation = next(item for item in document["functions"] if item.get("standard_role") == "capability_operations")
+    operation["category"] = "specific"
+    operation.pop("required_group")
+    operation["applicability"] = "not_applicable"
+    operation["not_applicable_reason"] = "test"
+    diagnostics = profile_diagnostics(document, profile)
+    assert [item.code for item in diagnostics] == [OP_FUNCTION_METADATA, OP_FUNCTION_METADATA, OP_FUNCTION_APPLICABILITY]
+
+
+def test_oms_25_profile_position_information_is_one_component_level_function_when_any_capability_requires_it() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _capability_profile_document(capabilities=2, position=True)
+    assert profile_diagnostics(document, profile) == []
+    document["functions"] = [item for item in document["functions"] if item.get("standard_role") != "position_information_processing"]
+    assert [item.code for item in profile_diagnostics(document, profile)] == [OP_MISSING_CAPABILITY_FUNCTION]
+    document = _capability_profile_document(capabilities=2, position=False)
     assert profile_diagnostics(document, profile) == []
 
 
@@ -1226,7 +1329,7 @@ def test_subsystem_status_partial_example_lacks_only_other_required_subsystem_fu
 
 
 def test_validation_diagnostic_code_inventory_is_unique_and_well_formed() -> None:
-    assert len(VALIDATION_DIAGNOSTIC_CODES) == 20
+    assert len(VALIDATION_DIAGNOSTIC_CODES) == 22
     assert all(re.fullmatch(r"(?:SC|OP)_[A-Z0-9_]+", code) for code in VALIDATION_DIAGNOSTIC_CODES)
 
 

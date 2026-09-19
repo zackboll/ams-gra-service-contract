@@ -6,6 +6,9 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Deterministic non-normative Inputs/Outputs Markdown and JSON projection
+  tooling, joining contract-owned fields with manifest-verified UCI message
+  primitive/QName/type identity without changing the portable grammar.
 - Shared YAML 1.2-compatible, JSON-compatible input loading with duplicate-key rejection for contracts, profiles, and schema-source manifests.
 - Explicit project boundary for non-normative reference validator/resolver tooling and intentionally limited UCI declaration resolution.
 - Opt-in OMS 2.5 Required Service Function profile validation.

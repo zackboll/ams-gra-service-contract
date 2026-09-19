@@ -20,6 +20,12 @@
     "schema_family": {"const": "uci"},
     "schema_version": {"type": "string", "minLength": 1},
     "role": {"enum": ["baseline", "extension"]},
+    "compatible_baseline_versions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -48,5 +54,12 @@
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"role": {"const": "extension"}}},
+      "then": {"required": ["compatible_baseline_versions"]},
+      "else": {"not": {"required": ["compatible_baseline_versions"]}}
+    }
+  ]
 }

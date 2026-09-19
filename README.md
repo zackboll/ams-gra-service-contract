@@ -18,6 +18,10 @@ manifest that pins an immutable upstream revision, root XSD, required file set,
 and SHA-256 digests. This manifest is not part of the portable Service Contract
 grammar. See [docs/schema-sources.md](docs/schema-sources.md).
 
+Toolchains compose one matching baseline manifest plus only the extension
+manifests explicitly declared by the contract, failing when exact ID mapping or
+baseline compatibility is incomplete.
+
 ## Profile validation
 
 The generic v0.1 schema is OMS-version-neutral. Opt-in profiles provide

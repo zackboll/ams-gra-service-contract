@@ -24,6 +24,40 @@ portable Service Contract grammar. It does not duplicate XSD-owned message
 definitions, types, primitive metadata, or namespaces. It also does not
 redistribute, incorporate, or relicense the UCI XSD files.
 
+## Schema-source set composition
+
+A validated contract composes exactly one baseline manifest and exactly its
+declared extension manifests. The baseline manifest MUST have `role: baseline`,
+`schema_family: uci`, and a `schema_version` equal to
+`standards.uci_schema_version`. For a baseline, `schema_version` is the logical
+UCI baseline version.
+
+An extension manifest MUST have `role: extension`. Its `schema_version` is the
+extension package's own version, not the UCI baseline version. It MUST declare a
+non-empty, unique `compatible_baseline_versions` list; the contract's baseline
+version must occur in that list. Baseline manifests MUST NOT have that field.
+This clarification retains `manifest_version: "0.1"`: no extension artifact was
+previously published here under the extension role.
+
+Extension identifiers map by exact, case-sensitive equality from
+`standards.uci_extension_schemas[]` to extension-manifest `id`. Missing declared
+manifests, undeclared supplied manifests, duplicate supplied IDs, wrong roles,
+and incompatible baselines fail composition.
+
+```text
+contract baseline UCI: 2.5
+contract extensions: ext-a-1.0, ext-b-2.0
+supplied manifests:   ext-b-2.0, ext-a-1.0
+
+composed set:
+  1. uci-2.5-baseline
+  2. ext-a-1.0
+  3. ext-b-2.0
+```
+
+The numeric/order presentation is deterministic composition order, **not**
+override precedence. It does not resolve duplicate XSD declarations.
+
 ## Trust boundary
 
 The `sources:` field in a Service Contract provides traceability. It must not
@@ -94,3 +128,17 @@ python tools/schema_sources.py verify schema-sources/uci/2.5/manifest.yaml \
 This additionally verifies raw bytes of the manifest-declared local files
 against their SHA-256 values. It remains offline and requires an already
 obtained local checkout/tree.
+
+### Set composition
+
+Compose validated metadata without fetching or verifying source bytes:
+
+```bash
+python tools/schema_sources.py compose \
+  --contract contracts/example.yaml \
+  --baseline-manifest schema-sources/uci/2.5/manifest.yaml \
+  --extension-manifest /path/to/ext-a-manifest.yaml
+```
+
+Composition is distinct from local byte verification. A consumer verifies bytes
+before loading and parsing a usable XSD set.

@@ -124,7 +124,21 @@ The OMS Service Contract instructions require the Service Contract environment/m
 
 ### 5.3 `uci_extension_schemas`
 
-An optional ordered list of extension-schema identifiers. The format does not prescribe how identifiers map to files; the consuming resolver/toolchain MUST define that mapping explicitly.
+An optional ordered list of logical extension-schema identifiers. A declared value
+MUST match exactly one supplied extension schema-source manifest whose `id` is
+byte-for-byte equal to that value. Matching is case-sensitive; it MUST NOT use
+case folding, substring matching, filenames, repository URIs, or inferred paths.
+
+Every declared identifier MUST have a manifest, and a toolchain MUST reject an
+undeclared supplied extension manifest. The contract contains logical identities
+only; it MUST NOT contain manifest paths, source revisions, hashes, or XSD
+namespace details.
+
+Declaration order defines the deterministic order of the composed schema-source
+set after its baseline. It is an ordering for loading, display, and reproducible
+composition only. It MUST NOT define symbol override precedence: neither an
+extension over the baseline nor a later extension over an earlier extension may
+silently win a message-name conflict.
 
 A resolver MUST NOT silently search arbitrary schemas when a message is absent from the declared schema set.
 
@@ -474,9 +488,21 @@ ResolvedExchange
   primitive = ...
 ```
 
-If the message cannot be resolved, resolution MUST fail.
+For an unqualified contract message name, a future resolver MUST find all global
+message declarations whose local name equals `exchange.message` in the selected
+schema-source set. The candidate count has fail-closed semantics: zero candidates
+MUST fail as unknown, one candidate resolves, and more than one candidate MUST
+fail as ambiguous. It MUST NOT select a candidate based on baseline versus
+extension role, extension declaration order, manifest input order, file order,
+or filesystem order.
 
-If multiple definitions make the reference ambiguous, resolution MUST fail unless the resolver has an explicit, deterministic namespace/extension rule documented by that toolchain.
+XSD declarations are fundamentally identified by XML Schema expanded names. v0.1
+contract message references remain local names only. Therefore
+`{namespace-A}ExampleMessage` and `{namespace-B}ExampleMessage` make
+`message: ExampleMessage` ambiguous. v0.1 does not add namespace-qualified
+message syntax; a future need for it requires a reviewed contract-language
+change. Multiple manifests sharing a target namespace are not invalid merely due
+to namespace equality; uniqueness concerns the resolved declaration.
 
 A producer MUST NOT add a private `primitive` property to bypass resolution; unknown fields are intentionally rejected.
 

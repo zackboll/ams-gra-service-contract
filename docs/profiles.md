@@ -207,6 +207,18 @@ Capability identity or function ownership from which to instantiate the family,
 so no ESM, literal placeholder, or name-template profile rule is encoded. See
 [Task 028 evidence](task-028-oms25-capability-status.md).
 
+Task 029 classifies Capability Enable/Disable Table 3.3-3 separately. Its
+`ESM_SettingsCommand` and `ESM_SettingsCommandStatus` rows are removable green
+examples in every matcher-owned field, including DE, LoM, and Periodicity.
+Mixed Description/Workflow prose fixes only a Capability-relative
+`SettingsCommand` input family and `SettingsCommandStatus` output/response
+family. It does not fix portable kind, mandate, or an OMS timing discriminator;
+the response relationship is behavioral rather than `on_demand` evidence. v0.1
+has neither Capability identity/ownership for exact family instantiation nor a
+response-pair model, so no ESM, literal placeholder, name-template, or partial
+exchange profile rule is encoded. See
+[Task 029 evidence](task-029-oms25-capability-enable-disable.md).
+
 The profile also does not validate conditional Section 3.1 Service Functions for
 Platform-hosted Adapters or other OMS-version profiles. It does not claim full
 OMS Subsystem compliance.

@@ -71,7 +71,7 @@ def test_capability_enable_disable_reference_example() -> None:
         "traceability": [
             {
                 "source": "oms-service-contract-instructions-v25",
-                "locator": "Capability Enable/Disable / Inputs and Outputs",
+                "locator": "3.3.2.2.4 / Table 3.3-3 / ESM_SettingsCommand",
             }
         ],
     }
@@ -79,6 +79,11 @@ def test_capability_enable_disable_reference_example() -> None:
     assert exchanges["ESM_SettingsCommandStatus"]["direction"] == "output"
     assert exchanges["ESM_SettingsCommandStatus"]["mandate"] == "mandatory"
     assert exchanges["ESM_SettingsCommandStatus"]["timing"] == {"kind": "on_demand"}
+    assert exchanges["ESM_SettingsCommandStatus"]["traceability"][0]["locator"] == (
+        "3.3.2.2.4 / Table 3.3-3 / ESM_SettingsCommandStatus"
+    )
+    assert "illustrative portable transcription" in document["service"]["description"].lower()
+    assert "not OMS profile-enforced" in function["description"]
     assert all("primitive" not in exchange for exchange in exchanges.values())
 
 
@@ -265,6 +270,24 @@ def test_oms_25_profile_capability_status_esm_examples_are_not_required(
     document_factory, selector: str
 ) -> None:
     """Table 3.3-2 ESM rows are removable green examples, not profile requirements."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = document_factory()
+
+    assert all(
+        exchange.get("message") != selector
+        for function in document["functions"]
+        for exchange in function["exchanges"]
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize("document_factory", [_complete_service_status_document, _complete_subsystem_document])
+@pytest.mark.parametrize("selector", ["ESM_SettingsCommand", "ESM_SettingsCommandStatus"])
+def test_oms_25_profile_capability_enable_disable_esm_examples_are_not_required(
+    document_factory, selector: str
+) -> None:
+    """Table 3.3-3 ESM rows are removable green examples, not profile requirements."""
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
     document = document_factory()

@@ -1,0 +1,64 @@
+contract_version: "0.1"
+
+service:
+  name: example-esm-capability-service
+  version: "0.1.0"
+  kind: service
+  description: >-
+    Illustrative machine-readable representation of the OMS v2.5 Capability
+    Enable/Disable function using the upstream ESM example. This is an example
+    of this independent format, not an official OMS artifact.
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+sources:
+  - id: oms-service-contract-instructions-v25
+    title: OMS Service Contract Instructions v2.5
+    document_number: OMSC-INS-003
+    revision: M
+    date: "2026-01-22"
+    uri: https://github.com/open-arsenal/oms/blob/726272bd0390982a759c91a9cf4e13b81c2b510b/docs_official/14_2_OMSC-INS-003_RevM_ServiceContractInstructions_DandD_v2_5.docx
+
+functions:
+  - id: esm-capability-enable-disable
+    name: ESM Capability Enable/Disable
+    category: required
+    required_group: capability
+    applicability: applicable
+    description: >-
+      Required Capability-related command/status exchange example. Message
+      primitives are intentionally omitted and are expected to be resolved from
+      the selected UCI schema.
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: >-
+          Required Capability-related Functions / Capability Enable/Disable
+    exchanges:
+      - id: esm-settings-command-input
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: ESM_SettingsCommand
+        topic: ESM_SettingsCommand
+        timing:
+          kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: Capability Enable/Disable / Inputs and Outputs
+
+      - id: esm-settings-command-status-output
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: ESM_SettingsCommandStatus
+        topic: ESM_SettingsCommandStatus
+        timing:
+          kind: on_demand
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: Capability Enable/Disable / Inputs and Outputs
+            note: >-
+              Upstream timing values are TBD, so no numerical response-time
+              values are encoded.

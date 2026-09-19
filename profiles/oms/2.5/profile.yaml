@@ -27,3 +27,28 @@ required_functions:
     traceability:
       - source: oms-service-contract-instructions-v25
         locator: 3.1.2 Service Status
+    required_exchanges:
+      - kind: oms_message
+        message: ServiceStatus
+        direction: output
+        mandate: mandatory
+        timing_kind: periodic
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.1.2.4 / Table 3.1-2 / ServiceStatus
+      - kind: oms_message
+        message: ServiceStatusDataRequest
+        direction: input
+        mandate: mandatory
+        timing_kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.1.2.4 / Table 3.1-2 / ServiceStatusDataRequest
+      - kind: oms_message
+        message: ServiceStatusDataRequestStatus
+        direction: output
+        mandate: mandatory
+        timing_kind: on_demand
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.1.2.4 / Table 3.1-2 / ServiceStatusDataRequestStatus

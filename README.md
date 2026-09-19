@@ -36,7 +36,12 @@ python tools/validate.py \
 
 For `service` and `isolator`, it requires the canonical functions **Service
 Initialization** and **Service Status** with required/service/applicable
-metadata. Subsystem applicability is conditional upstream and is not inferred.
+metadata. It also requires the three minimum Service Status OMS-message shapes:
+periodic `ServiceStatus` output, asynchronous `ServiceStatusDataRequest` input,
+and on-demand `ServiceStatusDataRequestStatus` output. It does not yet validate
+Service Initialization exchanges, numerical timing values, SOAC selection,
+Appendix C content, UCI primitives, or workflow/state behavior. Subsystem
+applicability is conditional upstream and is not inferred.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).

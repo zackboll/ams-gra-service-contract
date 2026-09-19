@@ -41,8 +41,20 @@ traceability prose. A future contract version may introduce explicit
 standard-function identity if real consumers show that name matching is
 insufficient.
 
-This profile validates required-function inventory and metadata only. It does
-not yet validate each function's complete exchange inventory.
+For the uniquely matched **Service Status** function, the profile additionally
+requires these minimum OMS-message exchange shapes, regardless of local
+function/exchange IDs or declaration order:
+
+- `ServiceStatus`: output, mandatory, periodic;
+- `ServiceStatusDataRequest`: input, mandatory, asynchronous; and
+- `ServiceStatusDataRequestStatus`: output, mandatory, on-demand.
+
+Additional valid exchange rows are allowed. The profile intentionally does not
+fix topics, operational attributes/SOAC selection, subscription groups,
+numerical timing values, Appendix C content, contract traceability, or UCI
+message primitives. It does not yet validate Service Initialization exchange
+inventory, complete Required Subsystem Function inventory, complete
+capability-related Function inventory, or workflow/state behavior.
 
 ## Partial reference examples
 

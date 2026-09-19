@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from tools.validate import load_document, profile_diagnostics, validate_path, validate_profile_path
+from tools.validate import (
+    load_document,
+    profile_diagnostics,
+    validate_path,
+    validate_profile_document,
+    validate_profile_path,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE_PATH = ROOT / "profiles" / "oms" / "2.5" / "profile.yaml"
@@ -141,6 +147,7 @@ def test_oms_25_profile_stops_after_oms_version_mismatch() -> None:
     assert len(messages) == 1
     assert "requires OMS version '2.5'" in messages[0]
     assert not any("requires function" in message for message in messages)
+    assert not any("exchange" in message for message in messages)
 
 
 def test_oms_25_profile_stops_after_contract_version_mismatch() -> None:
@@ -157,3 +164,105 @@ def test_oms_25_profile_stops_after_contract_version_mismatch() -> None:
     assert len(messages) == 1
     assert "does not support contract version '9.9'" in messages[0]
     assert not any("requires function" in message for message in messages)
+
+
+def _complete_service_status_document() -> dict:
+    return load_document(ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "service-required-functions.yaml")
+
+
+@pytest.mark.parametrize(
+    ("message", "field", "value"),
+    [
+        ("ServiceStatus", "direction", "input"),
+        ("ServiceStatus", "mandate", "optional"),
+        ("ServiceStatus", "timing.kind", "on_demand"),
+    ],
+)
+def test_oms_25_profile_rejects_service_status_exchange_shape_mismatches(
+    message: str, field: str, value: str
+) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    exchange = next(item for item in document["functions"][1]["exchanges"] if item["message"] == message)
+    if field == "timing.kind":
+        exchange["timing"]["kind"] = value
+    else:
+        exchange[field] = value
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert message in diagnostics[0].message
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["ServiceStatus", "ServiceStatusDataRequest", "ServiceStatusDataRequestStatus"],
+)
+def test_oms_25_profile_rejects_each_missing_service_status_exchange(message: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    exchanges = document["functions"][1]["exchanges"]
+    document["functions"][1]["exchanges"] = [item for item in exchanges if item["message"] != message]
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert message in diagnostics[0].message
+
+
+def test_oms_25_profile_allows_additional_service_status_exchanges() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["functions"][1]["exchanges"].append(
+        {
+            "id": "local-extra-row",
+            "kind": "non_oms_message",
+            "direction": "input",
+            "mandate": "optional",
+            "name": "LocalIntegrationMessage",
+            "timing": {"kind": "asynchronous"},
+        }
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_rejects_duplicate_required_exchange_rules() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    duplicate = dict(profile["required_functions"][1]["required_exchanges"][0])
+    duplicate["traceability"] = [
+        {"source": "oms-service-contract-instructions-v25", "locator": "different prose"}
+    ]
+    profile["required_functions"][1]["required_exchanges"].append(duplicate)
+
+    diagnostics = validate_profile_document(profile)
+    assert any("duplicate required exchange rule" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_rejects_unknown_required_exchange_traceability_source() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][1]["required_exchanges"][0]["traceability"][0]["source"] = "unknown-source"
+
+    diagnostics = validate_profile_document(profile)
+    assert any("unknown source id 'unknown-source'" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_schema_rejects_required_exchange_primitive() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][1]["required_exchanges"][0]["primitive"] = "D"
+
+    diagnostics = validate_profile_document(profile)
+    assert any("primitive" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_service_status_partial_example_lacks_only_service_initialization_for_oms_profile() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+
+    diagnostics = validate_path(ROOT / "examples" / "service-status.yaml", profile)
+    assert len(diagnostics) == 1
+    assert "Service Initialization" in diagnostics[0].message

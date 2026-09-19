@@ -6,6 +6,13 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Capability Operations (Section 3.3.2.3/Table 3.3-4) OOXML exchange
+  classification. `Entity`/`SignalReport` are removable green ESM examples and
+  `ProductMetadata`/`ProductLocation`/`ImageFile` removable green PO/POST
+  examples in every matcher-owned field; `ImageFile` Data Transfer metadata is
+  green example content too. Generic Operations prose supplies no universal
+  exchange shape; fixed Preconditions remain behavioral. No domain heuristic,
+  profile rule, schema, validator, diagnostic, or public example was added.
 - OMS 2.5 Capability Enable/Disable (Section 3.3.2.2/Table 3.3-3) OOXML
   exchange classification. `ESM_SettingsCommand` and
   `ESM_SettingsCommandStatus` are removable green examples in every

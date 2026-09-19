@@ -219,6 +219,18 @@ response-pair model, so no ESM, literal placeholder, name-template, or partial
 exchange profile rule is encoded. See
 [Task 029 evidence](task-029-oms25-capability-enable-disable.md).
 
+Task 030 completes the Section 3.3 exchange-table classification with Capability
+Operations Table 3.3-4. `Entity` and `SignalReport` are explicitly green ESM
+examples; `ProductMetadata`, `ProductLocation`, and `ImageFile` are explicitly
+green PO/POST examples. Every matcher-owned row field is removable guidance;
+for `ImageFile`, DE=`DT`, protocol `NFS`, type `Image`, format `JPEG`, sharing
+`Shared Use`, and Appendix C `TBD` are green example values too. Mixed generic
+heading/Description prose identifies only a Capability Operations role, while
+fixed Preconditions remain behavioral and the Reporting Interval guidance does
+not establish timing. No row is universal, no domain-specific group is
+profile-enforced, and no selector/name heuristic is used. See
+[Task 030 evidence](task-030-oms25-capability-operations.md).
+
 The profile also does not validate conditional Section 3.1 Service Functions for
 Platform-hosted Adapters or other OMS-version profiles. It does not claim full
 OMS Subsystem compliance.

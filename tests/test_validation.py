@@ -300,6 +300,33 @@ def test_oms_25_profile_capability_enable_disable_esm_examples_are_not_required(
     assert profile_diagnostics(document, profile) == []
 
 
+@pytest.mark.parametrize("document_factory", [_complete_service_status_document, _complete_subsystem_document])
+@pytest.mark.parametrize(
+    ("selector", "field"),
+    [
+        ("Entity", "message"),
+        ("SignalReport", "message"),
+        ("ProductMetadata", "message"),
+        ("ProductLocation", "message"),
+        ("ImageFile", "name"),
+    ],
+)
+def test_oms_25_profile_capability_operations_domain_examples_are_not_required(
+    document_factory, selector: str, field: str
+) -> None:
+    """Table 3.3-4 ESM and PO/POST groups are removable domain examples."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = document_factory()
+
+    assert all(
+        exchange.get(field) != selector
+        for function in document["functions"]
+        for exchange in function["exchanges"]
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
 @pytest.mark.parametrize(
     "name",
     [

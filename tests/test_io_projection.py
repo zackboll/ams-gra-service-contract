@@ -116,7 +116,8 @@ def test_resolution_join_fails_closed_when_message_differs() -> None:
 def test_resolver_cli_output_is_unchanged_for_invalid_contract() -> None:
     result = subprocess.run([sys.executable, "tools/uci_resolver.py", "resolve", "--contract", "missing.yaml", "--baseline-manifest", "missing.yaml", "--baseline-source-root", "."], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 1
-    assert result.stdout.startswith("FAIL could not parse contract missing.yaml:")
+    assert result.stdout.startswith("FAIL contract input")
+    assert "SC_SCHEMA could not parse contract missing.yaml:" in result.stdout
 
 
 def test_schema_source_cli_failures_are_clear_and_resolver_compatible(tmp_path: Path) -> None:

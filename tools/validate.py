@@ -49,6 +49,8 @@ OP_UNSUPPORTED_CONTRACT_VERSION = "OP_UNSUPPORTED_CONTRACT_VERSION"
 OP_OMS_VERSION_MISMATCH = "OP_OMS_VERSION_MISMATCH"
 OP_MISSING_REQUIRED_FUNCTION = "OP_MISSING_REQUIRED_FUNCTION"
 OP_AMBIGUOUS_REQUIRED_FUNCTION = "OP_AMBIGUOUS_REQUIRED_FUNCTION"
+OP_MISSING_CAPABILITY_FUNCTION = "OP_MISSING_CAPABILITY_FUNCTION"
+OP_AMBIGUOUS_CAPABILITY_FUNCTION = "OP_AMBIGUOUS_CAPABILITY_FUNCTION"
 OP_FUNCTION_METADATA = "OP_FUNCTION_METADATA"
 OP_FUNCTION_APPLICABILITY = "OP_FUNCTION_APPLICABILITY"
 OP_MISSING_REQUIRED_EXCHANGE = "OP_MISSING_REQUIRED_EXCHANGE"
@@ -60,6 +62,7 @@ VALIDATION_DIAGNOSTIC_CODES = frozenset(
         OP_SCHEMA, OP_DUPLICATE_SOURCE, OP_DUPLICATE_FUNCTION, OP_DUPLICATE_APPLIES_TO,
         OP_UNKNOWN_TRACE_SOURCE, OP_DUPLICATE_EXCHANGE_RULE, OP_UNSUPPORTED_CONTRACT_VERSION,
         OP_OMS_VERSION_MISMATCH, OP_MISSING_REQUIRED_FUNCTION, OP_AMBIGUOUS_REQUIRED_FUNCTION,
+        OP_MISSING_CAPABILITY_FUNCTION, OP_AMBIGUOUS_CAPABILITY_FUNCTION,
         OP_FUNCTION_METADATA, OP_FUNCTION_APPLICABILITY, OP_MISSING_REQUIRED_EXCHANGE,
     }
 )
@@ -284,6 +287,19 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
                 )
             )
             duplicate_exchange_keys.remove(key)
+    capability_functions = profile.get("required_capability_functions", [])
+    for index, function in enumerate(capability_functions):
+        if not isinstance(function, dict):
+            continue
+        for trace_index, trace in enumerate(function.get("traceability", [])):
+            if isinstance(trace, dict) and trace.get("source") not in source_id_set:
+                diagnostics.append(
+                    Diagnostic(
+                        code=OP_UNKNOWN_TRACE_SOURCE,
+                        path=f"$.required_capability_functions[{index}].traceability[{trace_index}].source",
+                        message=f"unknown source id {trace.get('source')!r}",
+                    )
+                )
     return diagnostics
 
 
@@ -332,6 +348,58 @@ def required_exchange_matches(actual: dict[str, Any], requirement: dict[str, Any
         and actual.get("mandate") == requirement.get("mandate")
         and actual.get("timing", {}).get("kind") == requirement.get("timing_kind")
     )
+
+
+def _capability_requirement_applies(requirement: dict[str, Any], kind: Any, capabilities: list[Any]) -> bool:
+    if kind not in requirement["applies_to"]:
+        return False
+    condition = requirement.get("requires_position_information")
+    return condition is None or any(
+        isinstance(capability, dict) and capability.get("requires_position_information") == condition
+        for capability in capabilities
+    )
+
+
+def _capability_function_diagnostics(
+    functions: list[Any], requirement: dict[str, Any], profile_id: str, kind: str, capability_id: str | None,
+) -> list[Diagnostic]:
+    role = requirement["role"]
+    matches = [
+        (index, function)
+        for index, function in enumerate(functions)
+        if isinstance(function, dict)
+        and function.get("standard_role") == role
+        and (capability_id is None or function.get("capability") == capability_id)
+    ]
+    target = f" for capability {capability_id!r}" if capability_id is not None else ""
+    if not matches:
+        return [Diagnostic(
+            code=OP_MISSING_CAPABILITY_FUNCTION,
+            path="$.functions",
+            message=f"OMS profile {profile_id!r} requires role {role!r}{target} for {kind}",
+        )]
+    if len(matches) > 1:
+        return [Diagnostic(
+            code=OP_AMBIGUOUS_CAPABILITY_FUNCTION,
+            path="$.functions",
+            message=f"OMS profile {profile_id!r} has multiple functions with role {role!r}{target} for {kind}",
+        )]
+    index, function = matches[0]
+    diagnostics: list[Diagnostic] = []
+    for field in ("category", "required_group"):
+        if function.get(field) != requirement[field]:
+            diagnostics.append(Diagnostic(
+                code=OP_FUNCTION_METADATA,
+                path=f"$.functions[{index}].{field}",
+                message=f"OMS profile {profile_id!r} requires role {role!r}{target} to have {field} {requirement[field]!r} for {kind}",
+            ))
+    if function.get("applicability") != requirement["applicability"]:
+        diagnostics.append(Diagnostic(
+            code=OP_FUNCTION_APPLICABILITY,
+            path=f"$.functions[{index}].applicability",
+            message=f"OMS profile {profile_id!r} requires applicability {requirement['applicability']!r} for role {role!r}{target} for {kind}",
+        ))
+    return diagnostics
 
 
 def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
@@ -435,6 +503,17 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
                     f"{exchange_requirement['timing_kind']!r} for {kind}",
                 )
             )
+    capabilities = document.get("capabilities")
+    if not isinstance(capabilities, list):
+        return diagnostics
+    for requirement in profile.get("required_capability_functions", []):
+        if not _capability_requirement_applies(requirement, kind, capabilities):
+            continue
+        if requirement["per_capability"]:
+            for capability in sorted(capabilities, key=lambda item: item["id"]):
+                diagnostics.extend(_capability_function_diagnostics(functions, requirement, profile_id, kind, capability["id"]))
+        else:
+            diagnostics.extend(_capability_function_diagnostics(functions, requirement, profile_id, kind, None))
     return diagnostics
 
 

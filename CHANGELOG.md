@@ -6,6 +6,14 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Section 3.3 Capability function inventory profile: additive optional
+  `functions[].standard_role` supplies bounded role identity independent of
+  display names and IDs. Explicit non-empty Capability inventories trigger three
+  owned roles per Capability for Services/Subsystems and conditional one
+  component-level Position Information Processing role. New stable
+  `OP_MISSING_CAPABILITY_FUNCTION` and `OP_AMBIGUOUS_CAPABILITY_FUNCTION`
+  diagnostics identify Capability IDs. No Section 3.3 exchange minimum or
+  behavior rule is added.
 - Optional portable Capability identity and ownership model: explicit
   `capabilities` declarations preserve omitted-versus-empty semantics; each
   Capability has an ID, display name, and explicit position-information Boolean;

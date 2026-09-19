@@ -159,3 +159,41 @@ required_functions:
     traceability:
       - source: oms-service-contract-instructions-v25
         locator: 3.2.6 Subsystem Shutdown
+required_capability_functions:
+  - role: capability_status
+    applies_to: [service, subsystem]
+    category: required
+    required_group: capability
+    applicability: applicable
+    per_capability: true
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.3.2.1 Capability and Capability Status
+  - role: capability_enable_disable
+    applies_to: [service, subsystem]
+    category: required
+    required_group: capability
+    applicability: applicable
+    per_capability: true
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.3.2.2 Capability Enable/Disable
+  - role: capability_operations
+    applies_to: [service, subsystem]
+    category: required
+    required_group: capability
+    applicability: applicable
+    per_capability: true
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.3.2.3 Capability Operations
+  - role: position_information_processing
+    applies_to: [service, subsystem]
+    category: required
+    required_group: capability
+    applicability: applicable
+    per_capability: false
+    requires_position_information: true
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.3.1 Position Information Processing

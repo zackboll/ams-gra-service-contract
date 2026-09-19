@@ -58,6 +58,8 @@ ownership merely by orchestrating that layer.
 | `OP_OMS_VERSION_MISMATCH` | Contract OMS version differs from the profile OMS version. |
 | `OP_MISSING_REQUIRED_FUNCTION` | Required canonical function is absent. |
 | `OP_AMBIGUOUS_REQUIRED_FUNCTION` | Multiple contract functions match one canonical required function. |
+| `OP_MISSING_CAPABILITY_FUNCTION` | Required Capability role is absent; the message identifies its Capability ID when the role is per-Capability. |
+| `OP_AMBIGUOUS_CAPABILITY_FUNCTION` | Multiple contract functions match one required Capability role; the message identifies its Capability ID when applicable. |
 | `OP_FUNCTION_METADATA` | Required function category or required group is wrong. |
 | `OP_FUNCTION_APPLICABILITY` | Required function fixed or allowed applicability is wrong. |
 | `OP_MISSING_REQUIRED_EXCHANGE` | Required semantic exchange shape is absent. |

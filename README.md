@@ -61,12 +61,18 @@ explicitly identify its owner with `capability: esm`. References use the ID, not
 the display name, and are never inferred from function names, exchange names,
 UCI types, or descriptions. The omission of `capabilities` means Capability
 facts were not supplied; `capabilities: []` affirmatively declares zero
-Capabilities. This infrastructure does not itself impose OMS Section 3.3
-inventory rules. See [Task 031 design note](docs/task-031-capability-identity-ownership-model.md).
+Capabilities. OMS 2.5 profile validation uses optional `functions[].standard_role`
+for Section 3.3 role identity. It is distinct from ownership and never parsed
+from names, IDs, exchanges, or prose. With an explicit non-empty Capability
+inventory, Services and Subsystems require three owned roles per Capability; an
+Isolator does not. If any Capability requires position information, one
+component-level Position Information Processing role is required. No Section 3.3
+exchange minimum is added. See [Task 032 evidence](docs/task-032-oms25-capability-function-profile.md).
 
 ## Profile validation
 
-OMS 2.5 Capability Operations evidence is classified but not profile-enforced.
+OMS 2.5 Capability Operations exchange evidence is classified but not
+profile-enforced.
 Table 3.3-4's `Entity`/`SignalReport` rows are green ESM examples, while
 `ProductMetadata`/`ProductLocation`/`ImageFile` are green PO/POST examples; all
 matcher-owned fields and `ImageFile` Data Transfer metadata are removable

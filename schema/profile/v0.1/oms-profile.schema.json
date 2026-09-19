@@ -11,7 +11,8 @@
     "oms_version": {"type": "string", "minLength": 1},
     "contract_versions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
-    "required_functions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredFunction"}}
+    "required_functions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredFunction"}},
+    "required_capability_functions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredCapabilityFunction"}}
   },
   "$defs": {
     "identifier": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$", "minLength": 1},
@@ -44,6 +45,20 @@
         "allowed_applicability": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["applicable", "not_applicable"]}},
         "traceability": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/traceRef"}},
         "required_exchanges": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredExchange"}}
+      }
+    },
+    "requiredCapabilityFunction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "applies_to", "category", "required_group", "applicability", "per_capability", "traceability"],
+      "properties": {
+        "role": {"enum": ["capability_status", "capability_enable_disable", "capability_operations", "position_information_processing"]},
+        "applies_to": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["service", "subsystem", "isolator"]}},
+        "category": {"enum": ["required", "specific"]},
+        "required_group": {"enum": ["service", "subsystem", "capability"]},
+        "applicability": {"enum": ["applicable", "not_applicable"]},
+        "per_capability": {"type": "boolean"},
+        "requires_position_information": {"type": "boolean"},
+        "traceability": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/traceRef"}}
       }
     },
     "requiredExchange": {

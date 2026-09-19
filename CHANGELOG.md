@@ -6,6 +6,9 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Stable symbolic `IP_*` diagnostics for fail-closed Inputs/Outputs projection
+  joins, while preserving lower-layer `SC_*`, `SS_*`, and `UR_*` identities
+  through projection orchestration.
 - Stable symbolic `UR_*` diagnostics for UCI resolver parsing and resolution,
   while preserving `SC_*` contract and `SS_*` schema-source diagnostic
   ownership through resolver orchestration.

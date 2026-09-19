@@ -2,12 +2,18 @@ from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
 import pytest
 
-from tools.io_projection import InputsOutputsProjectionError, project_inputs_outputs, render_json, render_markdown
+from tools.io_projection import (
+    INPUTS_OUTPUTS_DIAGNOSTIC_CODES, IP_AMBIGUOUS_RESOLUTION,
+    IP_MESSAGE_MISMATCH, IP_MISSING_RESOLUTION, IP_UNEXPECTED_RESOLUTION,
+    InputsOutputsProjectionError, project_inputs_outputs, render_json,
+    render_markdown,
+)
 from tools.uci_resolver import ResolvedOmsExchange
 from tools.validate import load_document
 
@@ -22,6 +28,14 @@ def oms_resolution(function_id: str, exchange_id: str, message: str = "MessageA"
 def real_resolution(function_id: str, exchange_id: str, message: str, primitive: str) -> ResolvedOmsExchange:
     namespace = "https://www.vdl.afrl.af.mil/programs/oam"
     return ResolvedOmsExchange(function_id, exchange_id, message, f"{{{namespace}}}{message}", primitive, f"{{{namespace}}}{message}MT", "uci-2.5-baseline", "OAC-STD-UCI_V2.5/UCI_MessageDefinitions_v2_5_0.xsd")
+
+
+def manifest_for(xsd: bytes) -> dict[str, object]:
+    return {"manifest_version": "0.1", "id": "baseline", "schema_family": "uci", "schema_version": "2.5", "role": "baseline", "source": {"kind": "git", "repository": "https://example.test/uci.git", "revision": "a" * 40}, "root_schema": "message.xsd", "files": [{"path": "message.xsd", "sha256": hashlib.sha256(xsd).hexdigest()}]}
+
+
+def run_projection(contract_path: Path, manifest_path: Path, source: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run([sys.executable, "tools/io_projection.py", "--contract", str(contract_path), "--baseline-manifest", str(manifest_path), "--baseline-source-root", str(source), "--format", "json"], cwd=ROOT, text=True, capture_output=True, check=False)
 
 
 def contract() -> dict:
@@ -97,20 +111,26 @@ def test_json_is_deterministic_and_keeps_canonical_values() -> None:
     assert rendered.endswith("\n")
 
 
-@pytest.mark.parametrize("resolved, match", [([], "missing OMS resolution"), ([oms_resolution("missing", "message")], "does not exist")])
-def test_resolution_join_fails_closed(resolved: list[ResolvedOmsExchange], match: str) -> None:
-    with pytest.raises(InputsOutputsProjectionError, match=match):
+def test_inputs_outputs_diagnostic_code_inventory_is_stable() -> None:
+    assert len(INPUTS_OUTPUTS_DIAGNOSTIC_CODES) == 4
+    assert all(re.fullmatch(r"IP_[A-Z0-9_]+", code) for code in INPUTS_OUTPUTS_DIAGNOSTIC_CODES)
+
+
+@pytest.mark.parametrize(
+    ("resolved", "code", "message"),
+    [
+        ([oms_resolution("missing", "message")], IP_UNEXPECTED_RESOLUTION, "'missing'/'message'"),
+        ([oms_resolution("first", "message"), oms_resolution("first", "message")], IP_AMBIGUOUS_RESOLUTION, "'first'/'message'"),
+        ([oms_resolution("first", "message", "MessageB")], IP_MESSAGE_MISMATCH, "'MessageA', resolved message 'MessageB'"),
+        ([], IP_MISSING_RESOLUTION, "'first'/'message'"),
+    ],
+)
+def test_resolution_join_fails_closed_with_exact_projection_code(resolved: list[ResolvedOmsExchange], code: str, message: str) -> None:
+    with pytest.raises(InputsOutputsProjectionError) as raised:
         project_inputs_outputs(contract(), resolved)
-
-
-def test_duplicate_resolution_join_fails_closed() -> None:
-    with pytest.raises(InputsOutputsProjectionError, match="ambiguous OMS resolution"):
-        project_inputs_outputs(contract(), [oms_resolution("first", "message"), oms_resolution("first", "message")])
-
-
-def test_resolution_join_fails_closed_when_message_differs() -> None:
-    with pytest.raises(InputsOutputsProjectionError, match=r"MessageA.*MessageB"):
-        project_inputs_outputs(contract(), [oms_resolution("first", "message", "MessageB")])
+    assert raised.value.code == code
+    assert message in raised.value.message
+    assert str(raised.value).startswith(f"{code} ")
 
 
 def test_resolver_cli_output_is_unchanged_for_invalid_contract() -> None:
@@ -143,14 +163,44 @@ def test_projection_cli_handles_a_synthetic_verified_source(tmp_path: Path) -> N
     source = tmp_path / "source"
     source.mkdir()
     (source / "message.xsd").write_bytes(xsd)
-    manifest = {"manifest_version": "0.1", "id": "baseline", "schema_family": "uci", "schema_version": "2.5", "role": "baseline", "source": {"kind": "git", "repository": "https://example.test/uci.git", "revision": "a" * 40}, "root_schema": "message.xsd", "files": [{"path": "message.xsd", "sha256": hashlib.sha256(xsd).hexdigest()}]}
+    manifest = manifest_for(xsd)
     contract_path = tmp_path / "contract.json"
     manifest_path = tmp_path / "manifest.json"
     contract_path.write_text(json.dumps(data), encoding="utf-8")
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-    result = subprocess.run([sys.executable, "tools/io_projection.py", "--contract", str(contract_path), "--baseline-manifest", str(manifest_path), "--baseline-source-root", str(source), "--format", "json"], cwd=ROOT, text=True, capture_output=True, check=False)
+    result = run_projection(contract_path, manifest_path, source)
     assert result.returncode == 0
     assert json.loads(result.stdout)["functions"][0]["exchanges"][0]["uci_primitive"] == "Status-1"
+
+
+@pytest.mark.parametrize("failure", ["invalid-contract", "tampered-source", "unknown-message", "malformed-xml"])
+def test_projection_cli_preserves_lower_layer_diagnostic_ownership(tmp_path: Path, failure: str) -> None:
+    data = contract()
+    xsd = b'''<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test" xmlns:tns="urn:test"><xs:complexType name="MessageAMT"/><xs:element name="MessageA" type="tns:MessageAMT"><xs:annotation><xs:documentation>UCI_PRIMITIVE: Status-1.</xs:documentation></xs:annotation></xs:element></xs:schema>'''
+    source = tmp_path / "source"
+    source.mkdir()
+    source_bytes = xsd
+    expected = {"invalid-contract": "SC_SCHEMA", "tampered-source": "SS_HASH_MISMATCH", "unknown-message": "UR_UNKNOWN_MESSAGE", "malformed-xml": "UR_XML_PARSE"}[failure]
+    if failure == "invalid-contract":
+        del data["functions"]
+    elif failure == "tampered-source":
+        source_bytes = b"tampered"
+    elif failure == "unknown-message":
+        data["functions"][0]["exchanges"][0]["message"] = "DoesNotExist"
+    elif failure == "malformed-xml":
+        xsd = b"<xs:schema"
+        source_bytes = xsd
+    (source / "message.xsd").write_bytes(source_bytes)
+    contract_path = tmp_path / "contract.json"
+    manifest_path = tmp_path / "manifest.json"
+    contract_path.write_text(json.dumps(data), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest_for(xsd)), encoding="utf-8")
+    result = run_projection(contract_path, manifest_path, source)
+    assert result.returncode == 1
+    assert expected in result.stdout
+    assert "Traceback" not in result.stdout
+    assert "Traceback" not in result.stderr
+    assert "IP_" not in result.stdout
 
 
 def test_source_example_projection_preserves_expected_uci_identities() -> None:

@@ -96,7 +96,7 @@ The normative data model is JSON-compatible. A producer may serialize it as JSON
 
 ## 7. Why not store message primitive in the contract?
 
-Because the upstream OMS Service Contract instructions tie Message Primitive to UCI's `PRIMITIVE_TYPE` annotation. Copying it would create two sources of truth:
+Because the OMS Service Contract material makes Message Primitive UCI-owned metadata. In the pinned public UCI 2.5 XSD it is represented by `UCI_PRIMITIVE:` documentation metadata. Copying it would create two sources of truth:
 
 ```text
 UCI says:      Command-2

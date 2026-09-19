@@ -32,7 +32,7 @@ The core v0.1 fields correspond directly to the upstream Inputs and Outputs tabl
 
 | OMS Service Contract column/concept | v0.1 | Ownership / behavior |
 |---|---|---|
-| Message Primitive (MP) | **Not stored** | Derived from UCI `PRIMITIVE_TYPE`. This avoids a duplicate source of truth. |
+| Message Primitive (MP) | **Not stored** | Derived from UCI-owned metadata; public UCI 2.5 uses `UCI_PRIMITIVE:` documentation. This avoids a duplicate source of truth. |
 | Input / Output (I/O) | `direction` | `input` or `output`. |
 | Data Exchange (DE) | `kind` | Explicit machine discriminator; see mapping below. |
 | Data Exchange Name | `message` or `name` | `message` for OMS Message; `name` for other exchange kinds. |
@@ -45,7 +45,7 @@ The core v0.1 fields correspond directly to the upstream Inputs and Outputs tabl
 
 ## 3. Message Primitive is intentionally derived
 
-The upstream instructions state that the Message Primitive column corresponds to the `PRIMITIVE_TYPE` tag annotation in the UCI schema message definitions file.
+The OMS instructions describe the Message Primitive relationship as UCI-owned. The pinned public UCI 2.5 schema message definitions serialize the value in `xs:documentation` entries beginning `UCI_PRIMITIVE:`.
 
 Therefore this is intentionally invalid as a design pattern:
 
@@ -64,7 +64,7 @@ selected UCI schema
     |
     +--> message definition
     |
-    +--> PRIMITIVE_TYPE
+    +--> UCI_PRIMITIVE: documentation
     |
     v
 resolved primitive

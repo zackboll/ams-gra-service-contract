@@ -44,6 +44,15 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 `IP_*`; preparation failures retain `SC_*`, `SS_*`, or `UR_*`. See
 [docs/inputs-outputs-projection.md](docs/inputs-outputs-projection.md).
 
+## Published-contract exercises
+
+The first evidence-driven exercises against published OMS 2.5 Markdown Service
+Contracts are recorded in
+[docs/task-033-real-service-contract-exercises.md](docs/task-033-real-service-contract-exercises.md).
+They intentionally do not turn incomplete published documentation into invented
+v0.1 YAML. The exercise distinguishes complete authored-contract semantics from
+partial observations extracted from existing documentation.
+
 ## Capability identity and ownership
 
 Portable v0.1 contracts may optionally declare explicit Capability facts:

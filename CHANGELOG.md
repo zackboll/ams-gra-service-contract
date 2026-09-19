@@ -6,6 +6,13 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Evidence-driven exercise of two published OMS 2.5 Service Contracts (RF FM
+  Demod and Graupel), including field-level provenance/representability matrices,
+  independent profile comparison, and real UCI 2.5 resolver results. Neither
+  incomplete Markdown source was converted into invented YAML; schema and profile
+  acceptance rules are unchanged. Regressions confirm omitted Capabilities are
+  not inferred from RF message names and that Isolators never receive Section 3.3
+  requirements from Capability-like terms.
 - OMS 2.5 Section 3.3 Capability function inventory profile: additive optional
   `functions[].standard_role` supplies bounded role identity independent of
   display names and IDs. Explicit non-empty Capability inventories trigger three

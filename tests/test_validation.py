@@ -325,6 +325,38 @@ def test_oms_25_profile_valid_contracts_without_capabilities_retain_their_result
     assert profile_diagnostics(document, profile) == []
 
 
+def test_oms_25_profile_does_not_infer_capabilities_from_real_source_message_names() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["functions"].append({
+        "id": "rf-fm-demod-observed-messages", "name": "RF FM Demod observed messages",
+        "category": "specific", "applicability": "applicable",
+        "description": "Names copied from published RF FM Demod documentation; not Capability declarations.",
+        "exchanges": [
+            {"id": "position-report", "kind": "oms_message", "direction": "input", "mandate": "optional", "message": "PositionReport", "topic": "observed.position", "timing": {"kind": "asynchronous"}},
+            {"id": "signal-report", "kind": "oms_message", "direction": "output", "mandate": "optional", "message": "SignalReport", "topic": "observed.signal", "timing": {"kind": "asynchronous"}},
+        ],
+    })
+
+    assert "capabilities" not in document
+    assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_never_applies_section_33_to_isolator_with_capability_like_terms() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["service"]["kind"] = "isolator"
+    document["capabilities"] = [{"id": "display", "name": "Capability-like display term", "requires_position_information": True}]
+    document["functions"].append({
+        "id": "capability-like-observed-input", "name": "Capability SignalReport observer",
+        "category": "specific", "applicability": "applicable", "exchanges": [],
+    })
+
+    assert profile_diagnostics(document, profile) == []
+
+
 CAPABILITY_ROLES = ["capability_status", "capability_enable_disable", "capability_operations"]
 
 

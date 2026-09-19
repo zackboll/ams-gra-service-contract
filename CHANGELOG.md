@@ -6,6 +6,8 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Shared YAML 1.2-compatible, JSON-compatible input loading with duplicate-key rejection for contracts, profiles, and schema-source manifests.
+- Explicit project boundary for non-normative reference validator/resolver tooling and intentionally limited UCI declaration resolution.
 - Opt-in OMS 2.5 Required Service Function profile validation.
 - Automated repository text-hygiene enforcement.
 - UCI 2.5 schema-source manifest with immutable source revision and SHA-256 verification.

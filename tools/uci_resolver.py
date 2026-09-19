@@ -9,13 +9,14 @@ import re
 from typing import Any
 from defusedxml import ElementTree
 from defusedxml.common import DefusedXmlException
-import yaml
 try:
     from tools.schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
     from tools.validate import validate_document
+    from tools.yaml_support import YamlInputError, load_path
 except ModuleNotFoundError:
     from schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
     from validate import validate_document
+    from yaml_support import YamlInputError, load_path
 
 XSD_NAMESPACE = "http://www.w3.org/2001/XMLSchema"
 XSD_SCHEMA = f"{{{XSD_NAMESPACE}}}schema"
@@ -193,9 +194,8 @@ def resolve_contract_messages(contract: Any, verified_schema_source_set: Verifie
 
 def _load_contract(path: Path) -> Any:
     try:
-        with path.open(encoding="utf-8") as stream:
-            return yaml.safe_load(stream)
-    except (OSError, yaml.YAMLError) as exc:
+        return load_path(path)
+    except YamlInputError as exc:
         raise UciResolverError(f"could not parse contract {path}: {exc}") from exc
 
 def main(argv: list[str] | None = None) -> int:
@@ -207,7 +207,11 @@ def main(argv: list[str] | None = None) -> int:
     resolve.add_argument("--baseline-source-root", type=Path, required=True)
     resolve.add_argument("--extension", nargs=2, action="append", metavar=("MANIFEST", "SOURCE_ROOT"), default=[])
     args = parser.parse_args(argv)
-    contract = _load_contract(args.contract)
+    try:
+        contract = _load_contract(args.contract)
+    except UciResolverError as exc:
+        print(f"FAIL {exc}")
+        return 1
     baseline, diagnostics = validate_manifest_path(args.baseline_manifest.resolve())
     extension_results = [validate_manifest_path(Path(manifest).resolve()) for manifest, _ in args.extension]
     diagnostics.extend(item for _, items in extension_results for item in items)

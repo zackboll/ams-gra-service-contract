@@ -6,7 +6,7 @@ Thank you for helping improve the machine-readable Service Contract experiment.
 
 Changes should preserve four boundaries:
 
-1. this repository specifies a portable contract format, not a language backend;
+1. this repository specifies a portable contract format and hosts non-normative reference conformance/resolution tooling, not a language backend or standardized generator IR;
 2. UCI-owned message-definition facts should be resolved from UCI, not copied here;
 3. upstream semantics should be represented faithfully and cited; and
 4. new fields should have concrete semantics and a demonstrated consumer/use case.

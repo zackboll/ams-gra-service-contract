@@ -54,7 +54,13 @@ Contract Model -- uci_schema_version --> toolchain schema-source selection
      Ada        Rust       C++      deployment/docs
 ```
 
-The **Resolved Service IR** should be an implementation detail of the generator. It may contain data not present in the portable contract, such as:
+The **Resolved Service IR** is intentionally consumer-specific, not a normative
+serialized resolved-contract format or cross-generator API. The repository's
+Python `VerifiedSchemaSourceSet`, `UciMessageDefinition`, `UciTypeDeclaration`,
+`ParsedXsdDocument`, and `ResolvedOmsExchange` dataclasses are reference models
+used to exercise semantics; a conforming consumer may implement those semantics
+independently in any language. A generator's IR may contain data not present in
+the portable contract, such as:
 
 ```text
 ResolvedExchange

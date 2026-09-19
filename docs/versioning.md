@@ -88,9 +88,11 @@ through `compatible_baseline_versions`; it does not pretend its own version is
 the UCI baseline version. Contract declaration order gives deterministic schema
 set composition order, not implicit override precedence.
 
-XSD namespace/message parsing remains future work. Until a resolver implements
-it, toolchains must not infer message resolution or precedence from extension
-ordering.
+The reference resolver already performs namespace-aware message declaration and
+primitive resolution and resolves each primitive-tagged message to its exact
+global type declaration identity. It still does not infer override precedence:
+zero, one, and multiple matching declarations remain unknown, resolved, and
+ambiguous respectively.
 
 ## 7. AMS GRA version
 
@@ -116,7 +118,9 @@ This identifies the software implementation described by the contract. It is ind
 
 ## 9. Generator version
 
-The code generator is outside this repository and should have its own release/version.
+Language-specific code generators are outside this repository and should have
+their own release/version. The repository's reference resolver is non-normative
+tooling, not a generator backend or standardized generator IR.
 
 Generated output should ideally record a manifest similar to:
 

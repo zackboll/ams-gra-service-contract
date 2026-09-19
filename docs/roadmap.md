@@ -22,9 +22,9 @@ Goals:
 
 Explicitly out of scope:
 
-- Complete UCI type-model parsing (verified source loading, global message/type
+- Complete UCI type-layout parsing (verified source loading, global message/type
   declaration identity, namespace-aware QName resolution, and primitive extraction
-  are implemented; type contents are not);
+  are implemented; type contents are intentionally not);
 - code generators;
 - behavioral DSL;
 - formal proof semantics.
@@ -33,13 +33,20 @@ Explicitly out of scope:
 
 Potential goals driven by real implementation experience:
 
-- complete UCI type-model parsing beyond the implemented message/type declaration resolver;
 - explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (initial OMS 2.5 Required
   Service Functions profile implemented; further profile/resolver work remains);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection;
-- canonical diagnostic codes.
+- canonical diagnostic codes;
+- real Service Contract exercises, cross-version validation, mature diagnostics,
+  and first independent downstream consumers.
+
+A full UCI type-layout parser is not an implied next milestone. It would require
+substantial XSD support (content models, inheritance, members, cardinality,
+attributes, restrictions, anonymous types, imports/includes, and built-ins) and
+belongs in a downstream binding/code-generator or separate reusable
+language-neutral schema library only if real consumers demonstrate that need.
 
 ## Candidate v0.3 — Behavioral model exploration
 

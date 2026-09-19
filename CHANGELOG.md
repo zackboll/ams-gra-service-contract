@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Optional explicit author-decision overlays for completion worksheets. Decisions
+  separately select exact evidence candidates or supply scalar author values,
+  retain evidence/provenance, and use stable decision-specific `CA_*`
+  diagnostics. They do not generate, edit, map, or apply Service Contracts, and
+  do not establish profile satisfaction. The IR Search and Track evidence pins
+  the correct `sk-skills` repository URI and published configuration field names.
 - Provenance-preserving, non-normative completion worksheet tooling with a
   standalone tooling schema, `CA_*` diagnostics, deterministic Markdown/JSON
   rendering, profile-derived fixed requirements, and the IR Search and Track

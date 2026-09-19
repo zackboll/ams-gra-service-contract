@@ -20,6 +20,7 @@ except ModuleNotFoundError:  # Support direct execution as ``python tools/comple
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "tooling" / "completion" / "v0.1" / "completion-input.schema.json"
+DECISIONS_SCHEMA_PATH = ROOT / "schema" / "tooling" / "completion" / "v0.1" / "completion-decisions.schema.json"
 
 CA_SCHEMA = "CA_SCHEMA"
 CA_DUPLICATE_SOURCE = "CA_DUPLICATE_SOURCE"
@@ -27,10 +28,16 @@ CA_DUPLICATE_CANDIDATE = "CA_DUPLICATE_CANDIDATE"
 CA_UNKNOWN_SOURCE = "CA_UNKNOWN_SOURCE"
 CA_UNSUPPORTED_CONTRACT_VERSION = "CA_UNSUPPORTED_CONTRACT_VERSION"
 CA_OMS_VERSION_MISMATCH = "CA_OMS_VERSION_MISMATCH"
+CA_DECISION_SCHEMA = "CA_DECISION_SCHEMA"
+CA_DUPLICATE_DECISION_TARGET = "CA_DUPLICATE_DECISION_TARGET"
+CA_UNKNOWN_CANDIDATE = "CA_UNKNOWN_CANDIDATE"
+CA_DECISION_TARGET_MISMATCH = "CA_DECISION_TARGET_MISMATCH"
 
 COMPLETION_ASSISTANT_DIAGNOSTIC_CODES = frozenset({
     CA_SCHEMA, CA_DUPLICATE_SOURCE, CA_DUPLICATE_CANDIDATE, CA_UNKNOWN_SOURCE,
     CA_UNSUPPORTED_CONTRACT_VERSION, CA_OMS_VERSION_MISMATCH,
+    CA_DECISION_SCHEMA, CA_DUPLICATE_DECISION_TARGET, CA_UNKNOWN_CANDIDATE,
+    CA_DECISION_TARGET_MISMATCH,
 })
 
 
@@ -45,9 +52,19 @@ def load_completion_schema() -> dict[str, Any]:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
+def load_decisions_schema() -> dict[str, Any]:
+    return json.loads(DECISIONS_SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
 def completion_schema_diagnostics(document: Any) -> list[Diagnostic]:
     validator = Draft202012Validator(load_completion_schema(), format_checker=FormatChecker())
     return [Diagnostic(CA_SCHEMA, _format_json_path(error.absolute_path), error.message)
+            for error in sorted(validator.iter_errors(document), key=lambda error: list(error.absolute_path))]
+
+
+def decisions_schema_diagnostics(document: Any) -> list[Diagnostic]:
+    validator = Draft202012Validator(load_decisions_schema(), format_checker=FormatChecker())
+    return [Diagnostic(CA_DECISION_SCHEMA, _format_json_path(error.absolute_path), error.message)
             for error in sorted(validator.iter_errors(document), key=lambda error: list(error.absolute_path))]
 
 
@@ -91,6 +108,35 @@ def load_completion_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
     return document, validate_completion_document(document)
 
 
+def validate_decisions_document(document: Any, completion_document: dict[str, Any]) -> list[Diagnostic]:
+    diagnostics = decisions_schema_diagnostics(document)
+    if diagnostics:
+        return diagnostics
+    decisions = document["decisions"]
+    targets = [decision["target"] for decision in decisions]
+    diagnostics = [Diagnostic(CA_DUPLICATE_DECISION_TARGET, "$.decisions", f"duplicate decision target {target!r}")
+                   for target in sorted(_duplicates(targets))]
+    candidates = {candidate["id"]: candidate for candidate in completion_document["candidates"]}
+    for index, decision in enumerate(decisions):
+        candidate_id = decision.get("select_candidate")
+        if candidate_id is None:
+            continue
+        candidate = candidates.get(candidate_id)
+        if candidate is None:
+            diagnostics.append(Diagnostic(CA_UNKNOWN_CANDIDATE, f"$.decisions[{index}].select_candidate", f"unknown candidate id {candidate_id!r}"))
+        elif candidate["target"] != decision["target"]:
+            diagnostics.append(Diagnostic(CA_DECISION_TARGET_MISMATCH, f"$.decisions[{index}].target", f"decision target {decision['target']!r} does not match candidate {candidate_id!r} target {candidate['target']!r}"))
+    return diagnostics
+
+
+def load_decisions_path(path: Path, completion_document: dict[str, Any]) -> tuple[Any | None, list[Diagnostic]]:
+    try:
+        document = load_path(path)
+    except YamlInputError as exc:
+        return None, [Diagnostic(CA_DECISION_SCHEMA, "", f"could not parse {path}: {exc}")]
+    return document, validate_decisions_document(document, completion_document)
+
+
 def _value_sort_key(value: Any) -> tuple[str, str]:
     return type(value).__name__, json.dumps(value, ensure_ascii=False, sort_keys=True)
 
@@ -121,7 +167,7 @@ def _requirements(profile: dict[str, Any], kind: str) -> list[dict[str, Any]]:
     return requirements
 
 
-def build_worksheet(document: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
+def build_worksheet(document: dict[str, Any], profile: dict[str, Any], decisions_document: dict[str, Any] | None = None) -> dict[str, Any]:
     target = document["target"]
     candidates = sorted(document["candidates"], key=_candidate_sort_key)
     sources = {source["id"]: source for source in document["sources"]}
@@ -129,13 +175,28 @@ def build_worksheet(document: dict[str, Any], profile: dict[str, Any]) -> dict[s
     by_target: dict[str, list[dict[str, Any]]] = {}
     for candidate in evidence:
         by_target.setdefault(candidate["target"], []).append(candidate)
+    evidence_by_id = {candidate["id"]: candidate for candidate in evidence}
+    author_decisions: list[dict[str, Any]] = []
+    for decision in (decisions_document or {"decisions": []})["decisions"]:
+        if "select_candidate" in decision:
+            candidate = evidence_by_id[decision["select_candidate"]]
+            rendered = {"target": decision["target"], "decision_kind": "candidate", "value": candidate["value"],
+                        "candidate_id": candidate["id"], "source": candidate["source"], "provenance": candidate["provenance"]}
+        else:
+            rendered = {"target": decision["target"], "decision_kind": "explicit_value", "value": decision["value"]}
+        if "note" in decision:
+            rendered["note"] = decision["note"]
+        author_decisions.append(rendered)
+    author_decisions.sort(key=lambda decision: decision["target"])
+    decided_targets = {decision["target"] for decision in author_decisions}
     conflicts = [{"target": name, "candidates": items, "decision": "Explicit author decision required; no candidate is selected."}
                  for name, items in sorted(by_target.items()) if len({_value_sort_key(item["value"]) for item in items}) > 1]
-    decisions = [conflict["decision"] + f" Target: {conflict['target']}." for conflict in conflicts]
+    decisions = [conflict["decision"] + f" Target: {conflict['target']}." for conflict in conflicts if conflict["target"] not in decided_targets]
     if target["service_kind"] in {"service", "subsystem"}:
         decisions.append("Confirm Capability inventory: Capability facts not supplied / unknown; explicitly zero Capabilities; or one or more Capabilities.")
     return {"completion_version": document["completion_version"], "target": target, "candidates": evidence,
-            "conflicts": conflicts, "profile_requirements": _requirements(profile, target["service_kind"]),
+            "conflicts": conflicts, "author_decisions": author_decisions,
+            "resolved_targets": sorted(decided_targets), "profile_requirements": _requirements(profile, target["service_kind"]),
             "open_decisions": decisions}
 
 
@@ -167,20 +228,28 @@ def render_markdown(worksheet: dict[str, Any]) -> str:
     lines.extend(["", "## Candidate evidence", "", "| Target | Candidate value | Provenance | Source | Locator | Note |", "| --- | --- | --- | --- | --- | --- |"])
     for candidate in worksheet["candidates"]:
         lines.append("| " + " | ".join(_cell(candidate.get(key)) for key in ("target", "value", "provenance", "source_title", "locator", "note")) + " |")
-    lines.extend(["", "## Candidate conflicts / author decisions", ""])
+    lines.extend(["", "## Candidate conflicts", ""])
     if worksheet["conflicts"]:
         for conflict in worksheet["conflicts"]:
             values = ", ".join(_cell(candidate["value"]) for candidate in conflict["candidates"])
-            lines.append(f"- **{_cell(conflict['target'])}**: conflicting candidate values {values}. Explicit author decision required; no candidate is selected.")
+            suffix = "An explicit author decision is recorded." if conflict["target"] in worksheet["resolved_targets"] else "Explicit author decision required; no candidate is selected."
+            lines.append(f"- **{_cell(conflict['target'])}**: conflicting candidate values {values}. {suffix}")
     else:
         lines.append("- No distinct candidate values conflict. Candidates remain unconfirmed and unselected.")
+    lines.extend(["", "## Author decisions", ""])
+    if worksheet["author_decisions"]:
+        lines.extend(["| Target | Decision type | Value | Selected candidate | Provenance | Source | Note |", "| --- | --- | --- | --- | --- | --- | --- |"])
+        for decision in worksheet["author_decisions"]:
+            lines.append("| " + " | ".join(_cell(decision.get(key)) for key in ("target", "decision_kind", "value", "candidate_id", "provenance", "source", "note")) + " |")
+    else:
+        lines.append("- No explicit author decisions recorded.")
     lines.extend(["", "## OMS profile requirements", ""])
     for requirement in worksheet["profile_requirements"]:
         applicability = requirement["applicability"] if "applicability" in requirement else ", ".join(requirement["allowed_applicability"])
         lines.append(f"- **{_cell(requirement['name'])}** — component kind: {_cell(requirement['component_kind'])}; category: {_cell(requirement['category'])}; required group: {_cell(requirement['required_group'])}; applicability: {_cell(applicability)}; traceability: " + "; ".join(f"{item['source']} {_cell(item['locator'])}" for item in requirement["traceability"]))
         for exchange in requirement.get("required_exchanges", []):
             lines.append(f"  - Exchange: kind {_cell(exchange['kind'])}; selector {_cell(exchange['selector'])}; direction {_cell(exchange['direction'])}; mandate {_cell(exchange['mandate'])}; timing kind {_cell(exchange['timing_kind'])}; traceability: " + "; ".join(f"{item['source']} {_cell(item['locator'])}" for item in exchange["traceability"]))
-    lines.extend(["", "## Open author decisions", ""])
+    lines.extend(["", "## Remaining open decisions", ""])
     lines.extend(f"- {_cell(decision)}" for decision in worksheet["open_decisions"]) or lines.append("- Review all candidate evidence before authoring contract semantics.")
     lines.extend(["", "## Safety boundary", "", "Candidate values are not Service Contract semantics until explicitly reviewed and authored into a valid contract. This worksheet is non-normative evidence tooling: it does not validate OMS compliance, select candidates, infer missing semantics, or generate/edit a contract."])
     return "\n".join(lines) + "\n"
@@ -189,10 +258,14 @@ def render_markdown(worksheet: dict[str, Any]) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, required=True)
+    parser.add_argument("--decisions", type=Path)
     parser.add_argument("--profile", type=Path, required=True)
     parser.add_argument("--format", choices=("markdown", "json"), required=True)
     args = parser.parse_args(argv)
     document, diagnostics = load_completion_path(args.input.resolve())
+    decisions_document = None
+    if not diagnostics and args.decisions:
+        decisions_document, diagnostics = load_decisions_path(args.decisions.resolve(), document)
     if not diagnostics:
         profile, diagnostics = validate_profile_path(args.profile.resolve())
         if not diagnostics:
@@ -201,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
         for diagnostic in diagnostics:
             print(f"FAIL {diagnostic}", file=sys.stderr)
         return 1
-    worksheet = build_worksheet(document, profile)
+    worksheet = build_worksheet(document, profile, decisions_document)
     print(render_markdown(worksheet) if args.format == "markdown" else render_json(worksheet), end="")
     return 0
 

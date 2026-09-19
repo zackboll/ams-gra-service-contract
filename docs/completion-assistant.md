@@ -6,6 +6,7 @@ worksheet from a completion input and a validated OMS profile:
 ```bash
 python tools/completion_assistant.py \
   --input examples/completion/ir-search-and-track.yaml \
+  --decisions examples/completion/ir-search-and-track-decisions.yaml \
   --profile profiles/oms/2.5/profile.yaml \
   --format markdown
 ```
@@ -14,7 +15,7 @@ Use `--format json` for reference-tool JSON. Normal stdout contains only the
 requested rendering. Invalid input, invalid profiles, or incompatible target
 versions return nonzero and write `FAIL <diagnostic>` to stderr.
 
-## Completion input
+## Evidence candidates and author decisions
 
 `schema/tooling/completion/v0.1/completion-input.schema.json` is tooling-only,
 not part of the portable Service Contract schema hierarchy. It requires a target
@@ -28,10 +29,26 @@ Sources retain one of `published_contract`, `published_supporting_doc`,
 confidence or a ranking. Duplicate source/candidate IDs and unknown candidate
 sources are rejected with `CA_*` diagnostics.
 
-Candidates sharing a target are retained. Distinct values are an explicit author
-decision; identical values from multiple sources also remain separate provenance
-records. The assistant never selects, accepts, confirms, ranks, or treats a
-candidate as authored contract semantics.
+Candidates sharing a target are retained. Distinct values require an explicit
+author decision; identical values from multiple sources also remain separate
+provenance records. The assistant never selects, ranks, or treats a candidate as
+authored contract semantics.
+
+`schema/tooling/completion/v0.1/completion-decisions.schema.json` defines an
+optional, separate author-decision overlay. Each opaque worksheet `target` has at
+most one decision, which uses exactly one of `select_candidate` or scalar
+`value`. A selected candidate retains that exact evidence record and provenance.
+An explicit value is author intent only and has no fabricated source provenance,
+even when it equals an observed candidate. Decision diagnostics reject malformed
+documents, duplicate targets, unknown candidate IDs, and candidate-target
+mismatches.
+
+The stages remain distinct: an **evidence candidate** is an observed possible
+value; an **author decision** is explicit intent recorded against a worksheet
+label; an **authored contract semantic** is a value actually written to and
+validated in a portable Service Contract. Task 036 implements only the first two
+stages. It has no candidate-to-contract mapping, JSONPath execution, patching,
+generation, or apply operation.
 
 ## Profile and Capability boundary
 
@@ -46,4 +63,5 @@ inventory from message/candidate names and does not apply Section 3.3 rules.
 Isolators receive no Capability-inventory prompt or Section 3.3 requirements.
 
 This tool performs no source extraction, scraping, LLM inference, contract
-generation, contract editing, or author confirmation.
+generation, contract editing, candidate-to-profile satisfaction analysis, or
+Capability inference.

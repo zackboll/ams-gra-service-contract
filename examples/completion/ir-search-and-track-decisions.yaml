@@ -1,0 +1,29 @@
+decision_version: "0.1"
+decisions:
+  - target: service.name
+    select_candidate: service-name
+    note: Confirmed from published Service Contract.
+  - target: service.version
+    select_candidate: service-version
+  - target: service.kind
+    select_candidate: service-kind
+  - target: standards.oms_version
+    select_candidate: oms-version
+  - target: standards.uci_schema_version
+    select_candidate: uci-version
+  - target: exchange[PositionReport].direction
+    select_candidate: position-direction
+  - target: exchange[PositionReport].topic
+    select_candidate: position-topic
+  - target: exchange[ServiceStatus].direction
+    select_candidate: status-direction
+  - target: exchange[ServiceStatus].topic
+    select_candidate: status-topic
+  - target: exchange[ServiceStatus].timing.kind
+    select_candidate: status-timing
+  - target: exchange[ServiceStatus].timing.nominal_rate_hz
+    select_candidate: status-rate
+  - target: exchange[ObservationMeasurementReport].direction
+    select_candidate: observation-direction
+  - target: exchange[ObservationMeasurementReport].topic
+    select_candidate: observation-topic

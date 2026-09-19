@@ -8,12 +8,12 @@ sources:
   - id: primary-contract
     provenance: published_contract
     title: OMS Service Contract - IR Search and Track
-    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-ir-search-and-track/blob/7d06735e56aa0baa8cc61e578928ee4d28936bc3/docs/compliance/oms-service-contract.md
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-skills-ir-search-and-track/blob/7d06735e56aa0baa8cc61e578928ee4d28936bc3/docs/compliance/oms-service-contract.md
     revision: 7d06735e56aa0baa8cc61e578928ee4d28936bc3
   - id: configuration-doc
     provenance: published_supporting_doc
     title: IR Search and Track Configuration
-    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-ir-search-and-track/blob/7d06735e56aa0baa8cc61e578928ee4d28936bc3/docs/configuration.md
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-skills-ir-search-and-track/blob/7d06735e56aa0baa8cc61e578928ee4d28936bc3/docs/configuration.md
     revision: 7d06735e56aa0baa8cc61e578928ee4d28936bc3
 candidates:
   - id: service-name
@@ -55,7 +55,7 @@ candidates:
     target: exchange[PositionReport].topic
     value: mission.position-report
     source: configuration-doc
-    locator: position_report_topic
+    locator: position_topic
   - id: status-selector
     target: exchange[ServiceStatus].selector
     value: ServiceStatus
@@ -80,7 +80,7 @@ candidates:
     target: exchange[ServiceStatus].timing.nominal_rate_hz
     value: 1
     source: configuration-doc
-    locator: service_status_publish_rate_hz
+    locator: status_report_rate_hz
   - id: observation-selector
     target: exchange[ObservationMeasurementReport].selector
     value: ObservationMeasurementReport
@@ -95,4 +95,4 @@ candidates:
     target: exchange[ObservationMeasurementReport].topic
     value: mission.observation-measurement-report
     source: configuration-doc
-    locator: observation_measurement_report_topic
+    locator: observation_topic

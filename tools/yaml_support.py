@@ -27,7 +27,7 @@ JsonCompatibleYamlLoader.add_implicit_resolver(
     "tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF")
 )
 JsonCompatibleYamlLoader.add_implicit_resolver(
-    "tag:yaml.org,2002:int", re.compile(r"^[-+]?(?:0o[0-7]+|0x[0-9a-fA-F]+|[0-9]+)$"), list("-+0123456789")
+    "tag:yaml.org,2002:int", re.compile(r"^(?:[-+]?[0-9]+|0o[0-7]+|0x[0-9a-fA-F]+)$"), list("-+0123456789")
 )
 JsonCompatibleYamlLoader.add_implicit_resolver(
     "tag:yaml.org,2002:float",
@@ -40,13 +40,11 @@ JsonCompatibleYamlLoader.add_implicit_resolver(
 
 def _construct_yaml_int(loader: JsonCompatibleYamlLoader, node: yaml.Node) -> int:
     value = loader.construct_scalar(node).replace("_", "")
-    match = re.fullmatch(r"(?P<sign>[-+]?)(?P<number>0o[0-7]+|0x[0-9a-fA-F]+|[0-9]+)", value)
+    match = re.fullmatch(r"(?:[-+]?[0-9]+|0o[0-7]+|0x[0-9a-fA-F]+)", value)
     if match is None:
         raise YamlInputError(f"invalid YAML 1.2 integer {value!r}")
-    number = match.group("number")
-    base = 8 if number.startswith("0o") else 16 if number.startswith("0x") else 10
-    result = int(number[2:] if base != 10 else number, base)
-    return -result if match.group("sign") == "-" else result
+    base = 8 if value.startswith("0o") else 16 if value.startswith("0x") else 10
+    return int(value[2:] if base != 10 else value, base)
 
 
 def _construct_mapping(loader: JsonCompatibleYamlLoader, node: yaml.MappingNode, deep: bool = False) -> dict[str, Any]:

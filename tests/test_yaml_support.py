@@ -27,6 +27,10 @@ ROOT = Path(__file__).resolve().parents[1]
         ("0o12", 10),
         ("0x3A", 58),
         ("0xff", 255),
+        ("+0o12", "+0o12"),
+        ("-0o12", "-0o12"),
+        ("+0x3A", "+0x3A"),
+        ("-0x3A", "-0x3A"),
     ],
 )
 def test_yaml_12_core_scalar_behavior(scalar: str, expected: object) -> None:
@@ -66,6 +70,12 @@ def test_explicit_yaml_12_hexadecimal_integer_tag() -> None:
 def test_malformed_explicit_integer_tag_is_a_yaml_input_error() -> None:
     with pytest.raises(YamlInputError, match="invalid YAML 1.2 integer"):
         load_text("value: !!int not-an-integer\n")
+
+
+@pytest.mark.parametrize("scalar", ["-0o12", "+0o12", "-0x3A", "+0x3A"])
+def test_explicit_signed_octal_and_hexadecimal_integer_tags_are_rejected(scalar: str) -> None:
+    with pytest.raises(YamlInputError, match="invalid YAML 1.2 integer"):
+        load_text(f"value: !!int {scalar}\n")
 
 
 def test_normal_json_document_loads() -> None:

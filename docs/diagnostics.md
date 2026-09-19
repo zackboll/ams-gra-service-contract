@@ -28,6 +28,7 @@ keyword.
 | `SS_*` | Schema-source selection and verification |
 | `UR_*` | UCI parsing and resolution |
 | `IP_*` | Inputs/Outputs projection join |
+| `CA_*` | Completion assistant tooling workspace |
 
 A higher-level tool can surface a lower-layer code unchanged; it does not take
 ownership merely by orchestrating that layer.
@@ -68,6 +69,20 @@ When contract-version or OMS-version compatibility fails, profile application
 returns only those compatibility diagnostics. Ordinary contract structural
 validation runs before profile application, so invalid portable documents yield
 `SC_SCHEMA` rather than being masked by profile diagnostics.
+
+## Completion assistant (`CA_*`)
+
+| Code | Meaning |
+| --- | --- |
+| `CA_SCHEMA` | Completion-input JSON-Schema or input parsing failure. |
+| `CA_DUPLICATE_SOURCE` | Duplicate completion source ID. |
+| `CA_DUPLICATE_CANDIDATE` | Duplicate completion candidate ID. |
+| `CA_UNKNOWN_SOURCE` | Candidate refers to an unknown completion source ID. |
+| `CA_UNSUPPORTED_CONTRACT_VERSION` | Selected profile does not support the target contract version. |
+| `CA_OMS_VERSION_MISMATCH` | Target OMS version differs from the selected profile OMS version. |
+
+`CA_*` applies only to the non-normative completion workspace. It is never a
+portable Service Contract validation result.
 
 ## Schema source (`SS_*`)
 

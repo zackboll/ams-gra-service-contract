@@ -1,0 +1,98 @@
+completion_version: "0.1"
+target:
+  contract_version: "0.1"
+  oms_version: "2.5"
+  service_kind: service
+  name: IR Search and Track
+sources:
+  - id: primary-contract
+    provenance: published_contract
+    title: OMS Service Contract - IR Search and Track
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-ir-search-and-track/blob/7d06735e56aa0baa8cc61e578928ee4d28936bc3/docs/compliance/oms-service-contract.md
+    revision: 7d06735e56aa0baa8cc61e578928ee4d28936bc3
+  - id: configuration-doc
+    provenance: published_supporting_doc
+    title: IR Search and Track Configuration
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-ir-search-and-track/blob/7d06735e56aa0baa8cc61e578928ee4d28936bc3/docs/configuration.md
+    revision: 7d06735e56aa0baa8cc61e578928ee4d28936bc3
+candidates:
+  - id: service-name
+    target: service.name
+    value: IR Search and Track
+    source: primary-contract
+    locator: Section 1
+  - id: service-version
+    target: service.version
+    value: 1.0.0
+    source: primary-contract
+    locator: Section 1
+  - id: service-kind
+    target: service.kind
+    value: service
+    source: primary-contract
+    locator: Sections 1 and 3
+  - id: oms-version
+    target: standards.oms_version
+    value: "2.5"
+    source: primary-contract
+    locator: Section 1
+  - id: uci-version
+    target: standards.uci_schema_version
+    value: "2.5"
+    source: primary-contract
+    locator: Section 2
+  - id: position-selector
+    target: exchange[PositionReport].selector
+    value: PositionReport
+    source: primary-contract
+    locator: Section 4.2
+  - id: position-direction
+    target: exchange[PositionReport].direction
+    value: input
+    source: primary-contract
+    locator: Section 4.2
+  - id: position-topic
+    target: exchange[PositionReport].topic
+    value: mission.position-report
+    source: configuration-doc
+    locator: position_report_topic
+  - id: status-selector
+    target: exchange[ServiceStatus].selector
+    value: ServiceStatus
+    source: primary-contract
+    locator: Section 4.3
+  - id: status-direction
+    target: exchange[ServiceStatus].direction
+    value: output
+    source: primary-contract
+    locator: Section 4.3
+  - id: status-timing
+    target: exchange[ServiceStatus].timing.kind
+    value: periodic
+    source: primary-contract
+    locator: Section 4.3
+  - id: status-topic
+    target: exchange[ServiceStatus].topic
+    value: mission.service-status
+    source: configuration-doc
+    locator: service_status_topic
+  - id: status-rate
+    target: exchange[ServiceStatus].timing.nominal_rate_hz
+    value: 1
+    source: configuration-doc
+    locator: service_status_publish_rate_hz
+  - id: observation-selector
+    target: exchange[ObservationMeasurementReport].selector
+    value: ObservationMeasurementReport
+    source: primary-contract
+    locator: Section 4.3
+  - id: observation-direction
+    target: exchange[ObservationMeasurementReport].direction
+    value: output
+    source: primary-contract
+    locator: Section 4.3
+  - id: observation-topic
+    target: exchange[ObservationMeasurementReport].topic
+    value: mission.observation-measurement-report
+    source: configuration-doc
+    locator: observation_measurement_report_topic

@@ -33,6 +33,14 @@ Explicitly out of scope:
 
 Potential goals driven by real implementation experience:
 
+- first author-confirmed completion-assistant foundation implemented: a
+  provenance-preserving, non-normative worksheet displays unconfirmed evidence
+  candidates alongside profile-derived requirements without changing core schema
+  semantics or acting as an independent downstream consumer. Source extraction,
+  candidate-to-contract field mapping, author confirmation workflow, contract
+  generation/apply, completion against Capability declarations,
+  candidate-to-profile satisfaction analysis, and broader independent consumers
+  remain pending;
 - explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (OMS 2.5 Required Service
   Function inventory, minimum Service Initialization and Service Status exchange
@@ -96,6 +104,15 @@ Potential goals driven by real implementation experience:
   completion assistance; it does not weaken authored-contract semantics or mark
   the independent-consumer 1.0 criterion complete. Broader examples are still
   needed before introducing a separate partial-observation model.
+- the first author-confirmed completion-assistant foundation is implemented:
+  provenance-preserving, unconfirmed candidates and separately displayed
+  profile requirements form a non-normative authoring worksheet. It performs no
+  contract generation, auto-confirmation, candidate-to-profile satisfaction
+  analysis, Capability inference, or component-kind inference. Source
+  extraction, candidate-to-contract field mapping, author confirmation workflow,
+  contract generation/apply, completion against Capability declarations,
+  candidate-to-profile satisfaction analysis, and broader independent consumers
+  remain pending.
 
 A full UCI type-layout parser is not an implied next milestone. It would require
 substantial XSD support (content models, inheritance, members, cardinality,

@@ -1,0 +1,16 @@
+manifest_version: "0.1"
+id: uci-2.5-baseline
+schema_family: uci
+schema_version: "2.5"
+role: baseline
+source:
+  kind: git
+  repository: https://github.com/open-arsenal/uci.git
+  revision: 093610b7753944059360d3236770ab446d039556
+  ref: v2.5
+root_schema: OAC-STD-UCI_V2.5/UCI_MessageDefinitions_v2_5_0.xsd
+files:
+  - path: OAC-STD-UCI_V2.5/UCI_MessageDefinitions_v2_5_0.xsd
+    sha256: ac9430499e1107371345e04430895c8c9f18578c1a6b022958ca43ae8aa7bf27
+  - path: OAC-STD-UCI_V2.5/UCI_SecurityMarkings_v2_5_0.xsd
+    sha256: 4a8056f1503234d423a0c2495844ab65387febced62bea58b87d4f343e9e7a0b

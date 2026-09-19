@@ -7,7 +7,7 @@ This document describes a recommended architecture for consuming the machine-rea
 A contract-aware generator normally needs at least:
 
 1. the machine-readable service contract;
-2. the baseline UCI XSD/schema set selected by `standards.uci_schema_version`;
+2. the baseline UCI XSD/schema set selected and verified through a schema-source manifest;
 3. declared UCI extension schemas, if any; and
 4. a target backend configuration.
 
@@ -80,16 +80,18 @@ For each contract:
 1. Parse YAML/JSON.
 2. Validate against the matching contract-language JSON Schema.
 3. Run semantic contract checks.
-4. Load the exact baseline UCI schema configured by the build/toolchain for `uci_schema_version`.
-5. Load only the declared extension schemas according to explicit toolchain mapping.
-6. For every `kind: oms_message` exchange:
+4. Map `standards.uci_schema_version` to a toolchain schema-source manifest.
+5. Verify the supplied local schema files against the manifest SHA-256 values.
+6. Load `manifest.root_schema` from those verified bytes.
+7. Load only the declared extension schemas according to explicit toolchain mapping.
+8. For every `kind: oms_message` exchange:
    1. resolve `message` uniquely;
    2. find its UCI definition;
    3. derive `PRIMITIVE_TYPE` and any other generator-required schema metadata;
    4. preserve the contract's direction/mandate/topic/timing metadata;
    5. produce one resolved exchange entry.
-7. Apply OMS-version-specific profile checks, if the tool supports them.
-8. Lower the resolved model into the target backend.
+9. Apply OMS-version-specific profile checks, if the tool supports them.
+10. Lower the resolved model into the target backend.
 
 ### Fail-closed behavior
 
@@ -248,13 +250,15 @@ A serious toolchain should record:
 - contract file digest;
 - contract-language version;
 - contract source commit/tag;
-- UCI schema release and file digest(s);
+- schema-source manifest version, identity, and digest;
+- UCI schema release, immutable revision, and file digest(s);
 - extension schema digest(s);
 - generator version/commit;
 - backend version; and
 - generated artifact manifest.
 
 This is more reliable than recording only `UCI 2.5` or a moving `main` branch.
+See [schema-source manifests](schema-sources.md).
 
 ## 13. Recommended diagnostic style
 

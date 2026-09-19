@@ -10,6 +10,14 @@ The central design rule is:
 
 The format deliberately does **not** copy UCI message layouts or message primitive metadata. A resolver or code generator loads the selected UCI schema and resolves the message names declared by the contract.
 
+## Schema-source manifests
+
+`standards.uci_schema_version` identifies a logical UCI version, not exact
+schema bytes. Toolchains can map it to a separately versioned schema-source
+manifest that pins an immutable upstream revision, root XSD, required file set,
+and SHA-256 digests. This manifest is not part of the portable Service Contract
+grammar. See [docs/schema-sources.md](docs/schema-sources.md).
+
 ## Profile validation
 
 The generic v0.1 schema is OMS-version-neutral. Opt-in profiles provide
@@ -381,8 +389,13 @@ The deployment configuration is not the Service Contract itself. It is one imple
 ├── Makefile
 ├── requirements-dev.txt
 ├── schema/
-│   └── v0.1/
-│       └── service-contract.schema.json
+│   ├── v0.1/
+│   │   └── service-contract.schema.json
+│   └── schema-source/v0.1/
+│       └── schema-source-manifest.schema.json
+├── schema-sources/
+│   └── uci/2.5/
+│       └── manifest.yaml
 ├── profiles/
 │   └── oms/2.5/
 │       └── profile.yaml
@@ -396,6 +409,7 @@ The deployment configuration is not the Service Contract itself. It is one imple
 │   ├── versioning.md
 │   ├── references.md
 │   ├── profiles.md
+│   ├── schema-sources.md
 │   └── roadmap.md
 ├── examples/
 │   ├── minimal.yaml
@@ -408,7 +422,8 @@ The deployment configuration is not the Service Contract itself. It is one imple
 │   ├── profiles/oms-2.5/
 │   └── test_validation.py
 └── tools/
-    └── validate.py
+    ├── validate.py
+    └── schema_sources.py
 ```
 
 ## Normative vs. informative content in this repository

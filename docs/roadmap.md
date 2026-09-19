@@ -31,7 +31,8 @@ Explicitly out of scope:
 
 Potential goals driven by real implementation experience:
 
-- standardized schema-source manifest/digest representation;
+- standardized schema-source manifest/digest representation (initial UCI 2.5
+  baseline manifest implemented; resolver integration and extension mapping remain);
 - deterministic extension-schema namespace resolution rules;
 - OMS-version-specific profile validation hooks (initial OMS 2.5 Required
   Service Functions profile implemented; further profile/resolver work remains);

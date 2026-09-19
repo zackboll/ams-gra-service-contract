@@ -6,6 +6,13 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Subsystem State Command Processing Table 3.2-3 OOXML source
+  classification and minimum command-input exchange validation:
+  `SubsystemStateCommand` is OMS-message input, mandatory, and asynchronous.
+  Both substantive rows are mixed, but every matched command field is fixed and
+  fixed workflow prose corroborates receipt. The fixed table status-input versus
+  workflow status-response conflict remains documented and is not
+  profile-enforced.
 - OMS 2.5 Subsystem Shutdown Table 3.2-6 OOXML source classification: the
   `SubsystemStateCommand`, `SubsystemStateCommandStatus`, and `Log_File` rows
   are all removable green guidance/example content, so no Shutdown exchange

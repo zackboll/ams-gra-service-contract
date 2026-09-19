@@ -6,6 +6,7 @@ import pytest
 from tools.validate import (
     load_document,
     profile_diagnostics,
+    validate_document,
     validate_path,
     validate_profile_document,
     validate_profile_path,
@@ -95,6 +96,12 @@ def test_oms_25_profile_manifest() -> None:
     assert [function["name"] for function in profile["required_functions"]] == [
         "Service Initialization",
         "Service Status",
+        "Subsystem Startup",
+        "Subsystem Status",
+        "Subsystem State Command Processing",
+        "Subsystem Built-In Test (BIT)",
+        "Subsystem Calibration",
+        "Subsystem Shutdown",
     ]
     assert all(len(function["applies_to"]) == len(set(function["applies_to"])) for function in profile["required_functions"])
 
@@ -169,6 +176,147 @@ def test_oms_25_profile_stops_after_contract_version_mismatch() -> None:
 
 def _complete_service_status_document() -> dict:
     return load_document(ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "service-required-functions.yaml")
+
+
+def _complete_subsystem_document() -> dict:
+    return load_document(
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-all-applicable.yaml"
+    )
+
+
+def _subsystem_function(document: dict, name: str) -> dict:
+    return next(function for function in document["functions"] if function["name"] == name)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Subsystem Startup",
+        "Subsystem Status",
+        "Subsystem State Command Processing",
+        "Subsystem Built-In Test (BIT)",
+        "Subsystem Calibration",
+        "Subsystem Shutdown",
+    ],
+)
+def test_oms_25_profile_rejects_each_missing_required_subsystem_function(name: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    document["functions"] = [function for function in document["functions"] if function["name"] != name]
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert name in diagnostics[0].message
+
+
+@pytest.mark.parametrize("name", ["Subsystem Startup", "Subsystem Status", "Subsystem Shutdown"])
+def test_oms_25_profile_rejects_not_applicable_fixed_subsystem_function(name: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    function = _subsystem_function(document, name)
+    function["applicability"] = "not_applicable"
+    function["not_applicable_reason"] = "Incorrectly marked not applicable."
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert "requires applicability 'applicable'" in diagnostics[0].message
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["Subsystem State Command Processing", "Subsystem Built-In Test (BIT)", "Subsystem Calibration"],
+)
+def test_oms_25_profile_allows_not_applicable_conditional_subsystem_function(name: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    function = _subsystem_function(document, name)
+    function["applicability"] = "not_applicable"
+    function["not_applicable_reason"] = "This behavior is not provided."
+
+    assert validate_path(
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-conditional-na.yaml", profile
+    ) == []
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "field, value",
+    [("category", "specific"), ("required_group", "service")],
+)
+def test_oms_25_profile_rejects_wrong_subsystem_function_metadata(field: str, value: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    _subsystem_function(document, "Subsystem Startup")[field] = value
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert field in diagnostics[0].message
+
+
+def test_oms_25_profile_rejects_duplicate_subsystem_function_name() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    duplicate = deepcopy(_subsystem_function(document, "Subsystem Status"))
+    duplicate["id"] = "another-local-status-id"
+    document["functions"].append(duplicate)
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert "multiple matches" in diagnostics[0].message
+
+
+def test_oms_25_profile_conditional_subsystem_function_without_reason_fails_contract_validation() -> None:
+    document = _complete_subsystem_document()
+    function = _subsystem_function(document, "Subsystem Calibration")
+    function["applicability"] = "not_applicable"
+
+    diagnostics = validate_path(
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-all-applicable.yaml"
+    )
+    assert diagnostics == []
+    diagnostics = validate_document(document)
+    assert any("not_applicable_reason" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_subsystem_version_mismatch_stops_before_required_functions() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = load_document(
+        ROOT / "tests" / "profiles" / "oms-2.5" / "invalid" / "subsystem-wrong-oms-version-missing-functions.yaml"
+    )
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert "requires OMS version '2.5'" in diagnostics[0].message
+    assert not any("requires function" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_schema_requires_exactly_one_applicability_form() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    conditional = profile["required_functions"][4]
+    conditional["applicability"] = "applicable"
+    assert validate_profile_document(profile)
+
+    del conditional["applicability"]
+    del conditional["allowed_applicability"]
+    assert validate_profile_document(profile)
+
+
+def test_oms_25_profile_schema_rejects_duplicate_or_empty_allowed_applicability() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    conditional = profile["required_functions"][4]
+    conditional["allowed_applicability"] = ["applicable", "applicable"]
+    assert validate_profile_document(profile)
+
+    conditional["allowed_applicability"] = []
+    assert validate_profile_document(profile)
 
 
 def _service_initialization(document: dict) -> dict:
@@ -278,12 +426,10 @@ def test_oms_25_profile_leaves_data_transfer_implementation_details_configurable
     assert profile_diagnostics(document, profile) == []
 
 
-def test_oms_25_profile_does_not_apply_required_service_functions_to_subsystems() -> None:
+def test_oms_25_profile_does_not_apply_required_service_functions_to_complete_subsystems() -> None:
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
-    document = _complete_service_status_document()
-    document["service"]["kind"] = "subsystem"
-    document["functions"] = []
+    document = _complete_subsystem_document()
     assert profile_diagnostics(document, profile) == []
 
 

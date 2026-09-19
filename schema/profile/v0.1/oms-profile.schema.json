@@ -30,13 +30,18 @@
     },
     "requiredFunction": {
       "type": "object", "additionalProperties": false,
-      "required": ["name", "applies_to", "category", "required_group", "applicability", "traceability"],
+      "required": ["name", "applies_to", "category", "required_group", "traceability"],
+      "oneOf": [
+        {"required": ["applicability"], "not": {"required": ["allowed_applicability"]}},
+        {"required": ["allowed_applicability"], "not": {"required": ["applicability"]}}
+      ],
       "properties": {
         "name": {"type": "string", "minLength": 1},
         "applies_to": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["service", "subsystem", "isolator"]}},
         "category": {"enum": ["required", "specific"]},
         "required_group": {"enum": ["service", "subsystem", "capability"]},
         "applicability": {"enum": ["applicable", "not_applicable"]},
+        "allowed_applicability": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["applicable", "not_applicable"]}},
         "traceability": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/traceRef"}},
         "required_exchanges": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredExchange"}}
       }

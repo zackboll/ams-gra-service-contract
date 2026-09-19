@@ -1,0 +1,16 @@
+# Profile-validation fixture only. Compatibility failure must short-circuit the
+# Required Subsystem Function inventory checks.
+contract_version: "0.1"
+service:
+  name: wrong-version-subsystem-no-required-functions
+  version: "0.1.0"
+  kind: subsystem
+standards:
+  oms_version: "2.6"
+  uci_schema_version: "2.6"
+functions:
+  - id: arbitrary-subsystem-function
+    name: Arbitrary Subsystem Function
+    category: specific
+    applicability: applicable
+    exchanges: []

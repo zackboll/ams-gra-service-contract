@@ -1,3 +1,4 @@
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:b">
-  <xs:element name="ExampleMessage"><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-2.</xs:documentation></xs:annotation></xs:element>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:b" targetNamespace="urn:b">
+  <xs:element name="ExampleMessage" type="tns:ExampleType"><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-2.</xs:documentation></xs:annotation></xs:element>
+  <xs:complexType name="ExampleType"/>
 </xs:schema>

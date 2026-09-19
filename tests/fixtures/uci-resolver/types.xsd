@@ -1,0 +1,5 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:types" targetNamespace="urn:types">
+  <xs:element name="Message" type="tns:MessageType"><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-1.</xs:documentation></xs:annotation></xs:element>
+  <xs:complexType name="MessageType"><xs:sequence><xs:element name="Nested" type="xs:string"><xs:complexType/></xs:element></xs:sequence></xs:complexType>
+  <xs:simpleType name="SimpleType"><xs:restriction base="xs:string"/></xs:simpleType>
+</xs:schema>

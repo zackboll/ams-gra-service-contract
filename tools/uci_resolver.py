@@ -1,32 +1,40 @@
 #!/usr/bin/env python3
 """Resolve OMS Message exchanges from manifest-verified local UCI XSD bytes."""
-
 from __future__ import annotations
-
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from io import BytesIO
 from pathlib import Path
-from typing import Any, Iterable
-
+import re
+from typing import Any
 from defusedxml import ElementTree
 from defusedxml.common import DefusedXmlException
 import yaml
-
 try:
     from tools.schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
     from tools.validate import validate_document
-except ModuleNotFoundError:  # Support direct execution as ``python tools/uci_resolver.py``.
+except ModuleNotFoundError:
     from schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
     from validate import validate_document
-
 
 XSD_NAMESPACE = "http://www.w3.org/2001/XMLSchema"
 XSD_SCHEMA = f"{{{XSD_NAMESPACE}}}schema"
 XSD_ELEMENT = f"{{{XSD_NAMESPACE}}}element"
+XSD_COMPLEX_TYPE = f"{{{XSD_NAMESPACE}}}complexType"
+XSD_SIMPLE_TYPE = f"{{{XSD_NAMESPACE}}}simpleType"
 XSD_ANNOTATION = f"{{{XSD_NAMESPACE}}}annotation"
 XSD_DOCUMENTATION = f"{{{XSD_NAMESPACE}}}documentation"
 PRIMITIVE_PREFIX = "UCI_PRIMITIVE:"
+QNAME_PATTERN = re.compile(r"^(?:(?P<prefix>[A-Za-z_][A-Za-z0-9_.-]*):)?(?P<local>[A-Za-z_][A-Za-z0-9_.-]*)$")
 
+@dataclass(frozen=True)
+class UciTypeDeclaration:
+    local_name: str
+    namespace: str
+    expanded_name: str
+    kind: str
+    manifest_id: str
+    source_path: str
 
 @dataclass(frozen=True)
 class UciMessageDefinition:
@@ -34,10 +42,20 @@ class UciMessageDefinition:
     namespace: str
     expanded_name: str
     primitive: str
-    type_name: str | None
+    lexical_type_name: str
+    type_expanded_name: str
+    type_declaration: UciTypeDeclaration | None
     manifest_id: str
     source_path: str
 
+@dataclass(frozen=True)
+class ParsedXsdDocument:
+    target_namespace: str
+    namespace_bindings: tuple[tuple[str, str], ...]
+    messages: tuple[UciMessageDefinition, ...]
+    type_declarations: tuple[UciTypeDeclaration, ...]
+    manifest_id: str
+    source_path: str
 
 @dataclass(frozen=True)
 class ResolvedOmsExchange:
@@ -46,42 +64,54 @@ class ResolvedOmsExchange:
     message: str
     expanded_name: str
     primitive: str
+    message_type_expanded_name: str
     manifest_id: str
     source_path: str
-
 
 class UciResolverError(Exception):
     """Expected fail-closed UCI resolver input or resolution failure."""
 
-
 def _context(manifest_id: str, source_path: str, local_name: str) -> str:
     return f"manifest {manifest_id!r}, file {source_path!r}, message {local_name!r}"
 
+def resolve_lexical_qname(lexical_name: str | None, namespace_bindings: dict[str, str], context: str) -> str:
+    """Resolve a lexical XSD QName using XML declarations, not prefix spelling."""
+    if lexical_name is None or not lexical_name.strip():
+        raise UciResolverError(f"missing or empty type QName in {context}")
+    match = QNAME_PATTERN.fullmatch(lexical_name)
+    if not match:
+        raise UciResolverError(f"malformed type QName {lexical_name!r} in {context}")
+    prefix = match.group("prefix") or ""
+    namespace = namespace_bindings.get(prefix)
+    if namespace is None:
+        raise UciResolverError(f"unknown namespace prefix {(prefix or 'default')!r} for type QName {lexical_name!r} in {context}")
+    return f"{{{namespace}}}{match.group('local')}"
 
 def _primitive_from_element(element: Any, manifest_id: str, source_path: str) -> str | None:
     local_name = element.get("name", "<unnamed>")
-    values = [
-        (documentation.text or "").strip()[len(PRIMITIVE_PREFIX) :].strip()
-        for documentation in element.findall(f"{XSD_ANNOTATION}/{XSD_DOCUMENTATION}")
-        if (documentation.text or "").strip().startswith(PRIMITIVE_PREFIX)
-    ]
+    values = [(item.text or "").strip()[len(PRIMITIVE_PREFIX):].strip() for item in element.findall(f"{XSD_ANNOTATION}/{XSD_DOCUMENTATION}") if (item.text or "").strip().startswith(PRIMITIVE_PREFIX)]
     if len(values) > 1:
         raise UciResolverError(f"duplicate UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
     if not values:
         return None
-    primitive = values[0]
-    if not primitive:
-        raise UciResolverError(f"empty UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
-    primitive = primitive[:-1] if primitive.endswith(".") else primitive
+    primitive = values[0][:-1] if values[0].endswith(".") else values[0]
     if not primitive:
         raise UciResolverError(f"empty UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
     return primitive
 
-
-def parse_uci_schema_bytes(data: bytes, manifest_id: str, source_path: str) -> list[UciMessageDefinition]:
-    """Parse direct global UCI message declarations from one verified XSD document."""
+def parse_uci_schema_document(data: bytes, manifest_id: str, source_path: str) -> ParsedXsdDocument:
+    """Parse one verified XSD snapshot and index direct global declarations."""
     try:
-        root = ElementTree.fromstring(data)
+        bindings: dict[str, str] = {}
+        root_bindings: dict[str, str] | None = None
+        events = ElementTree.iterparse(BytesIO(data), events=("start-ns", "start"))
+        for event, value in events:
+            if event == "start-ns":
+                prefix, namespace = value
+                bindings[prefix or ""] = namespace
+            elif root_bindings is None:
+                root_bindings = dict(bindings)
+        root = events.root
     except (DefusedXmlException, ElementTree.ParseError) as exc:
         raise UciResolverError(f"could not parse manifest {manifest_id!r}, file {source_path!r}: {exc}") from exc
     if root.tag != XSD_SCHEMA:
@@ -89,43 +119,48 @@ def parse_uci_schema_bytes(data: bytes, manifest_id: str, source_path: str) -> l
     namespace = root.get("targetNamespace")
     if not namespace:
         raise UciResolverError(f"manifest {manifest_id!r}, file {source_path!r}: xs:schema must declare targetNamespace")
-
-    definitions: list[UciMessageDefinition] = []
-    for element in root.findall(XSD_ELEMENT):
-        local_name = element.get("name")
-        if not local_name:
+    bindings = root_bindings or {}
+    messages: list[UciMessageDefinition] = []
+    declarations: list[UciTypeDeclaration] = []
+    for child in root:
+        if child.tag in (XSD_COMPLEX_TYPE, XSD_SIMPLE_TYPE) and child.get("name"):
+            name = child.get("name")
+            declarations.append(UciTypeDeclaration(name, namespace, f"{{{namespace}}}{name}", "complex" if child.tag == XSD_COMPLEX_TYPE else "simple", manifest_id, source_path))
+        if child.tag != XSD_ELEMENT or not child.get("name"):
             continue
-        primitive = _primitive_from_element(element, manifest_id, source_path)
+        primitive = _primitive_from_element(child, manifest_id, source_path)
         if primitive is None:
             continue
-        definitions.append(
-            UciMessageDefinition(
-                local_name=local_name,
-                namespace=namespace,
-                expanded_name=f"{{{namespace}}}{local_name}",
-                primitive=primitive,
-                type_name=element.get("type"),
-                manifest_id=manifest_id,
-                source_path=source_path,
-            )
-        )
-    return definitions
+        name = child.get("name")
+        context = _context(manifest_id, source_path, name)
+        lexical = child.get("type")
+        messages.append(UciMessageDefinition(name, namespace, f"{{{namespace}}}{name}", primitive, lexical or "", resolve_lexical_qname(lexical, bindings, context), None, manifest_id, source_path))
+    return ParsedXsdDocument(namespace, tuple(sorted(bindings.items())), tuple(messages), tuple(declarations), manifest_id, source_path)
 
+def parse_uci_schema_bytes(data: bytes, manifest_id: str, source_path: str) -> list[UciMessageDefinition]:
+    return list(parse_uci_schema_document(data, manifest_id, source_path).messages)
 
 def load_message_definitions(verified_schema_source_set: VerifiedSchemaSourceSet) -> list[UciMessageDefinition]:
-    """Parse only immutable bytes retained by verified schema-source snapshots."""
+    """Parse only immutable verified bytes and resolve every message type globally."""
+    documents = [parse_uci_schema_document(file.data, source.manifest_id, file.path) for source in (verified_schema_source_set.baseline, *verified_schema_source_set.extensions) for file in source.files]
+    index: dict[str, list[UciTypeDeclaration]] = {}
+    for declaration in (item for document in documents for item in document.type_declarations):
+        index.setdefault(declaration.expanded_name, []).append(declaration)
     definitions: list[UciMessageDefinition] = []
-    for source in (verified_schema_source_set.baseline, *verified_schema_source_set.extensions):
-        for file in source.files:
-            definitions.extend(parse_uci_schema_bytes(file.data, source.manifest_id, file.path))
+    for message in (item for document in documents for item in document.messages):
+        candidates = index.get(message.type_expanded_name, [])
+        if not candidates:
+            raise UciResolverError(f"unknown global UCI type {message.type_expanded_name} referenced by {_context(message.manifest_id, message.source_path, message.local_name)}")
+        if len(candidates) > 1:
+            descriptions = sorted(f"{item.kind} ({item.manifest_id}:{item.source_path})" for item in candidates)
+            raise UciResolverError(f"ambiguous global UCI type {message.type_expanded_name} referenced by {_context(message.manifest_id, message.source_path, message.local_name)}\ncandidates:\n" + "\n".join(f"  - {item}" for item in descriptions))
+        definitions.append(replace(message, type_declaration=candidates[0]))
     return definitions
 
-
 def resolve_contract_messages(contract: Any, verified_schema_source_set: VerifiedSchemaSourceSet) -> list[ResolvedOmsExchange]:
-    """Resolve OMS exchanges in function/exchange declaration order."""
     diagnostics = validate_document(contract)
     if diagnostics:
-        raise UciResolverError("contract validation failed:\n" + "\n".join(f"  {diagnostic}" for diagnostic in diagnostics))
+        raise UciResolverError("contract validation failed:\n" + "\n".join(f"  {item}" for item in diagnostics))
     definitions = load_message_definitions(verified_schema_source_set)
     resolved: list[ResolvedOmsExchange] = []
     for function in contract["functions"]:
@@ -133,25 +168,16 @@ def resolve_contract_messages(contract: Any, verified_schema_source_set: Verifie
             if exchange["kind"] != "oms_message":
                 continue
             message = exchange["message"]
-            candidates = [definition for definition in definitions if definition.local_name == message]
+            candidates = [item for item in definitions if item.local_name == message]
             context = f"function {function['id']!r}, exchange {exchange['id']!r}"
             if not candidates:
                 raise UciResolverError(f"unknown UCI message {message!r} ({context})")
             if len(candidates) > 1:
-                descriptions = sorted(
-                    f"{candidate.expanded_name} ({candidate.manifest_id}:{candidate.source_path})" for candidate in candidates
-                )
-                raise UciResolverError(
-                    f"ambiguous UCI message {message!r} ({context})\ncandidates:\n"
-                    + "\n".join(f"  - {description}" for description in descriptions)
-                )
-            candidate = candidates[0]
-            resolved.append(
-                ResolvedOmsExchange(function["id"], exchange["id"], message, candidate.expanded_name,
-                                    candidate.primitive, candidate.manifest_id, candidate.source_path)
-            )
+                descriptions = sorted(f"{item.expanded_name} ({item.manifest_id}:{item.source_path})" for item in candidates)
+                raise UciResolverError(f"ambiguous UCI message {message!r} ({context})\ncandidates:\n" + "\n".join(f"  - {item}" for item in descriptions))
+            item = candidates[0]
+            resolved.append(ResolvedOmsExchange(function["id"], exchange["id"], message, item.expanded_name, item.primitive, item.type_expanded_name, item.manifest_id, item.source_path))
     return resolved
-
 
 def _load_contract(path: Path) -> Any:
     try:
@@ -159,7 +185,6 @@ def _load_contract(path: Path) -> Any:
             return yaml.safe_load(stream)
     except (OSError, yaml.YAMLError) as exc:
         raise UciResolverError(f"could not parse contract {path}: {exc}") from exc
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -170,41 +195,31 @@ def main(argv: list[str] | None = None) -> int:
     resolve.add_argument("--baseline-source-root", type=Path, required=True)
     resolve.add_argument("--extension", nargs=2, action="append", metavar=("MANIFEST", "SOURCE_ROOT"), default=[])
     args = parser.parse_args(argv)
-
     contract = _load_contract(args.contract)
     baseline, diagnostics = validate_manifest_path(args.baseline_manifest.resolve())
     extension_results = [validate_manifest_path(Path(manifest).resolve()) for manifest, _ in args.extension]
-    diagnostics.extend(diagnostic for _, manifest_diagnostics in extension_results for diagnostic in manifest_diagnostics)
+    diagnostics.extend(item for _, items in extension_results for item in items)
     if diagnostics:
-        print("FAIL schema-source manifests")
-        for diagnostic in diagnostics:
-            print(f"  {diagnostic}")
+        print("FAIL schema-source manifests", *(f"  {item}" for item in diagnostics), sep="\n")
         return 1
-    schema_source_set, diagnostics = compose_schema_source_set(contract, baseline, [manifest for manifest, _ in extension_results])
+    schema_set, diagnostics = compose_schema_source_set(contract, baseline, [item for item, _ in extension_results])
     if diagnostics:
-        print("FAIL schema-source set")
-        for diagnostic in diagnostics:
-            print(f"  {diagnostic}")
+        print("FAIL schema-source set", *(f"  {item}" for item in diagnostics), sep="\n")
         return 1
     roots = {baseline["id"]: args.baseline_source_root}
-    roots.update({manifest["id"]: Path(source_root) for (manifest, _), (_, source_root) in zip(extension_results, args.extension)})
+    roots.update({manifest["id"]: Path(root) for (manifest, _), (_, root) in zip(extension_results, args.extension)})
     try:
-        verified_schema_source_set, diagnostics = load_verified_schema_source_set(schema_source_set, roots)
+        verified, diagnostics = load_verified_schema_source_set(schema_set, roots)
         if diagnostics:
-            raise UciResolverError("manifest verification failed:\n" + "\n".join(f"  {diagnostic}" for diagnostic in diagnostics))
-        resolved = resolve_contract_messages(contract, verified_schema_source_set)
+            raise UciResolverError("manifest verification failed:\n" + "\n".join(f"  {item}" for item in diagnostics))
+        resolved = resolve_contract_messages(contract, verified)
     except UciResolverError as exc:
         print(f"FAIL {exc}")
         return 1
     print("OK resolved OMS messages")
-    for exchange in resolved:
-        print(f"  {exchange.function_id}/{exchange.exchange_id}:")
-        print(f"    {exchange.message}")
-        print(f"    primitive: {exchange.primitive}")
-        print(f"    qname: {exchange.expanded_name}")
-        print(f"    source: {exchange.manifest_id}:{exchange.source_path}")
+    for item in resolved:
+        print(f"  {item.function_id}/{item.exchange_id}:\n    {item.message}\n    primitive: {item.primitive}\n    qname: {item.expanded_name}\n    type: {item.message_type_expanded_name}\n    source: {item.manifest_id}:{item.source_path}")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

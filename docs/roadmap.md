@@ -22,8 +22,9 @@ Goals:
 
 Explicitly out of scope:
 
-- Complete UCI type-model parsing (verified source loading, global message lookup,
-  namespace identity, and primitive extraction are implemented);
+- Complete UCI type-model parsing (verified source loading, global message/type
+  declaration identity, namespace-aware QName resolution, and primitive extraction
+  are implemented; type contents are not);
 - code generators;
 - behavioral DSL;
 - formal proof semantics.
@@ -32,7 +33,7 @@ Explicitly out of scope:
 
 Potential goals driven by real implementation experience:
 
-- complete UCI type-model parsing beyond the implemented message resolver;
+- complete UCI type-model parsing beyond the implemented message/type declaration resolver;
 - explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (initial OMS 2.5 Required
   Service Functions profile implemented; further profile/resolver work remains);

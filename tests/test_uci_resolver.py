@@ -6,7 +6,7 @@ import pytest
 
 from tools.schema_sources import compose_schema_source_set, load_verified_schema_source_set
 from tools.validate import load_document
-from tools.uci_resolver import UciResolverError, load_message_definitions, parse_uci_schema_bytes, resolve_contract_messages
+from tools.uci_resolver import UciResolverError, load_message_definitions, parse_uci_schema_bytes, parse_uci_schema_document, resolve_contract_messages
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "uci-resolver"
@@ -64,6 +64,16 @@ def test_parser_indexes_global_message_and_normalizes_trailing_period() -> None:
     assert [(item.local_name, item.primitive, item.expanded_name) for item in definitions] == [("MessageA", "Data-1", "{urn:baseline}MessageA")]
 
 
+def test_parser_indexes_global_complex_and_simple_types_only() -> None:
+    document = parse_uci_schema_document(fixture("types.xsd"), "baseline", "types.xsd")
+    assert [(item.expanded_name, item.kind) for item in document.type_declarations] == [("{urn:types}MessageType", "complex"), ("{urn:types}SimpleType", "simple")]
+
+
+def test_message_type_resolves_using_declared_namespace_prefix() -> None:
+    resolved = resolve(Path("/tmp") / "namespace-prefix", contract("Message"), {"types.xsd": fixture("types.xsd")})
+    assert resolved[0].message_type_expanded_name == "{urn:types}MessageType"
+
+
 @pytest.mark.parametrize(("raw_primitive", "expected"), [("Status-1", "Status-1"), ("Status-1.", "Status-1"), ("Status-1..", "Status-1.")])
 def test_parser_removes_exactly_one_final_prose_period(raw_primitive: str, expected: str) -> None:
     data = fixture("baseline.xsd").replace(b"Data-1.", raw_primitive.encode())
@@ -89,6 +99,37 @@ def test_parser_rejects_bad_metadata_and_xml(name: str, match: str) -> None:
 def test_one_candidate_resolves(tmp_path: Path) -> None:
     resolved = resolve(tmp_path, contract(), {"baseline.xsd": fixture("baseline.xsd")})
     assert resolved[0].primitive == "Data-1"
+    assert resolved[0].message_type_expanded_name == "{urn:baseline}MessageAType"
+
+
+@pytest.mark.parametrize("prefix", ["a", "differentPrefix"])
+def test_equivalent_namespace_prefixes_resolve_identically(tmp_path: Path, prefix: str) -> None:
+    data = fixture("baseline.xsd").replace(b"xmlns:tns=\"urn:baseline\"", f"xmlns:{prefix}=\"urn:baseline\"".encode()).replace(b"tns:MessageAType", f"{prefix}:MessageAType".encode())
+    assert resolve(tmp_path / prefix, contract(), {"baseline.xsd": data})[0].message_type_expanded_name == "{urn:baseline}MessageAType"
+
+
+@pytest.mark.parametrize(("replacement", "match"), [(b"foo:MessageAType", "unknown namespace prefix"), (b"", "missing or empty type QName"), (b"tns:Missing", "unknown global UCI type")])
+def test_bad_message_type_references_fail_closed(tmp_path: Path, replacement: bytes, match: str) -> None:
+    data = fixture("baseline.xsd").replace(b"tns:MessageAType", replacement, 1)
+    with pytest.raises(UciResolverError, match=match):
+        resolve(tmp_path, contract(), {"baseline.xsd": data})
+
+
+def test_duplicate_global_type_qname_fails_without_override_precedence(tmp_path: Path) -> None:
+    duplicate = fixture("baseline.xsd").replace(b"targetNamespace=\"urn:baseline\"", b"targetNamespace=\"urn:baseline\"")
+    with pytest.raises(UciResolverError, match="ambiguous global UCI type"):
+        resolve(tmp_path, contract(), {"a.xsd": fixture("baseline.xsd"), "b.xsd": duplicate})
+
+
+def test_extension_type_declaration_cannot_override_baseline(tmp_path: Path) -> None:
+    extension = manifest("extension", {"duplicate.xsd": fixture("baseline.xsd")}, "extension")
+    with pytest.raises(UciResolverError, match="ambiguous global UCI type"):
+        resolve(tmp_path, contract("MessageA", ["extension"]), {"baseline.xsd": fixture("baseline.xsd")}, [(extension, {"duplicate.xsd": fixture("baseline.xsd")})])
+
+
+def test_same_type_local_name_in_different_namespaces_is_not_ambiguous(tmp_path: Path) -> None:
+    other = fixture("baseline.xsd").replace(b"urn:baseline", b"urn:other").replace(b"MessageA", b"OtherMessage")
+    assert resolve(tmp_path, contract(), {"baseline.xsd": fixture("baseline.xsd"), "other.xsd": other})[0].message_type_expanded_name == "{urn:baseline}MessageAType"
 
 
 def test_resolver_parses_verified_snapshot_after_filesystem_mutation(tmp_path: Path) -> None:
@@ -116,14 +157,14 @@ def test_two_namespaces_with_same_local_name_fail_ambiguously(tmp_path: Path) ->
 
 def test_same_expanded_name_duplicate_fails_ambiguously(tmp_path: Path) -> None:
     source = fixture("ambiguous-a.xsd")
-    with pytest.raises(UciResolverError, match="ambiguous UCI message 'ExampleMessage'"):
+    with pytest.raises(UciResolverError, match="ambiguous global UCI type"):
         resolve(tmp_path, contract("ExampleMessage"), {"a.xsd": source, "b.xsd": source})
 
 
 def test_unique_extension_resolves_and_manifest_input_order_does_not_change_result(tmp_path: Path) -> None:
     extension_a = manifest("extension-a", {"extension.xsd": fixture("extension.xsd")}, "extension")
-    extension_b = manifest("extension-b", {"unrelated.xsd": fixture("baseline.xsd")}, "extension")
-    extensions = [(extension_a, {"extension.xsd": fixture("extension.xsd")}), (extension_b, {"unrelated.xsd": fixture("baseline.xsd")})]
+    extension_b = manifest("extension-b", {"unrelated.xsd": fixture("types.xsd")}, "extension")
+    extensions = [(extension_a, {"extension.xsd": fixture("extension.xsd")}), (extension_b, {"unrelated.xsd": fixture("types.xsd")})]
     resolved = resolve(
         tmp_path / "forward", contract("ExtensionMessage", ["extension-a", "extension-b"]),
         {"baseline.xsd": fixture("baseline.xsd")},

@@ -172,6 +172,16 @@ python tools/validate.py examples/service-status.yaml
 
 This performs **local contract validation only**. It validates the JSON Schema and repository-level semantic rules. It does not yet load an external UCI XSD. UCI resolution is a downstream resolver/code-generator responsibility in v0.1.
 
+## Reference examples
+
+The following are source-backed mappings of upstream OMS examples, not official
+generated OMS Service Contracts:
+
+- [`examples/service-status.yaml`](examples/service-status.yaml): Required
+  Service Function example.
+- [`examples/capability-enable-disable.yaml`](examples/capability-enable-disable.yaml):
+  Required Capability-related Command / Command Status example.
+
 ## Minimal example
 
 ```yaml
@@ -360,7 +370,8 @@ The deployment configuration is not the Service Contract itself. It is one imple
 │   └── roadmap.md
 ├── examples/
 │   ├── minimal.yaml
-│   └── service-status.yaml
+│   ├── service-status.yaml
+│   └── capability-enable-disable.yaml
 ├── tests/
 │   ├── valid/
 │   ├── invalid/

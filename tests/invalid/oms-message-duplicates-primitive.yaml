@@ -1,0 +1,26 @@
+contract_version: "0.1"
+
+service:
+  name: invalid-primitive-duplication-service
+  version: "0.1.0"
+  kind: service
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+functions:
+  - id: invalid-primitive-duplication
+    name: Invalid Primitive Duplication
+    category: specific
+    applicability: applicable
+    exchanges:
+      - id: duplicated-primitive
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: ESM_SettingsCommand
+        topic: ESM_SettingsCommand
+        primitive: Command
+        timing:
+          kind: asynchronous

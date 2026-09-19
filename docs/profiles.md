@@ -197,6 +197,16 @@ evidence establishes a fixed alternative group, v0.1 would additionally need a
 deliberately designed conditional-function and alternative-exchange model rather
 than encoding OR as an all-required list. See [Task 027 evidence](task-027-oms25-position-information.md).
 
+Task 028 classifies Capability and Capability Status Table 3.3-2 separately.
+Its `ESM_Capability` and `ESM_CapabilityStatus` rows are removable green
+examples in every matcher-owned field, including DE and LoM. Mixed generic
+function/Description prose fixes Capability-relative publication/output and
+periodic behavior, but the green `[CapabilityName]` replacement means it is not
+an exact selector; kind and mandate are not fully fixed. v0.1 has no independent
+Capability identity or function ownership from which to instantiate the family,
+so no ESM, literal placeholder, or name-template profile rule is encoded. See
+[Task 028 evidence](task-028-oms25-capability-status.md).
+
 The profile also does not validate conditional Section 3.1 Service Functions for
 Platform-hosted Adapters or other OMS-version profiles. It does not claim full
 OMS Subsystem compliance.

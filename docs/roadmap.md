@@ -58,8 +58,13 @@ Potential goals driven by real implementation experience:
     cardinality; Capability identity/presence/ownership and position-dependency
     facts remain needed for conditional function validation; deliberately
     designed conditional-function and alternative-exchange semantics remain
-    pending only if later fixed evidence requires them; Tables 3.3-2 through
-    3.3-4, broader profile coverage, and real Service Contract exercises remain);
+     pending only if later fixed evidence requires them; Table 3.3-2 Capability
+     and Capability Status classification completed: its ESM rows are removable
+     green examples, while mixed generic prose establishes only
+     Capability-relative output/periodic family semantics; explicit Capability
+     identity/presence/ownership remains required before exact enforcement;
+     Tables 3.3-3 and 3.3-4, broader profile coverage, and real Service Contract
+     exercises remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

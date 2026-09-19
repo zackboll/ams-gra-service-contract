@@ -6,6 +6,14 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Capability and Capability Status (Section 3.3.2.1/Table 3.3-2)
+  OOXML exchange classification. `ESM_Capability` and
+  `ESM_CapabilityStatus` are removable green examples in every matcher-owned
+  field. Mixed generic prose establishes only Capability-relative output and
+  periodic message-family behavior; it does not fix kind or mandate. Exact
+  per-Capability validation remains deferred because v0.1 lacks explicit
+  Capability identity and ownership. No ESM/literal-placeholder requirement,
+  name heuristic, schema, validator, or diagnostic was added.
 - OMS 2.5 Position Information Processing (Section 3.3.1/Table 3.3-1) OOXML
   exchange classification. `PositionReport` and `PositionReportDetailed` are
   green removable guidance in every matcher-owned table field, including LoM;

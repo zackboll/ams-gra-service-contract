@@ -54,6 +54,9 @@ stages. Task 037 adds a separate typed mapping and profile-derived scaffold;
  Service Contract. None of these tools executes JSONPath, patches, or applies a
  contract.
 
+Task 039 adds optional explicit specific-function structure; it is separate from
+both evidence and decisions. See [completion-specific-functions.md](completion-specific-functions.md).
+
 ## Profile and Capability boundary
 
 The selected profile is loaded through existing profile validation. Its fixed

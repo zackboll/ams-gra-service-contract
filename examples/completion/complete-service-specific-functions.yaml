@@ -1,0 +1,8 @@
+specific_functions_version: "0.1"
+functions:
+  - key: synthetic-processing
+    exchanges:
+      - key: synthetic-input
+        kind: oms_message
+      - key: synthetic-output
+        kind: oms_message

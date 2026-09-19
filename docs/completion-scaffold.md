@@ -18,8 +18,8 @@ not target-string parsing, define executable meaning. The scaffold marks values
 as `completion_target`, `oms_profile`, `author_decision`, or `missing`; selected
 candidates retain source/provenance while direct author values do not fabricate it.
 
-Only applicable Section 3.1 `required_functions` are scaffolded. It creates no
-specific functions or Capability functions, generates no IDs/topics, and makes no
+Optional `--specific-functions` adds only author-declared specific topology;
+keys never generate IDs or names. It creates no Capability functions, generates no IDs/topics, and makes no
 profile-satisfaction or compliance claim. Unmapped decisions remain visible.
 Task 038's separate materializer consumes this tooling-only scaffold fail-closed;
 it is the semantic boundary where successful stdout becomes a portable contract.

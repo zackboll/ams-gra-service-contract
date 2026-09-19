@@ -46,6 +46,11 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 
 ## Completion worksheet
 
+Completion tooling also supports optional explicit specific-function structure:
+an author declares topology and maps author decisions to its fields; message
+evidence never creates or groups functions. See
+[docs/completion-specific-functions.md](docs/completion-specific-functions.md).
+
 The non-normative completion assistant records source-backed, unconfirmed
 authoring candidates and optional explicit author decisions separately from
 authored Service Contract semantics and OMS profile requirements. Evidence

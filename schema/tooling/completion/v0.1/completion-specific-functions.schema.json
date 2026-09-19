@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-specific-functions:0.1",
+  "title": "Completion Specific-Function Structure",
+  "description": "Tooling-only author-declared specific-function topology; keys are not portable IDs.",
+  "type": "object", "additionalProperties": false,
+  "required": ["specific_functions_version", "functions"],
+  "properties": {
+    "specific_functions_version": {"const": "0.1"},
+    "functions": {"type": "array", "items": {"$ref": "#/$defs/function"}}
+  },
+  "$defs": {
+    "key": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$", "minLength": 1, "maxLength": 128},
+    "function": {
+      "type": "object", "additionalProperties": false, "required": ["key", "exchanges"],
+      "properties": {"key": {"$ref": "#/$defs/key"}, "exchanges": {"type": "array", "items": {"$ref": "#/$defs/exchange"}}}
+    },
+    "exchange": {
+      "type": "object", "additionalProperties": false, "required": ["key", "kind"],
+      "properties": {"key": {"$ref": "#/$defs/key"}, "kind": {"enum": ["oms_message", "data_transfer", "special_signal", "security_exchange", "non_oms_message"]}}
+    }
+  }
+}

@@ -1,12 +1,19 @@
 import hashlib
+import re
 from copy import deepcopy
 from pathlib import Path
 
 import pytest
 
-from tools.schema_sources import compose_schema_source_set, load_verified_schema_source_set
-from tools.validate import load_document
-from tools.uci_resolver import UciResolverError, load_message_definitions, parse_uci_schema_bytes, parse_uci_schema_document, resolve_contract_messages
+from tools.schema_sources import SS_BASELINE_SELECTION, SS_HASH_MISMATCH, SS_SCHEMA, compose_schema_source_set, load_verified_schema_source_set
+from tools.validate import SC_DUPLICATE_FUNCTION, SC_SCHEMA, load_document
+from tools.uci_resolver import (
+    UCI_RESOLVER_DIAGNOSTIC_CODES, UR_AMBIGUOUS_MESSAGE, UR_AMBIGUOUS_TYPE,
+    UR_PRIMITIVE_METADATA, UR_TYPE_QNAME, UR_UNKNOWN_MESSAGE, UR_UNKNOWN_TYPE,
+    UR_XML_PARSE, UR_XSD_DOCUMENT, UciResolutionPreparationError,
+    UciResolverError, load_message_definitions, parse_uci_schema_bytes,
+    parse_uci_schema_document, prepare_resolution, resolve_contract_messages,
+)
 from tools.uci_version_regression import classify, main as version_regression_main, unique_message
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -260,10 +267,98 @@ def test_cross_version_unique_message_fails_closed_for_multiple_local_name_candi
 
 def test_cross_version_cli_reports_expected_resolver_error_without_traceback(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     def fail_analyze(manifest_path: Path, source_root: Path) -> tuple[dict[str, object], list[object]]:
-        raise UciResolverError("synthetic resolver failure")
+        raise UciResolverError(UR_UNKNOWN_MESSAGE, "synthetic resolver failure")
 
     monkeypatch.setattr("tools.uci_version_regression.analyze", fail_analyze)
     assert version_regression_main(["--uci-25-source-root", "/tmp/a", "--uci-26-source-root", "/tmp/b"]) == 1
     captured = capsys.readouterr()
-    assert captured.out.startswith("FAIL synthetic resolver failure")
+    assert captured.out.startswith("FAIL UR_UNKNOWN_MESSAGE synthetic resolver failure")
     assert "Traceback" not in captured.err
+
+
+def test_resolver_diagnostic_inventory_is_unique_and_well_formed() -> None:
+    assert len(UCI_RESOLVER_DIAGNOSTIC_CODES) == 8
+    assert len(UCI_RESOLVER_DIAGNOSTIC_CODES) == len(set(UCI_RESOLVER_DIAGNOSTIC_CODES))
+    assert all(re.fullmatch(r"UR_[A-Z0-9_]+", code) for code in UCI_RESOLVER_DIAGNOSTIC_CODES)
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        (b"<xs:schema", UR_XML_PARSE),
+        (b"<root/>", UR_XSD_DOCUMENT),
+        (b"<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"/>", UR_XSD_DOCUMENT),
+    ],
+)
+def test_xml_and_document_failures_have_exact_codes(data: bytes, expected: str) -> None:
+    with pytest.raises(UciResolverError) as raised:
+        parse_uci_schema_bytes(data, "baseline", "broken.xsd")
+    assert raised.value.code == expected
+
+
+@pytest.mark.parametrize(("name", "expected"), [("duplicate-primitive.xsd", UR_PRIMITIVE_METADATA), ("empty-primitive.xsd", UR_PRIMITIVE_METADATA)])
+def test_primitive_metadata_failures_have_exact_codes(name: str, expected: str) -> None:
+    with pytest.raises(UciResolverError) as raised:
+        parse_uci_schema_bytes(fixture(name), "baseline", name)
+    assert raised.value.code == expected
+
+
+@pytest.mark.parametrize("replacement", [b"", b"bad::QName", b"unknown:MessageAType"])
+def test_type_qname_failures_have_exact_code(replacement: bytes) -> None:
+    with pytest.raises(UciResolverError) as raised:
+        parse_uci_schema_bytes(fixture("baseline.xsd").replace(b"tns:MessageAType", replacement, 1), "baseline", "baseline.xsd")
+    assert raised.value.code == UR_TYPE_QNAME
+
+
+def test_type_and_message_resolution_failures_have_exact_codes(tmp_path: Path) -> None:
+    unknown_type = fixture("baseline.xsd").replace(b"tns:MessageAType", b"tns:Missing", 1)
+    with pytest.raises(UciResolverError) as raised:
+        resolve(tmp_path / "unknown-type", contract(), {"baseline.xsd": unknown_type})
+    assert raised.value.code == UR_UNKNOWN_TYPE
+    with pytest.raises(UciResolverError) as raised:
+        resolve(tmp_path / "ambiguous-type", contract(), {"a.xsd": fixture("baseline.xsd"), "b.xsd": fixture("baseline.xsd")})
+    assert raised.value.code == UR_AMBIGUOUS_TYPE
+    with pytest.raises(UciResolverError) as raised:
+        resolve(tmp_path / "unknown-message", contract("DoesNotExist"), {"baseline.xsd": fixture("baseline.xsd")})
+    assert raised.value.code == UR_UNKNOWN_MESSAGE
+    with pytest.raises(UciResolverError) as raised:
+        resolve(tmp_path / "ambiguous-message", contract("ExampleMessage"), {"a.xsd": fixture("ambiguous-a.xsd"), "b.xsd": fixture("ambiguous-b.xsd")})
+    assert raised.value.code == UR_AMBIGUOUS_MESSAGE
+
+
+def test_preparation_preserves_structured_contract_and_schema_source_diagnostics(tmp_path: Path) -> None:
+    baseline_data = fixture("baseline.xsd")
+    baseline_manifest = tmp_path / "manifest.json"
+    baseline_manifest.write_text(__import__("json").dumps(manifest("baseline", {"baseline.xsd": baseline_data})), encoding="utf-8")
+    valid_contract = tmp_path / "contract.json"
+    valid_contract.write_text(__import__("json").dumps(contract()), encoding="utf-8")
+    invalid_contract = contract()
+    invalid_contract["functions"].append(deepcopy(invalid_contract["functions"][0]))
+    invalid_contract["functions"][1]["id"] = invalid_contract["functions"][0]["id"]
+    invalid_contract_path = tmp_path / "invalid-contract.json"
+    invalid_contract_path.write_text(__import__("json").dumps(invalid_contract), encoding="utf-8")
+    for contract_path, source_root, expected in (
+        (tmp_path / "malformed-contract.json", tmp_path, SC_SCHEMA),
+        (invalid_contract_path, tmp_path, SC_DUPLICATE_FUNCTION),
+    ):
+        if contract_path.name == "malformed-contract.json":
+            contract_path.write_text("{", encoding="utf-8")
+        with pytest.raises(UciResolutionPreparationError) as raised:
+            prepare_resolution(contract_path, baseline_manifest, source_root, [])
+        assert raised.value.diagnostics[0].code == expected
+        assert not raised.value.diagnostics[0].code.startswith("UR_")
+    tampered_root = stage(tmp_path / "tampered", {"baseline.xsd": b"tampered"})
+    with pytest.raises(UciResolutionPreparationError) as raised:
+        prepare_resolution(valid_contract, baseline_manifest, tampered_root, [])
+    assert raised.value.diagnostics[0].code == SS_HASH_MISMATCH
+    invalid_manifest = tmp_path / "invalid-manifest.json"
+    invalid_manifest.write_text("{}", encoding="utf-8")
+    with pytest.raises(UciResolutionPreparationError) as raised:
+        prepare_resolution(valid_contract, invalid_manifest, tmp_path, [])
+    assert raised.value.diagnostics[0].code == SS_SCHEMA
+    mismatch_manifest = manifest("baseline", {"baseline.xsd": baseline_data})
+    mismatch_manifest["schema_version"] = "2.4"
+    baseline_manifest.write_text(__import__("json").dumps(mismatch_manifest), encoding="utf-8")
+    with pytest.raises(UciResolutionPreparationError) as raised:
+        prepare_resolution(valid_contract, baseline_manifest, tmp_path, [])
+    assert raised.value.diagnostics[0].code == SS_BASELINE_SELECTION

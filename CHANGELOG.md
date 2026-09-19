@@ -6,6 +6,9 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Stable symbolic `UR_*` diagnostics for UCI resolver parsing and resolution,
+  while preserving `SC_*` contract and `SS_*` schema-source diagnostic
+  ownership through resolver orchestration.
 - Stable symbolic `SS_*` diagnostics for schema-source manifest validation,
   composition, and local byte verification, preserving `SC_*` contract
   diagnostics during composition.

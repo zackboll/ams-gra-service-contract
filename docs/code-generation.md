@@ -273,14 +273,13 @@ See [schema-source manifests](schema-sources.md).
 
 ## 13. Recommended diagnostic style
 
-The examples below are hypothetical future resolver diagnostics. `C102` and
-`C118` are not implemented canonical codes; current validator codes are
-documented in [validation diagnostics](diagnostics.md).
+The reference resolver publishes `UR_*` diagnostics; the complete ownership
+taxonomy is documented in [validation diagnostics](diagnostics.md).
 
 Diagnostics should identify both the contract path and external source context:
 
 ```text
-error[C102]: unknown UCI message 'ESM_SetingsCommand'
+UR_UNKNOWN_MESSAGE unknown UCI message 'ESM_SetingsCommand'
   contract: functions[2].exchanges[0].message
   function: esm-enable-disable
   exchange: settings-command-input
@@ -291,7 +290,7 @@ error[C102]: unknown UCI message 'ESM_SetingsCommand'
 For an ambiguity:
 
 ```text
-error[C118]: OMS message name resolves to multiple schema definitions
+UR_AMBIGUOUS_MESSAGE ambiguous UCI message 'ExampleMessage'
   message: ExampleMessage
   candidates:
     - baseline:...

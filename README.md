@@ -29,7 +29,8 @@ baseline compatibility is incomplete.
 
 Schema-source manifest, composition, and byte-verification failures use stable
 `SS_*` diagnostics; invalid contracts retain their `SC_*` identity during
-composition. See [docs/diagnostics.md](docs/diagnostics.md).
+composition; UCI XSD parsing and resolver semantics use `UR_*`. See
+[docs/diagnostics.md](docs/diagnostics.md).
 
 ## Inputs/Outputs projection
 

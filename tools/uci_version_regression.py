@@ -9,10 +9,10 @@ from typing import Any
 
 try:
     from tools.schema_sources import VerifiedSchemaSourceSet, load_verified_schema_source, validate_manifest_path
-    from tools.uci_resolver import UciMessageDefinition, UciResolverError, load_message_definitions
+    from tools.uci_resolver import UR_AMBIGUOUS_MESSAGE, UciMessageDefinition, UciResolverError, load_message_definitions
 except ModuleNotFoundError:
     from schema_sources import VerifiedSchemaSourceSet, load_verified_schema_source, validate_manifest_path
-    from uci_resolver import UciMessageDefinition, UciResolverError, load_message_definitions
+    from uci_resolver import UR_AMBIGUOUS_MESSAGE, UciMessageDefinition, UciResolverError, load_message_definitions
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_A = ROOT / "schema-sources" / "uci" / "2.5" / "manifest.yaml"
@@ -46,6 +46,7 @@ def unique_message(definitions: list[UciMessageDefinition], local_name: str) -> 
     if len(candidates) > 1:
         descriptions = sorted(f"{item.expanded_name} ({item.manifest_id}:{item.source_path})" for item in candidates)
         raise UciResolverError(
+            UR_AMBIGUOUS_MESSAGE,
             f"ambiguous UCI message {local_name!r} in cross-version continuity set\n"
             + "candidates:\n"
             + "\n".join(f"  - {item}" for item in descriptions)

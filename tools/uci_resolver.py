@@ -11,11 +11,11 @@ from defusedxml import ElementTree
 from defusedxml.common import DefusedXmlException
 try:
     from tools.schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
-    from tools.validate import validate_document
+    from tools.validate import Diagnostic, SC_SCHEMA, validate_document
     from tools.yaml_support import YamlInputError, load_path
 except ModuleNotFoundError:
     from schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
-    from validate import validate_document
+    from validate import Diagnostic, SC_SCHEMA, validate_document
     from yaml_support import YamlInputError, load_path
 
 XSD_NAMESPACE = "http://www.w3.org/2001/XMLSchema"
@@ -27,6 +27,23 @@ XSD_ANNOTATION = f"{{{XSD_NAMESPACE}}}annotation"
 XSD_DOCUMENTATION = f"{{{XSD_NAMESPACE}}}documentation"
 PRIMITIVE_PREFIX = "UCI_PRIMITIVE:"
 QNAME_PATTERN = re.compile(r"^(?:(?P<prefix>[A-Za-z_][A-Za-z0-9_.-]*):)?(?P<local>[A-Za-z_][A-Za-z0-9_.-]*)$")
+
+UR_XML_PARSE = "UR_XML_PARSE"
+UR_XSD_DOCUMENT = "UR_XSD_DOCUMENT"
+UR_PRIMITIVE_METADATA = "UR_PRIMITIVE_METADATA"
+UR_TYPE_QNAME = "UR_TYPE_QNAME"
+UR_UNKNOWN_TYPE = "UR_UNKNOWN_TYPE"
+UR_AMBIGUOUS_TYPE = "UR_AMBIGUOUS_TYPE"
+UR_UNKNOWN_MESSAGE = "UR_UNKNOWN_MESSAGE"
+UR_AMBIGUOUS_MESSAGE = "UR_AMBIGUOUS_MESSAGE"
+
+UCI_RESOLVER_DIAGNOSTIC_CODES = frozenset(
+    {
+        UR_XML_PARSE, UR_XSD_DOCUMENT, UR_PRIMITIVE_METADATA, UR_TYPE_QNAME,
+        UR_UNKNOWN_TYPE, UR_AMBIGUOUS_TYPE, UR_UNKNOWN_MESSAGE,
+        UR_AMBIGUOUS_MESSAGE,
+    }
+)
 
 @dataclass(frozen=True)
 class UciTypeDeclaration:
@@ -73,14 +90,21 @@ class ResolvedOmsExchange:
 class UciResolverError(Exception):
     """Expected fail-closed UCI resolver input or resolution failure."""
 
+    def __init__(self, code: str, message: str):
+        self.code = code
+        self.message = message
+        super().__init__(f"{code} {message}")
+
 
 class UciResolutionPreparationError(UciResolverError):
     """Expected manifest-selection failure with a CLI presentation stage."""
 
     def __init__(self, stage: str, diagnostics: list[Any]):
         self.stage = stage
-        self.diagnostics = tuple(str(item) for item in diagnostics)
-        super().__init__(f"{stage} failed:\n" + "\n".join(f"  {item}" for item in self.diagnostics))
+        self.diagnostics = tuple(diagnostics)
+        self.code = self.diagnostics[0].code if self.diagnostics else ""
+        self.message = f"{stage} failed:\n" + "\n".join(f"  {item}" for item in self.diagnostics)
+        Exception.__init__(self, self.message)
 
 def _context(manifest_id: str, source_path: str, local_name: str) -> str:
     return f"manifest {manifest_id!r}, file {source_path!r}, message {local_name!r}"
@@ -88,15 +112,15 @@ def _context(manifest_id: str, source_path: str, local_name: str) -> str:
 def resolve_lexical_qname(lexical_name: str | None, namespace_bindings: dict[str, str], context: str) -> str:
     """Resolve a lexical XSD QName using the containing element's in-scope bindings."""
     if lexical_name is None or not lexical_name.strip():
-        raise UciResolverError(f"missing or empty type QName in {context}")
+        raise UciResolverError(UR_TYPE_QNAME, f"missing or empty type QName in {context}")
     match = QNAME_PATTERN.fullmatch(lexical_name)
     if not match:
-        raise UciResolverError(f"malformed type QName {lexical_name!r} in {context}")
+        raise UciResolverError(UR_TYPE_QNAME, f"malformed type QName {lexical_name!r} in {context}")
     prefix = match.group("prefix") or ""
     if prefix not in namespace_bindings:
         if not prefix:
             return match.group("local")
-        raise UciResolverError(f"unknown namespace prefix {(prefix or 'default')!r} for type QName {lexical_name!r} in {context}")
+        raise UciResolverError(UR_TYPE_QNAME, f"unknown namespace prefix {(prefix or 'default')!r} for type QName {lexical_name!r} in {context}")
     namespace = namespace_bindings[prefix]
     return f"{{{namespace}}}{match.group('local')}"
 
@@ -104,12 +128,12 @@ def _primitive_from_element(element: Any, manifest_id: str, source_path: str) ->
     local_name = element.get("name", "<unnamed>")
     values = [(item.text or "").strip()[len(PRIMITIVE_PREFIX):].strip() for item in element.findall(f"{XSD_ANNOTATION}/{XSD_DOCUMENTATION}") if (item.text or "").strip().startswith(PRIMITIVE_PREFIX)]
     if len(values) > 1:
-        raise UciResolverError(f"duplicate UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
+        raise UciResolverError(UR_PRIMITIVE_METADATA, f"duplicate UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
     if not values:
         return None
     primitive = values[0][:-1] if values[0].endswith(".") else values[0]
     if not primitive:
-        raise UciResolverError(f"empty UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
+        raise UciResolverError(UR_PRIMITIVE_METADATA, f"empty UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
     return primitive
 
 def parse_uci_schema_document(data: bytes, manifest_id: str, source_path: str) -> ParsedXsdDocument:
@@ -136,12 +160,12 @@ def parse_uci_schema_document(data: bytes, manifest_id: str, source_path: str) -
                 scope_stack.pop()
         root = events.root
     except (DefusedXmlException, ElementTree.ParseError) as exc:
-        raise UciResolverError(f"could not parse manifest {manifest_id!r}, file {source_path!r}: {exc}") from exc
+        raise UciResolverError(UR_XML_PARSE, f"could not parse manifest {manifest_id!r}, file {source_path!r}: {exc}") from exc
     if root.tag != XSD_SCHEMA:
-        raise UciResolverError(f"manifest {manifest_id!r}, file {source_path!r}: document root must be xs:schema")
+        raise UciResolverError(UR_XSD_DOCUMENT, f"manifest {manifest_id!r}, file {source_path!r}: document root must be xs:schema")
     namespace = root.get("targetNamespace")
     if not namespace:
-        raise UciResolverError(f"manifest {manifest_id!r}, file {source_path!r}: xs:schema must declare targetNamespace")
+        raise UciResolverError(UR_XSD_DOCUMENT, f"manifest {manifest_id!r}, file {source_path!r}: xs:schema must declare targetNamespace")
     messages: list[UciMessageDefinition] = []
     declarations: list[UciTypeDeclaration] = []
     for child in root:
@@ -172,17 +196,17 @@ def load_message_definitions(verified_schema_source_set: VerifiedSchemaSourceSet
     for message in (item for document in documents for item in document.messages):
         candidates = index.get(message.type_expanded_name, [])
         if not candidates:
-            raise UciResolverError(f"unknown global UCI type {message.type_expanded_name} referenced by {_context(message.manifest_id, message.source_path, message.local_name)}")
+            raise UciResolverError(UR_UNKNOWN_TYPE, f"unknown global UCI type {message.type_expanded_name} referenced by {_context(message.manifest_id, message.source_path, message.local_name)}")
         if len(candidates) > 1:
             descriptions = sorted(f"{item.kind} ({item.manifest_id}:{item.source_path})" for item in candidates)
-            raise UciResolverError(f"ambiguous global UCI type {message.type_expanded_name} referenced by {_context(message.manifest_id, message.source_path, message.local_name)}\ncandidates:\n" + "\n".join(f"  - {item}" for item in descriptions))
+            raise UciResolverError(UR_AMBIGUOUS_TYPE, f"ambiguous global UCI type {message.type_expanded_name} referenced by {_context(message.manifest_id, message.source_path, message.local_name)}\ncandidates:\n" + "\n".join(f"  - {item}" for item in descriptions))
         definitions.append(replace(message, type_declaration=candidates[0]))
     return definitions
 
 def resolve_contract_messages(contract: Any, verified_schema_source_set: VerifiedSchemaSourceSet) -> list[ResolvedOmsExchange]:
     diagnostics = validate_document(contract)
     if diagnostics:
-        raise UciResolverError("contract validation failed:\n" + "\n".join(f"  {item}" for item in diagnostics))
+        raise UciResolutionPreparationError("contract validation", diagnostics)
     definitions = load_message_definitions(verified_schema_source_set)
     resolved: list[ResolvedOmsExchange] = []
     for function in contract["functions"]:
@@ -193,10 +217,10 @@ def resolve_contract_messages(contract: Any, verified_schema_source_set: Verifie
             candidates = [item for item in definitions if item.local_name == message]
             context = f"function {function['id']!r}, exchange {exchange['id']!r}"
             if not candidates:
-                raise UciResolverError(f"unknown UCI message {message!r} ({context})")
+                raise UciResolverError(UR_UNKNOWN_MESSAGE, f"unknown UCI message {message!r} ({context})")
             if len(candidates) > 1:
                 descriptions = sorted(f"{item.expanded_name} ({item.manifest_id}:{item.source_path})" for item in candidates)
-                raise UciResolverError(f"ambiguous UCI message {message!r} ({context})\ncandidates:\n" + "\n".join(f"  - {item}" for item in descriptions))
+                raise UciResolverError(UR_AMBIGUOUS_MESSAGE, f"ambiguous UCI message {message!r} ({context})\ncandidates:\n" + "\n".join(f"  - {item}" for item in descriptions))
             item = candidates[0]
             resolved.append(ResolvedOmsExchange(function["id"], exchange["id"], message, item.expanded_name, item.primitive, item.type_expanded_name, item.manifest_id, item.source_path))
     return resolved
@@ -205,7 +229,7 @@ def _load_contract(path: Path) -> Any:
     try:
         return load_path(path)
     except YamlInputError as exc:
-        raise UciResolverError(f"could not parse contract {path}: {exc}") from exc
+        raise UciResolutionPreparationError("contract input", [Diagnostic(SC_SCHEMA, "", f"could not parse contract {path}: {exc}")]) from exc
 
 
 def prepare_resolution(
@@ -232,7 +256,7 @@ def prepare_resolution(
     roots.update({manifest["id"]: root for (manifest, _), (_, root) in zip(extension_results, extensions)})
     verified, diagnostics = load_verified_schema_source_set(schema_set, roots)
     if diagnostics:
-        raise UciResolverError("manifest verification failed:\n" + "\n".join(f"  {item}" for item in diagnostics))
+        raise UciResolutionPreparationError("schema-source verification", diagnostics)
     return contract, verified, resolve_contract_messages(contract, verified)
 
 def main(argv: list[str] | None = None) -> int:

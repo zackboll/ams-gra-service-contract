@@ -76,4 +76,24 @@ context while the code identifies the category.
 | `SS_EXTENSION_COMPATIBILITY` | A selected extension is incompatible with the contract UCI baseline version. |
 | `SS_MANIFEST_ID_COLLISION` | Colliding baseline or extension manifest IDs make composition ambiguous. |
 
-Resolver and projection code families remain unpublished.
+## UCI resolver (`UR_*`)
+
+`UR_*` means the failure is owned by UCI XSD parsing or resolver semantics.
+Resolver orchestration can surface `SC_*`, `SS_*`, or `UR_*` depending on the
+layer that owns the failure: invalid contracts retain `SC_*`; manifest,
+composition, and verified-byte failures retain `SS_*`; only resolver-owned
+failures receive `UR_*`.
+
+| Code | Meaning |
+| --- | --- |
+| `UR_XML_PARSE` | Verified XSD bytes are malformed XML or rejected by defused XML parsing. |
+| `UR_XSD_DOCUMENT` | Parsed XML is not a usable `xs:schema` document or lacks `targetNamespace`. |
+| `UR_PRIMITIVE_METADATA` | Direct `UCI_PRIMITIVE:` metadata is duplicate or normalizes to empty. |
+| `UR_TYPE_QNAME` | A message `type` value is missing, malformed, or has an unknown namespace prefix. |
+| `UR_UNKNOWN_TYPE` | A resolved type QName has no matching global declaration. |
+| `UR_AMBIGUOUS_TYPE` | A resolved type QName has multiple matching global declarations. |
+| `UR_UNKNOWN_MESSAGE` | A contract OMS Message has no global UCI message candidate. |
+| `UR_AMBIGUOUS_MESSAGE` | A contract OMS Message has multiple global UCI message candidates. |
+
+The initial Inputs/Outputs projection has no projection-specific diagnostic
+taxonomy yet.

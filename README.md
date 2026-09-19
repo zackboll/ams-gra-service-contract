@@ -27,6 +27,10 @@ Toolchains compose one matching baseline manifest plus only the extension
 manifests explicitly declared by the contract, failing when exact ID mapping or
 baseline compatibility is incomplete.
 
+Schema-source manifest, composition, and byte-verification failures use stable
+`SS_*` diagnostics; invalid contracts retain their `SC_*` identity during
+composition. See [docs/diagnostics.md](docs/diagnostics.md).
+
 ## Inputs/Outputs projection
 
 The non-normative reference tool `tools/io_projection.py` derives a deterministic

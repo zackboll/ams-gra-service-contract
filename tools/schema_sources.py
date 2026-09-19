@@ -23,14 +23,41 @@ except ModuleNotFoundError:  # Support direct execution as ``python tools/schema
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "schema-source" / "v0.1" / "schema-source-manifest.schema.json"
 
+# Public, stable diagnostic identities for schema-source manifest validation,
+# composition, and local byte verification.
+SS_SCHEMA = "SS_SCHEMA"
+SS_UNSAFE_PATH = "SS_UNSAFE_PATH"
+SS_DUPLICATE_FILE = "SS_DUPLICATE_FILE"
+SS_FILE_ORDER = "SS_FILE_ORDER"
+SS_ROOT_SCHEMA = "SS_ROOT_SCHEMA"
+SS_FILE_OUTSIDE_ROOT = "SS_FILE_OUTSIDE_ROOT"
+SS_FILE_MISSING = "SS_FILE_MISSING"
+SS_FILE_READ = "SS_FILE_READ"
+SS_HASH_MISMATCH = "SS_HASH_MISMATCH"
+SS_SOURCE_ROOT_SET = "SS_SOURCE_ROOT_SET"
+SS_BASELINE_SELECTION = "SS_BASELINE_SELECTION"
+SS_EXTENSION_MAPPING = "SS_EXTENSION_MAPPING"
+SS_EXTENSION_COMPATIBILITY = "SS_EXTENSION_COMPATIBILITY"
+SS_MANIFEST_ID_COLLISION = "SS_MANIFEST_ID_COLLISION"
+
+SCHEMA_SOURCE_DIAGNOSTIC_CODES = frozenset(
+    {
+        SS_SCHEMA, SS_UNSAFE_PATH, SS_DUPLICATE_FILE, SS_FILE_ORDER, SS_ROOT_SCHEMA,
+        SS_FILE_OUTSIDE_ROOT, SS_FILE_MISSING, SS_FILE_READ, SS_HASH_MISMATCH,
+        SS_SOURCE_ROOT_SET, SS_BASELINE_SELECTION, SS_EXTENSION_MAPPING,
+        SS_EXTENSION_COMPATIBILITY, SS_MANIFEST_ID_COLLISION,
+    }
+)
+
 
 @dataclass(frozen=True)
 class Diagnostic:
+    code: str
     path: str
     message: str
 
     def __str__(self) -> str:
-        return f"{self.path}: {self.message}" if self.path else self.message
+        return f"{self.code} {self.path}: {self.message}" if self.path else f"{self.code} {self.message}"
 
 
 @dataclass(frozen=True)
@@ -84,7 +111,7 @@ def _format_json_path(parts: Iterable[Any]) -> str:
 def schema_diagnostics(manifest: Any) -> list[Diagnostic]:
     validator = Draft202012Validator(load_schema(), format_checker=FormatChecker())
     return [
-        Diagnostic(_format_json_path(error.absolute_path), error.message)
+        Diagnostic(SS_SCHEMA, _format_json_path(error.absolute_path), error.message)
         for error in sorted(validator.iter_errors(manifest), key=lambda error: list(error.absolute_path))
     ]
 
@@ -110,7 +137,7 @@ def semantic_diagnostics(manifest: Any) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     root_schema = manifest.get("root_schema")
     if isinstance(root_schema, str) and not is_safe_manifest_path(root_schema):
-        diagnostics.append(Diagnostic("$.root_schema", "must be a safe relative POSIX path"))
+        diagnostics.append(Diagnostic(SS_UNSAFE_PATH, "$.root_schema", "must be a safe relative POSIX path"))
 
     files = manifest.get("files")
     if not isinstance(files, list):
@@ -122,13 +149,13 @@ def semantic_diagnostics(manifest: Any) -> list[Diagnostic]:
         path = entry["path"]
         paths.append(path)
         if not is_safe_manifest_path(path):
-            diagnostics.append(Diagnostic(f"$.files[{index}].path", "must be a safe relative POSIX path"))
+            diagnostics.append(Diagnostic(SS_UNSAFE_PATH, f"$.files[{index}].path", "must be a safe relative POSIX path"))
     if len(paths) != len(set(paths)):
-        diagnostics.append(Diagnostic("$.files", "file paths must be unique"))
+        diagnostics.append(Diagnostic(SS_DUPLICATE_FILE, "$.files", "file paths must be unique"))
     if paths != sorted(paths):
-        diagnostics.append(Diagnostic("$.files", "file paths must be sorted lexicographically"))
+        diagnostics.append(Diagnostic(SS_FILE_ORDER, "$.files", "file paths must be sorted lexicographically"))
     if isinstance(root_schema, str) and paths.count(root_schema) != 1:
-        diagnostics.append(Diagnostic("$.root_schema", "must appear exactly once in $.files"))
+        diagnostics.append(Diagnostic(SS_ROOT_SCHEMA, "$.root_schema", "must appear exactly once in $.files"))
     return diagnostics
 
 
@@ -140,7 +167,7 @@ def validate_manifest_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
     try:
         manifest = load_manifest(path)
     except YamlInputError as exc:
-        return None, [Diagnostic("", f"could not parse {path}: {exc}")]
+        return None, [Diagnostic(SS_SCHEMA, "", f"could not parse {path}: {exc}")]
     return manifest, validate_manifest(manifest)
 
 
@@ -162,20 +189,20 @@ def load_verified_schema_source(manifest: Any, source_root: Path) -> tuple[Verif
         path = root / PurePosixPath(relative_path)
         resolved_path = path.resolve(strict=False)
         if not resolved_path.is_relative_to(root):
-            diagnostics.append(Diagnostic(relative_path, "file resolves outside --source-root"))
+            diagnostics.append(Diagnostic(SS_FILE_OUTSIDE_ROOT, relative_path, "file resolves outside --source-root"))
             continue
         if not resolved_path.is_file():
-            diagnostics.append(Diagnostic(relative_path, "file listed by manifest is missing"))
+            diagnostics.append(Diagnostic(SS_FILE_MISSING, relative_path, "file listed by manifest is missing"))
             continue
         try:
             data = resolved_path.read_bytes()
         except OSError as exc:
-            diagnostics.append(Diagnostic(relative_path, f"could not read file listed by manifest: {exc}"))
+            diagnostics.append(Diagnostic(SS_FILE_READ, relative_path, f"could not read file listed by manifest: {exc}"))
             continue
         actual = hashlib.sha256(data).hexdigest()
         if actual != entry["sha256"]:
             diagnostics.append(
-                Diagnostic(relative_path, f"expected sha256 {entry['sha256']}\n  actual   sha256 {actual}")
+                Diagnostic(SS_HASH_MISMATCH, relative_path, f"expected sha256 {entry['sha256']}\n  actual   sha256 {actual}")
             )
             continue
         files.append(VerifiedSchemaFile(relative_path, data))
@@ -192,20 +219,20 @@ def load_verified_schema_source_set(
     manifest_ids = [manifest["id"] for manifest in manifests]
     diagnostics: list[Diagnostic] = []
     if len(manifest_ids) != len(set(manifest_ids)):
-        diagnostics.append(Diagnostic("$.schema_source_set", "baseline and extension manifest ids must be unique"))
+        diagnostics.append(Diagnostic(SS_MANIFEST_ID_COLLISION, "$.schema_source_set", "baseline and extension manifest ids must be unique"))
     expected_ids = set(manifest_ids)
     supplied_ids = set(source_roots_by_manifest_id)
     for manifest_id in sorted(expected_ids - supplied_ids):
-        diagnostics.append(Diagnostic("$.source_roots", f"missing source root for manifest {manifest_id!r}"))
+        diagnostics.append(Diagnostic(SS_SOURCE_ROOT_SET, "$.source_roots", f"missing source root for manifest {manifest_id!r}"))
     for manifest_id in sorted(supplied_ids - expected_ids):
-        diagnostics.append(Diagnostic("$.source_roots", f"source root supplied for unselected manifest {manifest_id!r}"))
+        diagnostics.append(Diagnostic(SS_SOURCE_ROOT_SET, "$.source_roots", f"source root supplied for unselected manifest {manifest_id!r}"))
     if diagnostics:
         return None, diagnostics
 
     verified_sources: list[VerifiedSchemaSource] = []
     for manifest in manifests:
         verified_source, source_diagnostics = load_verified_schema_source(manifest, source_roots_by_manifest_id[manifest["id"]])
-        diagnostics.extend(Diagnostic(f"{manifest['id']}:{diagnostic.path}", diagnostic.message) for diagnostic in source_diagnostics)
+        diagnostics.extend(Diagnostic(diagnostic.code, f"{manifest['id']}:{diagnostic.path}", diagnostic.message) for diagnostic in source_diagnostics)
         if verified_source is not None:
             verified_sources.append(verified_source)
     if diagnostics:
@@ -220,12 +247,12 @@ def compose_schema_source_set(
 
     This operation validates metadata only; it does not verify source bytes.
     """
-    diagnostics = [Diagnostic(diagnostic.path, diagnostic.message) for diagnostic in validate_document(contract)]
+    diagnostics = [Diagnostic(diagnostic.code, diagnostic.path, diagnostic.message) for diagnostic in validate_document(contract)]
     diagnostics.extend(validate_manifest(baseline_manifest))
     extension_manifests = list(extension_manifests)
     for index, manifest in enumerate(extension_manifests):
         diagnostics.extend(
-            Diagnostic(f"$.extension_manifests[{index}]{diagnostic.path[1:]}", diagnostic.message)
+            Diagnostic(diagnostic.code, f"$.extension_manifests[{index}]{diagnostic.path[1:]}", diagnostic.message)
             for diagnostic in validate_manifest(manifest)
         )
     if diagnostics:
@@ -233,12 +260,12 @@ def compose_schema_source_set(
 
     baseline_version = contract["standards"]["uci_schema_version"]
     if baseline_manifest["role"] != "baseline":
-        diagnostics.append(Diagnostic("$.baseline_manifest.role", "must be 'baseline'"))
+        diagnostics.append(Diagnostic(SS_BASELINE_SELECTION, "$.baseline_manifest.role", "must be 'baseline'"))
     if baseline_manifest["schema_family"] != "uci":
-        diagnostics.append(Diagnostic("$.baseline_manifest.schema_family", "must be 'uci'"))
+        diagnostics.append(Diagnostic(SS_BASELINE_SELECTION, "$.baseline_manifest.schema_family", "must be 'uci'"))
     if baseline_manifest["schema_version"] != baseline_version:
         diagnostics.append(
-            Diagnostic(
+            Diagnostic(SS_BASELINE_SELECTION,
                 "$.baseline_manifest.schema_version",
                 f"must match contract UCI baseline version {baseline_version!r}",
             )
@@ -249,18 +276,18 @@ def compose_schema_source_set(
     for index, manifest in enumerate(extension_manifests):
         manifest_id = manifest["id"]
         if manifest_id == baseline_manifest["id"]:
-            diagnostics.append(Diagnostic(f"$.extension_manifests[{index}].id", f"extension manifest id {manifest_id!r} collides with baseline manifest id"))
+            diagnostics.append(Diagnostic(SS_MANIFEST_ID_COLLISION, f"$.extension_manifests[{index}].id", f"extension manifest id {manifest_id!r} collides with baseline manifest id"))
         if manifest_id in manifests_by_id:
-            diagnostics.append(Diagnostic(f"$.extension_manifests[{index}].id", f"duplicate supplied manifest id {manifest_id!r}"))
+            diagnostics.append(Diagnostic(SS_MANIFEST_ID_COLLISION, f"$.extension_manifests[{index}].id", f"duplicate supplied manifest id {manifest_id!r}"))
         else:
             manifests_by_id[manifest_id] = manifest
 
     declared_id_set = set(declared_ids)
     for manifest_id in sorted(set(manifests_by_id) - declared_id_set):
-        diagnostics.append(Diagnostic("$.extension_manifests", f"undeclared extension manifest id {manifest_id!r}"))
+        diagnostics.append(Diagnostic(SS_EXTENSION_MAPPING, "$.extension_manifests", f"undeclared extension manifest id {manifest_id!r}"))
     for manifest_id in declared_ids:
         if manifest_id not in manifests_by_id:
-            diagnostics.append(Diagnostic("$.standards.uci_extension_schemas", f"missing declared extension manifest id {manifest_id!r}"))
+            diagnostics.append(Diagnostic(SS_EXTENSION_MAPPING, "$.standards.uci_extension_schemas", f"missing declared extension manifest id {manifest_id!r}"))
 
     ordered_extensions: list[dict[str, Any]] = []
     for manifest_id in declared_ids:
@@ -268,12 +295,12 @@ def compose_schema_source_set(
         if manifest is None:
             continue
         if manifest["role"] != "extension":
-            diagnostics.append(Diagnostic("$.extension_manifests", f"manifest {manifest_id!r} must have role 'extension'"))
+            diagnostics.append(Diagnostic(SS_EXTENSION_MAPPING, "$.extension_manifests", f"manifest {manifest_id!r} must have role 'extension'"))
         if manifest["schema_family"] != "uci":
-            diagnostics.append(Diagnostic("$.extension_manifests", f"manifest {manifest_id!r} must have schema_family 'uci'"))
+            diagnostics.append(Diagnostic(SS_EXTENSION_MAPPING, "$.extension_manifests", f"manifest {manifest_id!r} must have schema_family 'uci'"))
         if manifest["role"] == "extension" and baseline_version not in manifest["compatible_baseline_versions"]:
             diagnostics.append(
-                Diagnostic(
+                Diagnostic(SS_EXTENSION_COMPATIBILITY,
                     "$.extension_manifests",
                     f"manifest {manifest_id!r} is not compatible with UCI baseline version {baseline_version!r}",
                 )
@@ -303,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             contract = load_path(args.contract)
         except YamlInputError as exc:
-            print(f"FAIL {args.contract.resolve()}\n  could not parse contract: {exc}")
+            print(f"FAIL {args.contract.resolve()}\n  SC_SCHEMA could not parse contract: {exc}")
             return 1
         baseline_path = args.baseline_manifest.resolve()
         baseline_manifest, baseline_diagnostics = validate_manifest_path(baseline_path)
@@ -311,7 +338,7 @@ def main(argv: list[str] | None = None) -> int:
         extension_results = [validate_manifest_path(path) for path in extension_paths]
         diagnostics = baseline_diagnostics[:]
         for path, (_, manifest_diagnostics) in zip(extension_paths, extension_results):
-            diagnostics.extend(Diagnostic(str(path), diagnostic.message) for diagnostic in manifest_diagnostics)
+            diagnostics.extend(Diagnostic(diagnostic.code, str(path), diagnostic.message) for diagnostic in manifest_diagnostics)
         if not diagnostics:
             schema_set, diagnostics = compose_schema_source_set(
                 contract, baseline_manifest, [manifest for manifest, _ in extension_results]

@@ -1,0 +1,76 @@
+contract_version: "0.1"
+
+service:
+  name: example-status-subsystem
+  version: "0.1.0"
+  kind: subsystem
+  description: >-
+    Illustrative machine-readable representation of the Subsystem Status
+    function shape from the OMS v2.5 Service Contract material. This is an
+    example of this independent format, not an official OMS artifact.
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+sources:
+  - id: oms-service-contract-instructions-v25
+    title: OMS Service Contract Instructions v2.5
+    document_number: OMSC-INS-003
+    revision: M
+    date: "2026-01-22"
+    uri: https://github.com/open-arsenal/oms/blob/726272bd0390982a759c91a9cf4e13b81c2b510b/docs_official/14_2_OMSC-INS-003_RevM_ServiceContractInstructions_DandD_v2_5.docx
+
+functions:
+  - id: subsystem-status
+    name: Subsystem Status
+    category: required
+    required_group: subsystem
+    applicability: applicable
+    description: >-
+      Required Subsystem Status interface example. Message primitive is
+      intentionally omitted and must be resolved from the selected UCI schema.
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.2.2 Subsystem Status
+    exchanges:
+      - id: subsystem-status-output
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: SubsystemStatus
+        topic: SubsystemStatus
+        timing:
+          kind: periodic
+          nominal_rate_hz: 1.0
+          max_rate_hz: 0.5
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.2.4 / Table 3.2-2 / SubsystemStatus
+            note: >-
+              Timing values mirror the upstream example table and are informative,
+              not hard real-time requirements in this v0.1 format.
+      - id: subsystem-status-data-request-input
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: SubsystemStatusDataRequest
+        topic: SubsystemStatusDataRequest
+        timing:
+          kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.2.4 / Table 3.2-2 / SubsystemStatusDataRequest
+      - id: subsystem-status-data-request-status-output
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: SubsystemStatusDataRequestStatus
+        topic: SubsystemStatusDataRequestStatus
+        timing:
+          kind: on_demand
+          nominal_response_seconds: 0.5
+          max_response_seconds: 3.0
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.2.4 / Table 3.2-2 / SubsystemStatusDataRequestStatus

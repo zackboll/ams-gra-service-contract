@@ -160,3 +160,7 @@ def test_source_example_projection_preserves_expected_uci_identities() -> None:
     initialization = load_document(ROOT / "examples" / "service-initialization.yaml")
     initialization_projection = project_inputs_outputs(initialization, [real_resolution("service-initialization", "file-metadata-input", "FileMetadata", "DataRecord-1"), real_resolution("service-initialization", "file-location-input", "FileLocation", "DataRecord-1")])
     assert [(item.exchange_name, item.uci_primitive) for item in initialization_projection.functions[0].exchanges] == [("FileMetadata", "DataRecord-1"), ("FileLocation", "DataRecord-1"), ("ServiceConfigFile", None)]
+    subsystem_status = load_document(ROOT / "examples" / "subsystem-status.yaml")
+    subsystem_status_ids = [("subsystem-status", "subsystem-status-output", "SubsystemStatus", "Status-1"), ("subsystem-status", "subsystem-status-data-request-input", "SubsystemStatusDataRequest", "DataRequest-2"), ("subsystem-status", "subsystem-status-data-request-status-output", "SubsystemStatusDataRequestStatus", "DataRequest-2")]
+    subsystem_projection = project_inputs_outputs(subsystem_status, [real_resolution(function, exchange, message, primitive) for function, exchange, message, primitive in subsystem_status_ids])
+    assert [(item.exchange_name, item.uci_primitive, item.message_type_qname) for item in subsystem_projection.functions[0].exchanges] == [(message, primitive, f"{{https://www.vdl.afrl.af.mil/programs/oam}}{message}MT") for _, _, message, primitive in subsystem_status_ids]

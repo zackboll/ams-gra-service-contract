@@ -46,24 +46,20 @@ python tools/validate.py \
 
 For `service` and `isolator`, it requires the canonical functions **Service
 Initialization** and **Service Status** with required/service/applicable
-metadata. It also requires the three minimum Service Status OMS-message shapes:
-periodic `ServiceStatus` output, asynchronous `ServiceStatusDataRequest` input,
-and on-demand `ServiceStatusDataRequestStatus` output; and the Service
-Initialization inventory: optional asynchronous `FileMetadata` and
-`FileLocation` OMS-message inputs plus optional asynchronous `ServiceConfigFile`
-Data Transfer input. Required profile rows still exist when their LoM is
-optional. Service Initialization matching does not fix Data Transfer protocol,
-data type, data format, sharing pattern, topics, SOAC, numerical timing,
-Appendix C, or primitives. For `subsystem`, it requires the Section 3.2
-inventory **Subsystem Startup**, **Subsystem Status**, **Subsystem State Command
-Processing**, **Subsystem Built-In Test (BIT)**, **Subsystem Calibration**, and
-**Subsystem Shutdown**. Required inventory/section presence is distinct from
+metadata, including their minimum exchange surfaces. For `subsystem`, it
+requires the Section 3.2 inventory **Subsystem Startup**, **Subsystem Status**,
+**Subsystem State Command Processing**, **Subsystem Built-In Test (BIT)**,
+**Subsystem Calibration**, and **Subsystem Shutdown**. It also requires the
+three minimum Subsystem Status OMS-message shapes: periodic `SubsystemStatus`
+output, asynchronous `SubsystemStatusDataRequest` input, and on-demand
+`SubsystemStatusDataRequestStatus` output. Matching is semantic and does not
+fix local IDs, topics, operational attributes, numerical timing values, Appendix
+C, or UCI primitives. Required inventory/section presence is distinct from
 `applicability: applicable`: State Command Processing, BIT, and Calibration may
 be explicitly `not_applicable` with the portable-contract rationale and empty
-exchange requirements. This does not yet validate Section 3.2 exchange
-inventories, Subsystem workflow/state behavior, Required Capability-related
-Functions, or conditional Section 3.1 Service Functions for Platform-hosted
-Adapters; it does not claim full OMS Subsystem compliance.
+exchange requirements. Remaining Section 3.2 exchange gaps are Subsystem
+Startup, State Command Processing, BIT, Calibration, and Shutdown. The profile
+does not claim full OMS Subsystem compliance.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).
@@ -255,6 +251,8 @@ generated OMS Service Contracts:
   Required Capability-related Command / Command Status example.
 - [`examples/service-initialization.yaml`](examples/service-initialization.yaml):
   Required Service Function containing both OMS Message and Data Transfer inputs.
+- [`examples/subsystem-status.yaml`](examples/subsystem-status.yaml): Required
+  Subsystem Function / status example.
 
 ## Minimal example
 

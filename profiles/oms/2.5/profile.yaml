@@ -93,6 +93,31 @@ required_functions:
     traceability:
       - source: oms-service-contract-instructions-v25
         locator: 3.2.2 Subsystem Status
+    required_exchanges:
+      - kind: oms_message
+        message: SubsystemStatus
+        direction: output
+        mandate: mandatory
+        timing_kind: periodic
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.2.4 / Table 3.2-2 / SubsystemStatus
+      - kind: oms_message
+        message: SubsystemStatusDataRequest
+        direction: input
+        mandate: mandatory
+        timing_kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.2.4 / Table 3.2-2 / SubsystemStatusDataRequest
+      - kind: oms_message
+        message: SubsystemStatusDataRequestStatus
+        direction: output
+        mandate: mandatory
+        timing_kind: on_demand
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.2.4 / Table 3.2-2 / SubsystemStatusDataRequestStatus
   - name: Subsystem State Command Processing
     applies_to: [subsystem]
     category: required

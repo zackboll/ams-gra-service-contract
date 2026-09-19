@@ -63,3 +63,9 @@ Initialization example resolves both `FileMetadata` and `FileLocation` as
 `DataRecord-1`; this remains visible even where an OMS example's MP-style
 presentation may suggest a different family. No compatibility mapping is
 applied.
+
+The Subsystem Status example resolves `SubsystemStatus` as `Status-1` and both
+`SubsystemStatusDataRequest` and `SubsystemStatusDataRequestStatus` as
+`DataRequest-2`. Its authored three-row order is retained in both Markdown and
+JSON projection output, with message and exact type QNames from the same
+verified UCI snapshot.

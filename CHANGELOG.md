@@ -6,6 +6,9 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- UCI 2.6 schema-source baseline with pinned extracted-XSD hashes, plus real
+  UCI 2.5 -> 2.6 resolver regression evidence and continuity checks for
+  repository-used message names.
 - Stable symbolic `SC_*` and `OP_*` diagnostics for portable-contract and OMS
   profile validation, with code-first CLI rendering and public inventory.
 - OMS 2.5 minimum Subsystem Status exchange-shape validation: periodic

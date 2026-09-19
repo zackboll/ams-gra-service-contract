@@ -7,6 +7,7 @@ import pytest
 from tools.schema_sources import compose_schema_source_set, load_verified_schema_source_set
 from tools.validate import load_document
 from tools.uci_resolver import UciResolverError, load_message_definitions, parse_uci_schema_bytes, parse_uci_schema_document, resolve_contract_messages
+from tools.uci_version_regression import classify
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "uci-resolver"
@@ -233,3 +234,10 @@ def test_non_oms_data_transfer_is_ignored(tmp_path: Path) -> None:
     data = load_document(ROOT / "examples" / "service-initialization.yaml")
     data["functions"][0]["exchanges"] = [data["functions"][0]["exchanges"][2]]
     assert resolve(tmp_path / "only-transfer", data, {"baseline.xsd": fixture("baseline.xsd")}) == []
+
+
+def test_cross_version_classification_fails_closed_for_absent_message() -> None:
+    record = {"local_name": "MessageA"}
+    assert classify(record, record) == "unchanged"
+    assert classify(record, None) == "absent in 2.6"
+    assert classify(None, record) == "newly resolvable"

@@ -7,6 +7,7 @@ from tools.validate import load_document
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "schema-sources" / "uci" / "2.5" / "manifest.yaml"
+UCI_26_MANIFEST_PATH = ROOT / "schema-sources" / "uci" / "2.6" / "manifest.yaml"
 
 
 def synthetic_manifest(files: dict[str, bytes]) -> dict[str, object]:
@@ -53,6 +54,24 @@ def test_checked_in_uci_25_manifest_validates() -> None:
     manifest, diagnostics = validate_manifest_path(MANIFEST_PATH)
     assert diagnostics == []
     assert manifest["manifest_version"] == "0.1"
+    assert manifest["role"] == "baseline"
+    assert manifest["schema_family"] == "uci"
+    assert manifest["schema_version"] == "2.5"
+    assert manifest["source"]["revision"] == "093610b7753944059360d3236770ab446d039556"
+    assert sum(item["path"] == manifest["root_schema"] for item in manifest["files"]) == 1
+    assert [item["path"] for item in manifest["files"]] == sorted(item["path"] for item in manifest["files"])
+
+
+def test_checked_in_uci_26_manifest_validates() -> None:
+    manifest, diagnostics = validate_manifest_path(UCI_26_MANIFEST_PATH)
+    assert diagnostics == []
+    assert manifest["manifest_version"] == "0.1"
+    assert manifest["role"] == "baseline"
+    assert manifest["schema_family"] == "uci"
+    assert manifest["schema_version"] == "2.6"
+    assert manifest["source"]["revision"] == "78eb61b6112c8bffa40820c33124b57787fc5bd9"
+    assert sum(item["path"] == manifest["root_schema"] for item in manifest["files"]) == 1
+    assert [item["path"] for item in manifest["files"]] == sorted(item["path"] for item in manifest["files"])
 
 
 def test_root_not_in_files_is_rejected() -> None:

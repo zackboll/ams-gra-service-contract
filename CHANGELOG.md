@@ -6,6 +6,9 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Stable symbolic `SS_*` diagnostics for schema-source manifest validation,
+  composition, and local byte verification, preserving `SC_*` contract
+  diagnostics during composition.
 - UCI 2.6 schema-source baseline with pinned extracted-XSD hashes, plus real
   UCI 2.5 -> 2.6 resolver regression evidence and continuity checks for
   repository-used message names.

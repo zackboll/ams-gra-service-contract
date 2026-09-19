@@ -1,8 +1,8 @@
 # Validation diagnostics
 
-`tools/validate.py` reports a stable symbolic code, a document path, and a
-human-readable message for every diagnostic. Codes let tests and downstream
-tools identify a failure class without parsing English prose:
+The validation and schema-source tools report a stable symbolic code, a path,
+and a human-readable message for every diagnostic. Codes let tests and
+downstream tools identify a failure class without parsing English prose:
 
 ```text
 SC_DUPLICATE_FUNCTION $.functions: duplicate function id 'foo'
@@ -52,6 +52,28 @@ returns only those compatibility diagnostics. Ordinary contract structural
 validation runs before profile application, so invalid portable documents yield
 `SC_SCHEMA` rather than being masked by profile diagnostics.
 
-This inventory covers only diagnostics owned by `tools/validate.py`. The
-schema-source verifier, UCI resolver, Inputs/Outputs projection, and YAML
-support do not yet publish canonical code families.
+## Schema source (`SS_*`)
+
+`SS_*` means the failure is owned by schema-source manifest, composition, or
+verification semantics. `compose_schema_source_set()` may return `SC_*`
+diagnostics when its input contract is invalid. The path and message provide
+context while the code identifies the category.
+
+| Code | Meaning |
+| --- | --- |
+| `SS_SCHEMA` | Manifest JSON-Schema validation or manifest YAML/JSON parsing failure. |
+| `SS_UNSAFE_PATH` | Root schema or manifest file path is not a canonical safe relative POSIX path. |
+| `SS_DUPLICATE_FILE` | Manifest file paths are not unique. |
+| `SS_FILE_ORDER` | Manifest file list is not lexicographically ordered. |
+| `SS_ROOT_SCHEMA` | Root schema does not appear exactly once in `files`. |
+| `SS_FILE_OUTSIDE_ROOT` | A resolved manifest file escapes the supplied source root. |
+| `SS_FILE_MISSING` | A manifest-declared file does not exist locally. |
+| `SS_FILE_READ` | A manifest-declared file could not be read. |
+| `SS_HASH_MISMATCH` | Actual bytes do not match the manifest SHA-256. |
+| `SS_SOURCE_ROOT_SET` | Supplied source-root IDs do not exactly match the selected schema-source set. |
+| `SS_BASELINE_SELECTION` | Baseline manifest role, family, or version is incompatible with the contract. |
+| `SS_EXTENSION_MAPPING` | Declared and supplied extension manifest IDs, roles, or families do not map exactly. |
+| `SS_EXTENSION_COMPATIBILITY` | A selected extension is incompatible with the contract UCI baseline version. |
+| `SS_MANIFEST_ID_COLLISION` | Colliding baseline or extension manifest IDs make composition ambiguous. |
+
+Resolver and projection code families remain unpublished.

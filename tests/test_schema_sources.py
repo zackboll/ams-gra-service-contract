@@ -1,8 +1,32 @@
 import hashlib
+import re
 from copy import deepcopy
 from pathlib import Path
 
-from tools.schema_sources import compose_schema_source_set, load_verified_schema_source, load_verified_schema_source_set, validate_manifest, validate_manifest_path, verify_manifest
+from tools import schema_sources
+from tools.schema_sources import (
+    SCHEMA_SOURCE_DIAGNOSTIC_CODES,
+    SS_BASELINE_SELECTION,
+    SS_DUPLICATE_FILE,
+    SS_EXTENSION_COMPATIBILITY,
+    SS_EXTENSION_MAPPING,
+    SS_FILE_MISSING,
+    SS_FILE_ORDER,
+    SS_FILE_OUTSIDE_ROOT,
+    SS_FILE_READ,
+    SS_HASH_MISMATCH,
+    SS_MANIFEST_ID_COLLISION,
+    SS_ROOT_SCHEMA,
+    SS_SCHEMA,
+    SS_SOURCE_ROOT_SET,
+    SS_UNSAFE_PATH,
+    compose_schema_source_set,
+    load_verified_schema_source,
+    load_verified_schema_source_set,
+    validate_manifest,
+    validate_manifest_path,
+    verify_manifest,
+)
 from tools.validate import load_document
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,32 +100,45 @@ def test_checked_in_uci_26_manifest_validates() -> None:
 
 def test_root_not_in_files_is_rejected() -> None:
     manifest = synthetic_manifest({"other.xsd": b"other"})
-    assert "must appear exactly once" in str(validate_manifest(manifest)[-1])
+    assert validate_manifest(manifest)[-1].code == SS_ROOT_SCHEMA
 
 
 def test_duplicate_file_path_is_rejected() -> None:
     manifest = synthetic_manifest({"root.xsd": b"root"})
     manifest["files"].append(deepcopy(manifest["files"][0]))
-    assert any("must be unique" in diagnostic.message for diagnostic in validate_manifest(manifest))
+    assert any(diagnostic.code == SS_DUPLICATE_FILE for diagnostic in validate_manifest(manifest))
 
 
-def test_unsafe_paths_are_rejected() -> None:
+def test_unsafe_root_path_is_rejected() -> None:
+    manifest = synthetic_manifest({"root.xsd": b"root"})
+    manifest["root_schema"] = "../root.xsd"
+    assert validate_manifest(manifest)[0].code == SS_UNSAFE_PATH
+
+
+def test_unsafe_file_paths_are_rejected() -> None:
     for path in ("../foo.xsd", "foo/../bar.xsd", "./foo.xsd", "foo\\bar.xsd", "C:/foo.xsd"):
         manifest = synthetic_manifest({"root.xsd": b"root"})
         manifest["files"][0]["path"] = path
-        assert any("safe relative POSIX" in diagnostic.message for diagnostic in validate_manifest(manifest))
+        assert any(diagnostic.code == SS_UNSAFE_PATH for diagnostic in validate_manifest(manifest))
 
 
 def test_invalid_sha256_is_structurally_rejected() -> None:
     manifest = synthetic_manifest({"root.xsd": b"root"})
     manifest["files"][0]["sha256"] = "not-a-digest"
-    assert any("does not match" in diagnostic.message for diagnostic in validate_manifest(manifest))
+    assert any(diagnostic.code == SS_SCHEMA for diagnostic in validate_manifest(manifest))
+
+
+def test_manifest_parse_failure_uses_schema_code(tmp_path: Path) -> None:
+    path = tmp_path / "manifest.yaml"
+    path.write_text("{not valid", encoding="utf-8")
+    _, diagnostics = validate_manifest_path(path)
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_SCHEMA]
 
 
 def test_unsorted_file_list_is_rejected() -> None:
     manifest = synthetic_manifest({"dependency.xsd": b"dependency", "root.xsd": b"root"})
     manifest["files"].reverse()
-    assert any("sorted lexicographically" in diagnostic.message for diagnostic in validate_manifest(manifest))
+    assert any(diagnostic.code == SS_FILE_ORDER for diagnostic in validate_manifest(manifest))
 
 
 def test_local_verification_accepts_exact_declared_subset(tmp_path: Path) -> None:
@@ -144,8 +181,10 @@ def test_verified_source_set_requires_exact_source_root_ids(tmp_path: Path) -> N
     schema_set, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a"]), baseline, [extension])
     assert diagnostics == []
     _, diagnostics = load_verified_schema_source_set(schema_set, {baseline["id"]: tmp_path})
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_SOURCE_ROOT_SET]
     assert any("missing source root for manifest 'ext-a'" in diagnostic.message for diagnostic in diagnostics)
     _, diagnostics = load_verified_schema_source_set(schema_set, {baseline["id"]: tmp_path, "ext-a": tmp_path, "extra": tmp_path})
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_SOURCE_ROOT_SET]
     assert any("source root supplied for unselected manifest 'extra'" in diagnostic.message for diagnostic in diagnostics)
 
 
@@ -169,13 +208,36 @@ def test_local_verification_reports_tampered_bytes(tmp_path: Path) -> None:
     (tmp_path / "root.xsd").write_bytes(b"tampered")
     diagnostics = verify_manifest(manifest, tmp_path)
     assert len(diagnostics) == 1
+    assert diagnostics[0].code == SS_HASH_MISMATCH
     assert "expected sha256" in diagnostics[0].message
     assert "actual   sha256" in diagnostics[0].message
 
 
 def test_local_verification_reports_missing_file(tmp_path: Path) -> None:
     diagnostics = verify_manifest(synthetic_manifest({"root.xsd": b"root"}), tmp_path)
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_FILE_MISSING]
     assert [diagnostic.message for diagnostic in diagnostics] == ["file listed by manifest is missing"]
+
+
+def test_local_verification_reports_file_outside_source_root(tmp_path: Path) -> None:
+    outside = tmp_path.parent / "outside.xsd"
+    outside.write_bytes(b"outside")
+    (tmp_path / "root.xsd").symlink_to(outside)
+    diagnostics = verify_manifest(synthetic_manifest({"root.xsd": b"outside"}), tmp_path)
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_FILE_OUTSIDE_ROOT]
+
+
+def test_local_verification_reports_file_read_error(tmp_path: Path, monkeypatch) -> None:
+    manifest = synthetic_manifest({"root.xsd": b"root"})
+    path = tmp_path / "root.xsd"
+    path.write_bytes(b"root")
+
+    def fail_read_bytes(_: Path) -> bytes:
+        raise OSError("read denied")
+
+    monkeypatch.setattr(Path, "read_bytes", fail_read_bytes)
+    diagnostics = verify_manifest(manifest, tmp_path)
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_FILE_READ]
 
 
 def test_extension_requires_compatible_baseline_versions() -> None:
@@ -207,19 +269,42 @@ def test_composition_rejects_invalid_contract_before_selection() -> None:
     contract["standards"].pop("uci_schema_version")
     schema_set, diagnostics = compose_schema_source_set(contract, synthetic_manifest({"root.xsd": b"root"}), [])
     assert schema_set is None
-    assert any("uci_schema_version" in diagnostic.message for diagnostic in diagnostics)
+    assert any(diagnostic.code == "SC_SCHEMA" and "uci_schema_version" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_composition_preserves_duplicate_contract_function_code() -> None:
+    contract = synthetic_contract()
+    contract["functions"].append(deepcopy(contract["functions"][0]))
+    _, diagnostics = compose_schema_source_set(contract, synthetic_manifest({"root.xsd": b"root"}), [])
+    assert [diagnostic.code for diagnostic in diagnostics] == ["SC_DUPLICATE_FUNCTION"]
 
 
 def test_composition_rejects_baseline_version_mismatch_and_wrong_role() -> None:
     manifest = synthetic_manifest({"root.xsd": b"root"})
     manifest["schema_version"] = "2.6"
     _, diagnostics = compose_schema_source_set(synthetic_contract(), manifest, [])
-    assert any("must match contract UCI baseline" in diagnostic.message for diagnostic in diagnostics)
+    assert any(diagnostic.code == SS_BASELINE_SELECTION and "must match contract UCI baseline" in diagnostic.message for diagnostic in diagnostics)
     manifest["schema_version"] = "1.0"
     manifest["role"] = "extension"
     manifest["compatible_baseline_versions"] = ["2.5"]
     _, diagnostics = compose_schema_source_set(synthetic_contract(), manifest, [])
-    assert any("must be 'baseline'" in diagnostic.message for diagnostic in diagnostics)
+    assert any(diagnostic.code == SS_BASELINE_SELECTION and "must be 'baseline'" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_composition_rejects_baseline_wrong_family(monkeypatch) -> None:
+    manifest = synthetic_manifest({"root.xsd": b"root"})
+    manifest["schema_family"] = "other"
+    monkeypatch.setattr(schema_sources, "validate_manifest", lambda _: [])
+    _, diagnostics = compose_schema_source_set(synthetic_contract(), manifest, [])
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_BASELINE_SELECTION]
+
+
+def test_composition_rejects_extension_wrong_family(monkeypatch) -> None:
+    extension = synthetic_extension("ext-a")
+    extension["schema_family"] = "other"
+    monkeypatch.setattr(schema_sources, "validate_manifest", lambda _: [])
+    _, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a"]), synthetic_manifest({"root.xsd": b"root"}), [extension])
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_EXTENSION_MAPPING]
 
 
 def test_composition_selects_extensions_in_contract_declaration_order() -> None:
@@ -232,6 +317,7 @@ def test_composition_selects_extensions_in_contract_declaration_order() -> None:
 def test_composition_rejects_missing_undeclared_and_exact_id_mismatches() -> None:
     _, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a", "ext-b"]), synthetic_manifest({"root.xsd": b"root"}), [synthetic_extension("Ext-A")])
     messages = [diagnostic.message for diagnostic in diagnostics]
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_EXTENSION_MAPPING] * 3
     assert any("missing declared extension manifest id 'ext-a'" in message for message in messages)
     assert any("missing declared extension manifest id 'ext-b'" in message for message in messages)
     assert any("undeclared extension manifest id 'Ext-A'" in message for message in messages)
@@ -243,6 +329,7 @@ def test_composition_rejects_duplicate_wrong_role_and_incompatible_extensions() 
     incompatible = synthetic_extension("ext-b", ["2.6"])
     _, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a", "ext-b"]), synthetic_manifest({"root.xsd": b"root"}), [wrong_role, synthetic_extension("ext-a"), incompatible])
     messages = [diagnostic.message for diagnostic in diagnostics]
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_MANIFEST_ID_COLLISION, SS_EXTENSION_MAPPING, SS_EXTENSION_COMPATIBILITY]
     assert any("duplicate supplied manifest id 'ext-a'" in message for message in messages)
     assert any("must have role 'extension'" in message for message in messages)
     assert any("not compatible with UCI baseline version '2.5'" in message for message in messages)
@@ -252,4 +339,10 @@ def test_composition_rejects_extension_id_collision_with_baseline() -> None:
     baseline = synthetic_manifest({"root.xsd": b"root"})
     extension = synthetic_extension("test-baseline")
     _, diagnostics = compose_schema_source_set(synthetic_contract(["test-baseline"]), baseline, [extension])
+    assert [diagnostic.code for diagnostic in diagnostics] == [SS_MANIFEST_ID_COLLISION]
     assert any("collides with baseline manifest id" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_schema_source_diagnostic_codes_are_unique_and_well_formed() -> None:
+    assert len(SCHEMA_SOURCE_DIAGNOSTIC_CODES) == 14
+    assert all(re.fullmatch(r"SS_[A-Z0-9_]+", code) for code in SCHEMA_SOURCE_DIAGNOSTIC_CODES)

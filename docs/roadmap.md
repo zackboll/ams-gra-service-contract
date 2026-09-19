@@ -44,8 +44,8 @@ Potential goals driven by real implementation experience:
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);
-- initial canonical contract/profile validation diagnostic codes implemented;
-  schema-source, resolver, and projection code families remain;
+- contract/profile and schema-source diagnostic codes implemented; resolver and
+  projection code families remain;
 - real Service Contract exercises, mature diagnostics, and first independent
   downstream consumers. An initial real UCI 2.5 -> 2.6 resolver/schema
   transition has been exercised; broader upstream-version mapping remains.

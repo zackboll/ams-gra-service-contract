@@ -135,6 +135,10 @@ and root/file-set invariants. It does not contact GitHub and does not prove that
 an arbitrary local UCI checkout has matching bytes. This is the operation run by
 `make check` and CI.
 
+Failures use stable code-first `SS_*` diagnostics; composition preserves `SC_*`
+diagnostics when the supplied Service Contract itself is invalid. See
+[diagnostics](diagnostics.md).
+
 ### Local source-byte verification
 
 Verify raw bytes in an already obtained local checkout:

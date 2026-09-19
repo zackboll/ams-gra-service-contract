@@ -1,11 +1,14 @@
 PYTHON ?= python3
 
-.PHONY: validate test check
+.PHONY: validate text-check test check
 
 validate:
 	$(PYTHON) tools/validate.py --all
 
+text-check:
+	$(PYTHON) tools/check_text_hygiene.py
+
 test:
 	$(PYTHON) -m pytest -q
 
-check: validate test
+check: text-check validate test

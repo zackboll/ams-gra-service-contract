@@ -598,7 +598,7 @@ Capability reference. When present, it MUST resolve to a declared Capability.
 No v0.1 rule requires a Capability to own a particular number or category of
 functions.
 
-## 20. Semantic validation rules
+## 19. Semantic validation rules
 
 After JSON Schema validation, a conforming repository validator MUST enforce at least:
 
@@ -613,7 +613,7 @@ A UCI-aware resolver additionally MUST enforce message resolution as described a
 
 Future validators may add diagnostics that do not change acceptance semantics. A warning MUST NOT silently become a rejection in the same contract-language version without a specification update.
 
-## 21. Round-trip and canonicalization
+## 20. Round-trip and canonicalization
 
 v0.1 does not define a canonical YAML serialization.
 
@@ -629,7 +629,7 @@ when round-tripping, because stable diffs are a principal use case.
 
 Tools MUST NOT rely on YAML mapping key order for semantics.
 
-## 22. Security considerations
+## 21. Security considerations
 
 Contracts may influence generated interfaces and deployment configuration. Consumers should treat contract files as source code:
 
@@ -640,7 +640,7 @@ Contracts may influence generated interfaces and deployment configuration. Consu
 - do not execute text from `description`, `note`, `details`, `locator`, or `reference`; and
 - treat generated deployment permissions as security-sensitive outputs requiring review.
 
-## 23. Extensibility policy
+## 22. Extensibility policy
 
 v0.1 intentionally rejects unknown fields rather than offering an unrestricted extension map. This keeps the experimental core small and makes typos visible.
 

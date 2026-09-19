@@ -67,4 +67,12 @@ functions:
     category: required
     required_group: subsystem
     applicability: applicable
-    exchanges: []
+    exchanges:
+      - id: local-state-command
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: SubsystemStateCommand
+        topic: local/state-command
+        timing:
+          kind: asynchronous

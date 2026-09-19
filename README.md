@@ -69,11 +69,13 @@ fix local IDs, topics, operational attributes, numerical timing values, Appendix
 C, or UCI primitives. Required inventory/section presence is distinct from
 `applicability: applicable`: State Command Processing, BIT, and Calibration may
 be explicitly `not_applicable` with the portable-contract rationale and empty
-exchange requirements. State Command Processing source classification is
-complete with no profile exchange minimum: its mixed Table 3.2-3 rows and fixed
-table-input/workflow-response status-direction conflict are documented rather
-than guessed. Remaining unclassified Section 3.2 exchange surfaces are
-Subsystem Startup, BIT, and Calibration. Table 3.2-6
+exchange requirements. State Command Processing has a fixed minimum
+`SubsystemStateCommand` OMS-message input, mandatory, asynchronous exchange.
+Its complete Table 3.2-3 rows are mixed, but all command fields matched by the
+profile are fixed and workflow receipt corroborates input. The status direction
+is intentionally not profile-enforced because fixed table-input and workflow-
+response evidence conflicts. Remaining unclassified Section 3.2 exchange
+surfaces are Subsystem Startup, BIT, and Calibration. Table 3.2-6
 Subsystem Shutdown rows (`SubsystemStateCommand`,
 `SubsystemStateCommandStatus`, and optional `Log_File`) are all green,
 removable DOCX guidance/example rows, so Shutdown has no profile exchange

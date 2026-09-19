@@ -47,18 +47,29 @@ exchange direction. The DOCX does not establish a single unambiguous fixed
 status direction, and the green timing/Appendix C cells do not resolve that
 conflict.
 
-Following the conservative fixed-source-conflict and mixed/indeterminate rules,
-the OMS 2.5 profile adds no `required_exchanges` for Subsystem State Command
-Processing. This does not treat Table 3.2-3 as categorically non-normative and
-does not choose a direction from message naming or intuition. The 0.5/3-second
-values remain informative green content and are not matched.
+Both rows remain mixed at the complete-row level, but that classification does
+not make every field unusable for the deliberately narrow profile matcher. For
+`SubsystemStateCommand`, every matched field is fixed black/automatic: OMS
+Message, `SubsystemStateCommand`, input, mandatory, and asynchronous. The only
+green command-row field is Appendix C mapping, which the profile does not
+match. Fixed workflow prose independently corroborates command input by saying
+the Subsystem receives the command. The profile therefore enforces that command
+minimum with traceability to `3.2.3.4 / Table 3.2-3 /
+SubsystemStateCommand`.
 
-`allowed_applicability: [applicable, not_applicable]` is unchanged. An
-applicable State Command Processing function with `exchanges: []` passes the
-profile regression. A not-applicable function continues to require the portable
-schema rationale and zero exchanges; the existing conditional-N/A fixture
-passes. Because no fixed exchange rule was added, profile-validator conditional
-exchange gating was neither needed nor changed.
+`SubsystemStateCommandStatus` remains unprofiled. Its fixed table direction is
+input while the fixed workflow prose says the Subsystem responds with it. That
+is a genuine fixed-source conflict, so the profile does not select input or
+output from message naming or intuition. Its green 0.5/3-second timing and
+Appendix C values remain unmatched.
 
-No public State Command Processing example was added: a useful example would
-have to select a status direction despite the unresolved fixed-source conflict.
+`allowed_applicability: [applicable, not_applicable]` is unchanged. The profile
+enforces this command rule when the function is applicable. When a requirement
+uses `allowed_applicability` and an actual `not_applicable` function is allowed,
+the validator skips only that requirement's `required_exchanges`; portable
+validation still requires the rationale and zero exchanges. Fixed-applicable
+requirements do not use this gate.
+
+No public State Command Processing example was added: the complete profile test
+fixture demonstrates the fixed command minimum without selecting a status
+direction despite the unresolved conflict.

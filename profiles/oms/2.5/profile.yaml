@@ -126,6 +126,15 @@ required_functions:
     traceability:
       - source: oms-service-contract-instructions-v25
         locator: 3.2.3 Subsystem State Command Processing
+    required_exchanges:
+      - kind: oms_message
+        message: SubsystemStateCommand
+        direction: input
+        mandate: mandatory
+        timing_kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.2.3.4 / Table 3.2-3 / SubsystemStateCommand
   - name: Subsystem Built-In Test (BIT)
     applies_to: [subsystem]
     category: required

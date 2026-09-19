@@ -264,19 +264,61 @@ def test_oms_25_profile_shutdown_green_table_rows_do_not_require_exchanges() -> 
     assert profile_diagnostics(document, profile) == []
 
 
-def test_oms_25_profile_state_command_mixed_table_rows_do_not_require_exchanges() -> None:
-    """Table 3.2-3 has fixed shape cells but green Appendix C/timing cells.
+def _subsystem_state_command(document: dict) -> dict:
+    return _subsystem_function(document, "Subsystem State Command Processing")
 
-    Its fixed status input conflicts with the fixed workflow response wording,
-    so Task 022 deliberately does not guess a portable exchange direction.
-    """
+
+def test_oms_25_profile_state_command_requires_fixed_command_input_only() -> None:
+    """Table 3.2-3's command-match fields are fixed; status direction conflicts."""
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
     document = _complete_subsystem_document()
-    state_command = _subsystem_function(document, "Subsystem State Command Processing")
+    state_command = _subsystem_state_command(document)
 
     assert state_command["applicability"] == "applicable"
-    assert state_command["exchanges"] == []
+    assert _exchange(state_command, "SubsystemStateCommand")["direction"] == "input"
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda function: function.update(exchanges=[]),
+        lambda function: _exchange(function, "SubsystemStateCommand").update(direction="output"),
+        lambda function: _exchange(function, "SubsystemStateCommand").update(mandate="optional"),
+        lambda function: _exchange(function, "SubsystemStateCommand")["timing"].update(kind="on_demand"),
+        lambda function: _exchange(function, "SubsystemStateCommand").update(message="OtherStateCommand"),
+        lambda function: _replace_state_command_with_non_oms_message(function),
+    ],
+    ids=["missing", "wrong-direction", "wrong-mandate", "wrong-timing", "wrong-message", "wrong-kind"],
+)
+def test_oms_25_profile_rejects_state_command_fixed_command_shape(mutation) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    mutation(_subsystem_state_command(document))
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert [diagnostic.code for diagnostic in diagnostics] == [OP_MISSING_REQUIRED_EXCHANGE]
+
+
+@pytest.mark.parametrize("direction", ["input", "output"])
+def test_oms_25_profile_does_not_require_or_match_state_command_status(direction: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    _subsystem_state_command(document)["exchanges"].append(
+        {
+            "id": f"local-state-command-status-{direction}",
+            "kind": "oms_message",
+            "direction": direction,
+            "mandate": "mandatory",
+            "message": "SubsystemStateCommandStatus",
+            "topic": f"local/state-command-status/{direction}",
+            "timing": {"kind": "on_demand"},
+        }
+    )
+
     assert profile_diagnostics(document, profile) == []
 
 
@@ -301,7 +343,7 @@ def test_oms_25_profile_state_command_mixed_table_rows_do_not_require_exchanges(
 )
 def test_state_command_not_applicable_portable_schema_requires_rationale_and_no_exchanges(mutation) -> None:
     document = _complete_subsystem_document()
-    state_command = _subsystem_function(document, "Subsystem State Command Processing")
+    state_command = _subsystem_state_command(document)
     state_command["applicability"] = "not_applicable"
     state_command["not_applicable_reason"] = "State commands are not supported."
     state_command["exchanges"] = []
@@ -325,6 +367,18 @@ def test_oms_25_profile_allows_not_applicable_conditional_subsystem_function(nam
     assert validate_path(
         ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-conditional-na.yaml", profile
     ) == []
+    assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_not_applicable_state_command_skips_required_exchanges() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    state_command = _subsystem_state_command(document)
+    state_command["applicability"] = "not_applicable"
+    state_command["not_applicable_reason"] = "State commands are not supported."
+    state_command["exchanges"] = []
+
     assert profile_diagnostics(document, profile) == []
 
 
@@ -425,7 +479,7 @@ def test_oms_25_profile_rejects_each_missing_subsystem_status_exchange(message: 
     status["exchanges"] = [item for item in status["exchanges"] if item["message"] != message]
 
     diagnostics = profile_diagnostics(document, profile)
-    assert len(diagnostics) == 1
+    assert [diagnostic.code for diagnostic in diagnostics] == [OP_MISSING_REQUIRED_EXCHANGE]
     assert message in diagnostics[0].message
 
 
@@ -505,6 +559,13 @@ def _service_initialization(document: dict) -> dict:
 
 def _exchange(function: dict, selector: str) -> dict:
     return next(item for item in function["exchanges"] if item.get("message", item.get("name")) == selector)
+
+
+def _replace_state_command_with_non_oms_message(function: dict) -> None:
+    exchange = _exchange(function, "SubsystemStateCommand")
+    exchange["kind"] = "non_oms_message"
+    exchange["name"] = exchange.pop("message")
+    exchange.pop("topic")
 
 
 def test_oms_25_profile_service_initialization_exchange_order_and_local_ids_are_irrelevant() -> None:

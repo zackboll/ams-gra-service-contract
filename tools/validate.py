@@ -385,7 +385,12 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
                     f"{requirement['allowed_applicability']!r} for {kind}",
                 )
             )
-        for exchange_requirement in requirement.get("required_exchanges", []):
+        skip_required_exchanges = (
+            "allowed_applicability" in requirement
+            and function.get("applicability") == "not_applicable"
+            and "not_applicable" in requirement["allowed_applicability"]
+        )
+        for exchange_requirement in ([] if skip_required_exchanges else requirement.get("required_exchanges", [])):
             if any(
                 required_exchange_matches(exchange, exchange_requirement)
                 for exchange in function.get("exchanges", [])

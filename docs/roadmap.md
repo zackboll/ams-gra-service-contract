@@ -40,8 +40,8 @@ Potential goals driven by real implementation experience:
   exchange shape implemented; Subsystem Shutdown Table 3.2-6 source
   classification completed (all substantive rows are removable green guidance,
    so no Shutdown exchange minimum); Subsystem State Command Processing source
-   classification completed (mixed table rows and fixed direction conflict, so
-   no fixed exchange minimum); Subsystem Startup source classification/exchanges,
+   classification completed (fixed command minimum implemented; status direction
+   conflict documented); Subsystem Startup source classification/exchanges,
    BIT exchanges, Calibration exchanges, Required Capability-related Functions, and broader
   profile coverage remain);
 - richer Data Transfer metadata if required by real contracts;

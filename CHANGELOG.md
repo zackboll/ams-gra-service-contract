@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Fail-closed completion-scaffold materialization into deterministic portable
+  Service Contract JSON. It refuses unresolved required values and unmapped
+  author decisions, preserves lower-layer `SC_*`/`OP_*` validation diagnostics,
+  has no file write/apply path, and omits unsupported capabilities, specific
+  functions, and automatic provenance/traceability. A synthetic conformance
+  exercise covers OMS Messages, Data Transfer, and all supported timing kinds.
 - Typed completion-decision mappings and deterministic profile-derived authoring
   scaffold tooling. Bounded `CA_*` mapping diagnostics validate typed future
   destinations while preserving unmapped decisions and structural missing fields.

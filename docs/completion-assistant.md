@@ -48,8 +48,11 @@ value; an **author decision** is explicit intent recorded against a worksheet
 label; an **authored contract semantic** is a value actually written to and
  validated in a portable Service Contract. Task 036 implements only the first two
 stages. Task 037 adds a separate typed mapping and profile-derived scaffold;
- see [completion-scaffold.md](completion-scaffold.md). Neither tool executes
- JSONPath, patches, generates, or applies a portable contract.
+ see [completion-scaffold.md](completion-scaffold.md). Task 038 adds the separate
+ fail-closed [materializer](completion-materialization.md): scaffold output remains
+ tooling-only, while successful materializer stdout is a validated portable
+ Service Contract. None of these tools executes JSONPath, patches, or applies a
+ contract.
 
 ## Profile and Capability boundary
 

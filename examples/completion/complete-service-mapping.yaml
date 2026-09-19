@@ -1,0 +1,24 @@
+mapping_version: "0.1"
+bindings:
+  - {target: service.name, destination: {kind: service_field, field: name}}
+  - {target: service.version, destination: {kind: service_field, field: version}}
+  - {target: standards.uci_schema_version, destination: {kind: standards_field, field: uci_schema_version}}
+  - {target: "function[Service Initialization].id", destination: {kind: required_function_field, profile_function: Service Initialization, field: id}}
+  - {target: "exchange[FileMetadata].id", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileMetadata, field: id}}
+  - {target: "exchange[FileMetadata].topic", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileMetadata, field: topic}}
+  - {target: "exchange[FileLocation].id", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileLocation, field: id}}
+  - {target: "exchange[FileLocation].topic", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileLocation, field: topic}}
+  - {target: "exchange[ServiceConfigFile].id", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: id}}
+  - {target: "exchange[ServiceConfigFile].protocol", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: protocol}}
+  - {target: "exchange[ServiceConfigFile].data_type", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: data_type}}
+  - {target: "exchange[ServiceConfigFile].data_format", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: data_format}}
+  - {target: "exchange[ServiceConfigFile].sharing_pattern", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: sharing_pattern}}
+  - {target: "function[Service Status].id", destination: {kind: required_function_field, profile_function: Service Status, field: id}}
+  - {target: "exchange[ServiceStatus].id", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: id}}
+  - {target: "exchange[ServiceStatus].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: topic}}
+  - {target: "exchange[ServiceStatus].timing.nominal_rate_hz", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: nominal_rate_hz}}
+  - {target: "exchange[ServiceStatusDataRequest].id", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequest, field: id}}
+  - {target: "exchange[ServiceStatusDataRequest].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequest, field: topic}}
+  - {target: "exchange[ServiceStatusDataRequestStatus].id", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequestStatus, field: id}}
+  - {target: "exchange[ServiceStatusDataRequestStatus].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequestStatus, field: topic}}
+  - {target: "exchange[ServiceStatusDataRequestStatus].timing.nominal_response_seconds", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequestStatus, field: nominal_response_seconds}}

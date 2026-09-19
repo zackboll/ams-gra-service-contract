@@ -6,6 +6,14 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Subsystem Startup Table 3.2-1 and workflow OOXML source
+  classification: `FileMetadata`, `FileLocation`, `Subsystem_OFP`,
+  `SubsystemConfigFile`, and `MDF` have green removable guidance for every
+  profile-matched field. The three MDF acquisition examples and their
+  keep-one/remove-others instruction are green guidance, so Startup has no
+  universal exchange minimum and no demonstrated fixed alternative-set modeling
+  requirement. Optional LoM remains distinct from row presence; Example 3
+  `QueryDataRequest`/`QueryDataRequestStatus` are not profile rules.
 - OMS 2.5 Subsystem Calibration Table 3.2-5 OOXML source classification: all
   seven substantive rows have green removable guidance for every profile-matched
   field and green message-specific workflow prose, so Calibration has no

@@ -16,8 +16,8 @@ upstream OMS commit `726272bd0390982a759c91a9cf4e13b81c2b510b`.
 Current OMS 2.5 coverage includes the Required Service Function inventory,
 Service Initialization exchange surface, Service Status exchange surface,
 Required Subsystem Function inventory, Subsystem Status exchange surface, and
-the completed State Command Processing, BIT, Calibration, and Shutdown source
-classifications.
+the completed Startup, State Command Processing, BIT, Calibration, and Shutdown
+source classifications.
 
 Section 3.1 says every OMS Service must provide the Required Service Functions
 and that the section also applies to Isolators. Sections 3.1.1 and 3.1.2 say
@@ -106,6 +106,19 @@ Section 3.2.6 evidence, rather than the conflicting Table 3.2-3 input row.
 None of those message shapes or timing numbers is profile-enforced because the
 rows are removable guidance.
 
+**Subsystem Startup** (Section 3.2.1 and Table 3.2-1) has no profiled exchange
+minimum. Every matcher-owned cell for `FileMetadata`, `FileLocation`,
+`Subsystem_OFP`, `SubsystemConfigFile`, and `MDF` resolves to green `00B050` in
+the pinned official DOCX. The NFS/FTP statement, all three MDF-information
+examples, and the instruction to keep one applicable example and remove the
+others are green guidance too. Thus `FileMetadata`/`FileLocation` are not
+reused from Service Initialization, the configuration-file and direct-MDF cases
+are not conflated, and `QueryDataRequest`/`QueryDataRequestStatus` from Example
+3 are not profile rules. Optional LoM is not row-presence logic; the applicable
+Startup fixture has zero source-backed exchanges because all candidate fields
+are removable guidance. No fixed alternative-set relationship is established,
+so no profile-model extension is justified.
+
 **Subsystem Built-In Test (BIT)** (Section 3.2.4 and Table 3.2-4) also has no
 profiled exchange minimum. All seven substantive candidate rows
 (`SubsystemBIT_Status`, `SubsystemBIT_Configuration`,
@@ -153,10 +166,11 @@ Additional valid exchange rows are allowed. The profile intentionally does not
 fix Service Initialization Data Transfer protocol, data type, data format, or
 sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
 subscription groups, numerical timing values, Appendix C content, contract
-traceability, or UCI message primitives. The remaining unclassified Section 3.2
-exchange surface is Subsystem Startup. BIT and Calibration are classified as
-green guidance with no fixed minimum, while State Command Processing has a fixed
-command minimum and a documented status-direction conflict.
+traceability, or UCI message primitives. All Section 3.2 Required Subsystem
+Function exchange surfaces now have an explicit source-classification outcome:
+Startup, BIT, Calibration, and Shutdown have no fixed minimum; Subsystem Status
+has its three fixed shapes; and State Command Processing has a fixed command
+minimum plus a documented status-direction conflict.
 The profile also does not validate Required Capability-related Function
 inventory, conditional Section 3.1 Service Functions for Platform-hosted
 Adapters, or other OMS-version profiles. It does not claim full OMS Subsystem

@@ -266,6 +266,46 @@ def test_oms_25_profile_shutdown_green_table_rows_do_not_require_exchanges() -> 
 
 @pytest.mark.parametrize(
     "selector",
+    ["FileMetadata", "FileLocation", "Subsystem_OFP", "SubsystemConfigFile", "MDF"],
+)
+def test_oms_25_profile_startup_green_table_rows_do_not_require_exchanges(selector: str) -> None:
+    """Table 3.2-1 rows and its three MDF acquisition examples are green guidance."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    startup = _subsystem_function(document, "Subsystem Startup")
+
+    assert startup["applicability"] == "applicable"
+    assert startup["exchanges"] == []
+    assert "required_exchanges" not in next(
+        function for function in profile["required_functions"] if function["name"] == startup["name"]
+    )
+    # In particular, omitting this alternative/example row is not OP_MISSING_REQUIRED_EXCHANGE.
+    assert profile_diagnostics(document, profile) == [], selector
+
+
+def test_oms_25_profile_allows_additional_startup_guidance_exchange() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    startup = _subsystem_function(document, "Subsystem Startup")
+    startup["exchanges"].append(
+        {
+            "id": "local-mdf-metadata",
+            "kind": "oms_message",
+            "direction": "input",
+            "mandate": "optional",
+            "message": "FileMetadata",
+            "topic": "local/mdf/metadata",
+            "timing": {"kind": "asynchronous"},
+        }
+    )
+
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "selector",
     [
         "SubsystemBIT_Status",
         "SubsystemBIT_Configuration",

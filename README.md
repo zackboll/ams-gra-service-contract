@@ -47,11 +47,15 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 ## Completion worksheet
 
 The non-normative completion assistant records source-backed, unconfirmed
-authoring candidates separately from authored Service Contract semantics and
-separately from OMS profile requirements. It retains conflicts rather than
-resolving them and has no extraction, inference, confirmation, or contract
-generation/apply path. See [docs/completion-assistant.md](docs/completion-assistant.md)
-and [Task 035](docs/task-035-completion-worksheet-core.md).
+authoring candidates and optional explicit author decisions separately from
+authored Service Contract semantics and OMS profile requirements. Evidence
+candidates, author decisions, and authored contract semantics are three distinct
+stages. A decision records author intent only; it does not map, generate, or
+apply a contract field. The assistant retains conflicts and has no extraction,
+inference, candidate-to-profile satisfaction, Capability inference, or contract
+generation/apply path. See [docs/completion-assistant.md](docs/completion-assistant.md),
+[Task 035](docs/task-035-completion-worksheet-core.md), and
+[Task 036](docs/task-036-completion-author-decisions.md).
 
 ## Published-contract exercises
 

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-decisions:0.1",
+  "title": "Service Contract Completion Author Decisions",
+  "description": "Non-normative explicit author decisions for a completion worksheet; not a Service Contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_version", "decisions"],
+  "properties": {
+    "decision_version": {"const": "0.1"},
+    "decisions": {"type": "array", "items": {"$ref": "#/$defs/decision"}}
+  },
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target"],
+      "properties": {
+        "target": {"type": "string", "minLength": 1},
+        "select_candidate": {"type": "string", "minLength": 1},
+        "value": {"type": ["string", "number", "boolean"]},
+        "note": {"type": "string", "minLength": 1}
+      },
+      "oneOf": [
+        {"required": ["select_candidate"]},
+        {"required": ["value"]}
+      ]
+    }
+  }
+}

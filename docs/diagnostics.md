@@ -80,6 +80,10 @@ validation runs before profile application, so invalid portable documents yield
 | `CA_UNKNOWN_SOURCE` | Candidate refers to an unknown completion source ID. |
 | `CA_UNSUPPORTED_CONTRACT_VERSION` | Selected profile does not support the target contract version. |
 | `CA_OMS_VERSION_MISMATCH` | Target OMS version differs from the selected profile OMS version. |
+| `CA_DECISION_SCHEMA` | Completion-decisions JSON-Schema or input parsing failure. |
+| `CA_DUPLICATE_DECISION_TARGET` | More than one author decision names the same worksheet target. |
+| `CA_UNKNOWN_CANDIDATE` | A decision selects a candidate ID not present in the completion input. |
+| `CA_DECISION_TARGET_MISMATCH` | A decision target differs from its selected candidate target. |
 
 `CA_*` applies only to the non-normative completion workspace. It is never a
 portable Service Contract validation result.

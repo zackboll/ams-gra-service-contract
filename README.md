@@ -75,7 +75,12 @@ Its complete Table 3.2-3 rows are mixed, but all command fields matched by the
 profile are fixed and workflow receipt corroborates input. The status direction
 is intentionally not profile-enforced because fixed table-input and workflow-
 response evidence conflicts. Remaining unclassified Section 3.2 exchange
-surfaces are Subsystem Startup, BIT, and Calibration. Table 3.2-6
+surfaces are Subsystem Startup and Calibration. Table 3.2-4 BIT rows
+(`SubsystemBIT_Status`, `SubsystemBIT_Configuration`, the State Command and
+BIT Command pairs, and `Log_File`) are all green, removable DOCX guidance, so
+BIT has no profile exchange minimum; its green workflow prose and informative
+1 Hz/0.5/3-second values do not alter that result. LoM Optional is not row
+optionality: it is not why a fixed row would be omitted. Table 3.2-6
 Subsystem Shutdown rows (`SubsystemStateCommand`,
 `SubsystemStateCommandStatus`, and optional `Log_File`) are all green,
 removable DOCX guidance/example rows, so Shutdown has no profile exchange

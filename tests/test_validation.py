@@ -264,6 +264,33 @@ def test_oms_25_profile_shutdown_green_table_rows_do_not_require_exchanges() -> 
     assert profile_diagnostics(document, profile) == []
 
 
+@pytest.mark.parametrize(
+    "selector",
+    [
+        "SubsystemBIT_Status",
+        "SubsystemBIT_Configuration",
+        "SubsystemStateCommand",
+        "SubsystemStateCommandStatus",
+        "SubsystemBIT_Command",
+        "SubsystemBIT_CommandStatus",
+        "Log_File",
+    ],
+)
+def test_oms_25_profile_bit_green_table_rows_do_not_require_exchanges(selector: str) -> None:
+    """Table 3.2-4 gives every candidate row green, removable source content."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    bit = _subsystem_function(document, "Subsystem Built-In Test (BIT)")
+
+    assert bit["applicability"] == "applicable"
+    assert bit["exchanges"] == []
+    assert "required_exchanges" not in next(
+        function for function in profile["required_functions"] if function["name"] == bit["name"]
+    )
+    assert profile_diagnostics(document, profile) == [], selector
+
+
 def _subsystem_state_command(document: dict) -> dict:
     return _subsystem_function(document, "Subsystem State Command Processing")
 
@@ -380,6 +407,48 @@ def test_oms_25_profile_not_applicable_state_command_skips_required_exchanges() 
     state_command["exchanges"] = []
 
     assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_not_applicable_bit_skips_green_table_rows() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    bit = _subsystem_function(document, "Subsystem Built-In Test (BIT)")
+    bit["applicability"] = "not_applicable"
+    bit["not_applicable_reason"] = "Built-in tests are not supported."
+    bit["exchanges"] = []
+
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda function: function.pop("not_applicable_reason"),
+        lambda function: function.update(
+            exchanges=[
+                {
+                    "id": "unexpected-bit-exchange",
+                    "kind": "oms_message",
+                    "direction": "output",
+                    "mandate": "optional",
+                    "message": "SubsystemBIT_Status",
+                    "timing": {"kind": "periodic"},
+                }
+            ]
+        ),
+    ],
+    ids=["missing-rationale", "exchanges-present"],
+)
+def test_bit_not_applicable_portable_schema_requires_rationale_and_no_exchanges(mutation) -> None:
+    document = _complete_subsystem_document()
+    bit = _subsystem_function(document, "Subsystem Built-In Test (BIT)")
+    bit["applicability"] = "not_applicable"
+    bit["not_applicable_reason"] = "Built-in tests are not supported."
+    bit["exchanges"] = []
+    mutation(bit)
+
+    assert {diagnostic.code for diagnostic in validate_document(document)} == {SC_SCHEMA}
 
 
 @pytest.mark.parametrize(

@@ -59,3 +59,5 @@ limited repository-used continuity set.
 
 The resolver remains fail-closed: a missing message is reported as absent rather
 than aliased, renamed, searched by similarity, or resolved from UCI 2.5.
+Continuity lookup also uses the resolver's fail-closed local-name ambiguity
+semantics: multiple candidates are an error, not a transition classification.

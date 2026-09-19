@@ -9,10 +9,10 @@ from typing import Any
 
 try:
     from tools.schema_sources import VerifiedSchemaSourceSet, load_verified_schema_source, validate_manifest_path
-    from tools.uci_resolver import UciMessageDefinition, load_message_definitions
+    from tools.uci_resolver import UciMessageDefinition, UciResolverError, load_message_definitions
 except ModuleNotFoundError:
     from schema_sources import VerifiedSchemaSourceSet, load_verified_schema_source, validate_manifest_path
-    from uci_resolver import UciMessageDefinition, load_message_definitions
+    from uci_resolver import UciMessageDefinition, UciResolverError, load_message_definitions
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_A = ROOT / "schema-sources" / "uci" / "2.5" / "manifest.yaml"
@@ -38,7 +38,22 @@ def classify(a: dict[str, str] | None, b: dict[str, str] | None) -> str:
     return "unchanged" if a == b else "changed"
 
 
-def analyze(manifest_path: Path, source_root: Path) -> tuple[dict[str, Any], dict[str, UciMessageDefinition]]:
+def unique_message(definitions: list[UciMessageDefinition], local_name: str) -> UciMessageDefinition | None:
+    """Resolve one local message name with the resolver's fail-closed semantics."""
+    candidates = [item for item in definitions if item.local_name == local_name]
+    if not candidates:
+        return None
+    if len(candidates) > 1:
+        descriptions = sorted(f"{item.expanded_name} ({item.manifest_id}:{item.source_path})" for item in candidates)
+        raise UciResolverError(
+            f"ambiguous UCI message {local_name!r} in cross-version continuity set\n"
+            + "candidates:\n"
+            + "\n".join(f"  - {item}" for item in descriptions)
+        )
+    return candidates[0]
+
+
+def analyze(manifest_path: Path, source_root: Path) -> tuple[dict[str, Any], list[UciMessageDefinition]]:
     manifest, diagnostics = validate_manifest_path(manifest_path)
     if diagnostics:
         raise ValueError("manifest validation failed: " + "; ".join(map(str, diagnostics)))
@@ -50,7 +65,7 @@ def analyze(manifest_path: Path, source_root: Path) -> tuple[dict[str, Any], dic
     expected = EXPECTED_COUNTS[manifest["schema_version"]]
     if counts != expected:
         raise ValueError(f"unexpected UCI {manifest['schema_version']} resolver counts: {counts!r}, expected {expected!r}")
-    return {"version": manifest["schema_version"], "manifest_id": manifest["id"], "counts": counts}, {item.local_name: item for item in definitions}
+    return {"version": manifest["schema_version"], "manifest_id": manifest["id"], "counts": counts}, definitions
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -62,10 +77,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         baseline_a, definitions_a = analyze(MANIFEST_A, args.uci_25_source_root)
         baseline_b, definitions_b = analyze(MANIFEST_B, args.uci_26_source_root)
-    except ValueError as exc:
+        messages = [
+            {
+                "message": name,
+                "version_a": record(unique_message(definitions_a, name)),
+                "version_b": record(unique_message(definitions_b, name)),
+            }
+            for name in CONTINUITY_MESSAGES
+        ]
+    except (ValueError, UciResolverError) as exc:
         print(f"FAIL {exc}")
         return 1
-    messages = [{"message": name, "version_a": record(definitions_a.get(name)), "version_b": record(definitions_b.get(name)), "classification": classify(record(definitions_a.get(name)), record(definitions_b.get(name)))} for name in CONTINUITY_MESSAGES]
+    for item in messages:
+        item["classification"] = classify(item["version_a"], item["version_b"])
     result = {"baseline_a": baseline_a, "baseline_b": baseline_b, "messages": messages}
     if args.format == "json":
         print(json.dumps(result, indent=2, sort_keys=True))

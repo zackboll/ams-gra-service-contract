@@ -7,7 +7,7 @@ import pytest
 from tools.schema_sources import compose_schema_source_set, load_verified_schema_source_set
 from tools.validate import load_document
 from tools.uci_resolver import UciResolverError, load_message_definitions, parse_uci_schema_bytes, parse_uci_schema_document, resolve_contract_messages
-from tools.uci_version_regression import classify
+from tools.uci_version_regression import classify, main as version_regression_main, unique_message
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "uci-resolver"
@@ -241,3 +241,29 @@ def test_cross_version_classification_fails_closed_for_absent_message() -> None:
     assert classify(record, record) == "unchanged"
     assert classify(record, None) == "absent in 2.6"
     assert classify(None, record) == "newly resolvable"
+
+
+def test_cross_version_unique_message_returns_none_for_zero_and_exact_item_for_one() -> None:
+    definition = parse_uci_schema_bytes(fixture("baseline.xsd"), "baseline", "baseline.xsd")[0]
+    assert unique_message([], "MessageA") is None
+    assert unique_message([definition], "MessageA") is definition
+
+
+def test_cross_version_unique_message_fails_closed_for_multiple_local_name_candidates() -> None:
+    definitions = [
+        *parse_uci_schema_bytes(fixture("ambiguous-a.xsd"), "manifest-a", "a.xsd"),
+        *parse_uci_schema_bytes(fixture("ambiguous-b.xsd"), "manifest-b", "b.xsd"),
+    ]
+    with pytest.raises(UciResolverError, match=r"(?s)ambiguous UCI message 'ExampleMessage'.*\{urn:a\}ExampleMessage.*manifest-a:a.xsd.*\{urn:b\}ExampleMessage.*manifest-b:b.xsd"):
+        unique_message(definitions, "ExampleMessage")
+
+
+def test_cross_version_cli_reports_expected_resolver_error_without_traceback(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    def fail_analyze(manifest_path: Path, source_root: Path) -> tuple[dict[str, object], list[object]]:
+        raise UciResolverError("synthetic resolver failure")
+
+    monkeypatch.setattr("tools.uci_version_regression.analyze", fail_analyze)
+    assert version_regression_main(["--uci-25-source-root", "/tmp/a", "--uci-26-source-root", "/tmp/b"]) == 1
+    captured = capsys.readouterr()
+    assert captured.out.startswith("FAIL synthetic resolver failure")
+    assert "Traceback" not in captured.err

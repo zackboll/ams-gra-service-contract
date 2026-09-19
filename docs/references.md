@@ -130,7 +130,15 @@ The contract format therefore stores message references but does not duplicate t
 
 ### Version caveat
 
-An OMS Service Contract may target a different UCI release than the latest available UCI repository release. A contract must declare its exact `uci_schema_version`. Tools must not substitute “latest UCI” automatically.
+An OMS Service Contract may target a different UCI release than the latest available UCI repository release. A contract declares its logical `uci_schema_version`; tools must not substitute “latest UCI” automatically.
+
+### Checked-in reproducibility artifact
+
+The baseline UCI 2.5 schema-source manifest is
+[`schema-sources/uci/2.5/manifest.yaml`](../schema-sources/uci/2.5/manifest.yaml).
+It pins UCI tag `v2.5` to immutable revision
+`093610b7753944059360d3236770ab446d039556`. The manifest, not this references
+page, is authoritative for exact file hashes.
 
 ## 4. Public implementation/reference examples
 

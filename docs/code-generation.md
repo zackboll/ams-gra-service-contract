@@ -16,7 +16,8 @@ Example CLI shape:
 ```bash
 oms-codegen generate \
   --contract contracts/example-service.yaml \
-  --uci ./uci/v2.5/UCI_MessageDefinitions_v2_5_0.xsd \
+  --schema-source-manifest schema-sources/uci/2.5/manifest.yaml \
+  --schema-source-root ./uci \
   --target ada \
   --out generated/
 ```
@@ -26,29 +27,26 @@ The exact CLI belongs to the generator project, not this specification.
 ## 2. Recommended pipeline
 
 ```text
-                 UCI XSD / extensions
-                         |
-                         v
-                    UCI parser
-                         |
-                         v
-                    UCI Schema IR
-                         |
-                         |
-contract YAML            |
-      |                  |
-      v                  |
-JSON Schema              |
-validation               |
-      |                  |
-      v                  |
-Contract semantic        |
-validation               |
-      |                  |
-      +------ resolve ----+
-                 |
-                 v
-          Resolved Service IR
+contract YAML
+       |
+       v
+Contract Model -- uci_schema_version --> toolchain schema-source selection
+                                             |
+                                             v
+                                   schema-source manifest
+                                             |
+                                  verify local schema bytes
+                                             |
+                                             v
+                                  UCI XSD set --> UCI parser
+                                                       |
+                                                       v
+                                                  UCI Schema IR
+                                             |
+       Contract Model + UCI Schema Model
+                     |
+                     v
+              Resolved Service IR
                  |
       +----------+----------+-----------+
       |          |          |           |

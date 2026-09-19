@@ -8,7 +8,7 @@ The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**
 
-The format deliberately does **not** copy UCI message layouts or message primitive metadata. A resolver or code generator loads the selected UCI schema and resolves the message names declared by the contract.
+The format deliberately does **not** copy UCI message layouts or message primitive metadata. A resolver or code generator verifies its selected external UCI schema source and resolves the message names declared by the contract.
 
 ## Schema-source manifests
 
@@ -91,18 +91,29 @@ This project is a companion representation, not a replacement standard.
          +-------------------+-------------------+
                              |
                              v
-                  service-contract.yaml
-                             |
-                  structural validation
-                             |
-                             v
-                       Contract Model
-                             |
-                  resolve OMS messages
-                   against UCI schema
-                             |
-                             v
-                    Resolved Service IR
+                   service-contract.yaml
+                              |
+                   structural validation
+                              |
+                              v
+                        Contract Model
+                              |
+                              | contract.standards.uci_schema_version
+                              v
+                 toolchain schema-source selection
+                              |
+                              v
+                     schema-source manifest
+                              |
+                    verify local UCI schema bytes
+                              |
+                              v
+                  UCI XSD set --> UCI parser
+                              |             |
+                              +-- resolve --+
+                                            |
+                                            v
+                                 Resolved Service IR
                              |
           +------------------+------------------+
           |          |        |        |         |
@@ -127,7 +138,7 @@ For the OMS Service Contract semantics represented here, the primary upstream so
 - [Service Contract Instructions v2.5, OMSC-INS-003 Rev M](https://github.com/open-arsenal/oms/blob/main/docs_official/14_2_OMSC-INS-003_RevM_ServiceContractInstructions_DandD_v2_5.docx)
 - [Language-Agnostic CAL Specification v2.5, OMSC-SPC-013 Rev B](https://github.com/open-arsenal/oms/blob/main/docs_official/20_OMSC-SPC-013_RevB_LanguageAgnostic_CAL_Specification_DandD_v2_5.docx)
 
-For message definitions, use the public upstream [UCI repository](https://github.com/open-arsenal/uci) and the exact UCI release declared by the contract.
+For message definitions, use the public upstream [UCI repository](https://github.com/open-arsenal/uci). The contract declares a logical `uci_schema_version`; a toolchain maps that version to a schema-source manifest, which pins the exact revision, file set, and digests.
 
 See [docs/references.md](docs/references.md) for a fuller source map and status notes, and [docs/upstream-mapping.md](docs/upstream-mapping.md) for a field-by-field mapping to the OMS Service Contract concepts.
 
@@ -187,7 +198,8 @@ python3 -m venv .venv
 python -m pip install -r requirements-dev.txt
 ```
 
-Validate the included examples and run the conformance tests:
+Run the complete repository validation suite (text hygiene, checked-in
+schema-source manifest validation, contract/example validation, and pytest):
 
 ```bash
 make check
@@ -300,7 +312,10 @@ The included validator performs these checks.
 
 ### 3. UCI semantic resolution
 
-A code generator or resolver should then load the selected UCI schema and verify:
+A reproducible code generator or resolver should first map the logical
+`uci_schema_version` to a selected schema-source manifest and verify the
+manifest-declared external UCI schema bytes. It should then load that verified
+schema set and verify:
 
 - every `oms_message.message` exists;
 - the message is resolved against the intended baseline/extension schema set;
@@ -310,24 +325,35 @@ A code generator or resolver should then load the selected UCI schema and verify
 
 See [docs/code-generation.md](docs/code-generation.md).
 
+The three layers above define contract validation and resolved-contract work;
+external schema-source verification is a separate reproducibility check, not a
+portable Service Contract conformance rule. In particular, contract conformance
+is not external schema-source verification, and neither is resolved-contract
+conformance.
+
 ## A proposed generator flow
 
 ```text
-UCI XSD(s) ---------------------> UCI Schema Model
-                                      |
-                                      |
-service-contract.yaml                 |
-        |                             |
-        v                             |
-JSON Schema validation                |
-        |                             |
-        v                             |
-Contract semantic validation          |
-        |                             |
-        +---------- resolve ----------+
-                       |
-                       v
-                Resolved Service IR
+service-contract.yaml
+        |
+        v
+structural + contract semantic validation
+        |
+        v
+Contract Model ---- uci_schema_version --> toolchain schema-source selection
+                                                |
+                                                v
+                                      schema-source manifest
+                                                |
+                                      verify local schema bytes
+                                                |
+                                                v
+                                       UCI XSD set --> UCI Schema Model
+                                                |             |
+                                                +-- resolve --+
+                                                              |
+                                                              v
+                                                   Resolved Service IR
                        |
           +------------+------------+
           |            |            |
@@ -391,16 +417,18 @@ The deployment configuration is not the Service Contract itself. It is one imple
 ├── schema/
 │   ├── v0.1/
 │   │   └── service-contract.schema.json
-│   └── schema-source/v0.1/
-│       └── schema-source-manifest.schema.json
+│   ├── profile/
+│   │   └── v0.1/
+│   │       └── oms-profile.schema.json
+│   └── schema-source/
+│       └── v0.1/
+│           └── schema-source-manifest.schema.json
 ├── schema-sources/
 │   └── uci/2.5/
 │       └── manifest.yaml
 ├── profiles/
 │   └── oms/2.5/
 │       └── profile.yaml
-├── schema/profile/v0.1/
-│   └── oms-profile.schema.json
 ├── docs/
 │   ├── specification.md
 │   ├── rationale.md
@@ -419,10 +447,15 @@ The deployment configuration is not the Service Contract itself. It is one imple
 ├── tests/
 │   ├── valid/
 │   ├── invalid/
-│   ├── profiles/oms-2.5/
-│   └── test_validation.py
+│   ├── profiles/
+│   │   └── oms-2.5/
+│   ├── test_validation.py
+│   ├── test_text_hygiene.py
+│   └── test_schema_sources.py
 └── tools/
+    ├── __init__.py
     ├── validate.py
+    ├── check_text_hygiene.py
     └── schema_sources.py
 ```
 

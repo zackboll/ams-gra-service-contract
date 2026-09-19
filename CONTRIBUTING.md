@@ -45,6 +45,9 @@ Install dependencies and run:
 make check
 ```
 
+This includes repository text hygiene checks for UTF-8 encoding, LF line
+endings, final newlines on non-empty text files, and no trailing whitespace.
+
 A new semantic rule should normally have both positive and negative coverage.
 
 ## Documentation style

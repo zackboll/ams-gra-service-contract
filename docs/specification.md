@@ -1,6 +1,6 @@
 # Machine-Readable Service Contract Specification v0.1
 
-**Status:** Experimental / pre-1.0  
+**Status:** Experimental / pre-1.0
 **Normative scope:** This document defines the semantics of `contract_version: "0.1"`. The JSON Schema in `schema/v0.1/service-contract.schema.json` defines its structural constraints.
 
 This specification is an independent companion format intended to represent a subset of information from an OMS Service Contract in a machine-readable form. It is not an official AMS GRA, OMS, or UCI specification.

@@ -291,6 +291,53 @@ def test_oms_25_profile_bit_green_table_rows_do_not_require_exchanges(selector: 
     assert profile_diagnostics(document, profile) == [], selector
 
 
+@pytest.mark.parametrize(
+    "selector",
+    [
+        "SubsystemCalibrationStatus",
+        "SubsystemCalibrationConfiguration",
+        "SubsystemStateCommand",
+        "SubsystemStateCommandStatus",
+        "SubsystemCalibrationCommand",
+        "SubsystemCalibrationCommandStatus",
+        "Log_File",
+    ],
+)
+def test_oms_25_profile_calibration_green_table_rows_do_not_require_exchanges(selector: str) -> None:
+    """Table 3.2-5 gives every candidate's matched fields green source content."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    calibration = _subsystem_function(document, "Subsystem Calibration")
+
+    assert calibration["applicability"] == "applicable"
+    assert calibration["exchanges"] == []
+    assert "required_exchanges" not in next(
+        function for function in profile["required_functions"] if function["name"] == calibration["name"]
+    )
+    assert profile_diagnostics(document, profile) == [], selector
+
+
+def test_oms_25_profile_allows_additional_calibration_exchanges() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    calibration = _subsystem_function(document, "Subsystem Calibration")
+    calibration["exchanges"].append(
+        {
+            "id": "local-calibration-status",
+            "kind": "oms_message",
+            "direction": "output",
+            "mandate": "optional",
+            "message": "SubsystemCalibrationStatus",
+            "topic": "local/calibration/status",
+            "timing": {"kind": "periodic"},
+        }
+    )
+
+    assert profile_diagnostics(document, profile) == []
+
+
 def _subsystem_state_command(document: dict) -> dict:
     return _subsystem_function(document, "Subsystem State Command Processing")
 
@@ -419,6 +466,48 @@ def test_oms_25_profile_not_applicable_bit_skips_green_table_rows() -> None:
     bit["exchanges"] = []
 
     assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_not_applicable_calibration_skips_required_exchanges() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    calibration = _subsystem_function(document, "Subsystem Calibration")
+    calibration["applicability"] = "not_applicable"
+    calibration["not_applicable_reason"] = "Calibration is not supported."
+    calibration["exchanges"] = []
+
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda function: function.pop("not_applicable_reason"),
+        lambda function: function.update(
+            exchanges=[
+                {
+                    "id": "unexpected-calibration-exchange",
+                    "kind": "oms_message",
+                    "direction": "output",
+                    "mandate": "optional",
+                    "message": "SubsystemCalibrationStatus",
+                    "timing": {"kind": "periodic"},
+                }
+            ]
+        ),
+    ],
+    ids=["missing-rationale", "exchanges-present"],
+)
+def test_calibration_not_applicable_portable_schema_requires_rationale_and_no_exchanges(mutation) -> None:
+    document = _complete_subsystem_document()
+    calibration = _subsystem_function(document, "Subsystem Calibration")
+    calibration["applicability"] = "not_applicable"
+    calibration["not_applicable_reason"] = "Calibration is not supported."
+    calibration["exchanges"] = []
+    mutation(calibration)
+
+    assert {diagnostic.code for diagnostic in validate_document(document)} == {SC_SCHEMA}
 
 
 @pytest.mark.parametrize(

@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Subsystem Calibration Table 3.2-5 OOXML source classification: all
+  seven substantive rows have green removable guidance for every profile-matched
+  field and green message-specific workflow prose, so Calibration has no
+  exchange minimum. Optional LoM remains distinct from row presence; numeric
+  timing is informative only; applicable and permitted N/A Calibration fixtures
+  retain the existing conditional-applicability behavior.
 - OMS 2.5 Subsystem Built-In Test (BIT) Table 3.2-4 OOXML source
   classification: all seven substantive rows are green removable guidance for
   every profile-matched field, so BIT has no exchange minimum. Optional LoM is

@@ -31,6 +31,7 @@ functions:
     category: required
     required_group: subsystem
     applicability: applicable
+    # Table 3.2-5 has no fixed source-backed minimum exchange shape.
     exchanges: []
   - id: local-subsystem-status
     name: Subsystem Status

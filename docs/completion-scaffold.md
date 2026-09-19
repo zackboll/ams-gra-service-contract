@@ -23,3 +23,9 @@ keys never generate IDs or names. It creates no Capability functions, generates 
 profile-satisfaction or compliance claim. Unmapped decisions remain visible.
 Task 038's separate materializer consumes this tooling-only scaffold fail-closed;
 it is the semantic boundary where successful stdout becomes a portable contract.
+
+Optional `--capabilities` adds explicit Capability topology. Omission is
+`unknown`, `capabilities: []` is `explicit_empty`, and a non-empty structure is
+`declared`; these states remain distinct. The validated OMS profile plus resolved
+Capability facts determines Section 3.3 function topology, never names or
+messages. Capability IDs/names and function IDs/names remain author decisions.

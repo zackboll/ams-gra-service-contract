@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-capabilities:0.1",
+  "title": "Completion Capability Structure",
+  "description": "Tooling-only Capability topology; keys are not portable Capability values.",
+  "type": "object", "additionalProperties": false,
+  "required": ["capabilities_version", "capabilities"],
+  "properties": {
+    "capabilities_version": {"const": "0.1"},
+    "capabilities": {"type": "array", "items": {"$ref": "#/$defs/capability"}}
+  },
+  "$defs": {
+    "key": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$", "minLength": 1, "maxLength": 128},
+    "capability": {"type": "object", "additionalProperties": false, "required": ["key"], "properties": {"key": {"$ref": "#/$defs/key"}}}
+  }
+}

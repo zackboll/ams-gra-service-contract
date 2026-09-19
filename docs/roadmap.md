@@ -41,9 +41,12 @@ Potential goals driven by real implementation experience:
    required-function authoring scaffold, and structural missing-field reporting
     are implemented. Specific-function structural authoring, typed mapping,
     scaffold, and fail-closed portable contract materialization, SC validation of
-    materialized output, and OMS profile validation of materialized output are
-     implemented. Capability declaration completion/materialization,
-     source/traceability authoring, safe file
+     materialized output, and OMS profile validation of materialized output are
+      implemented. Capability declaration completion/materialization, Section
+     3.3 per-Capability required-function scaffold/materialization, and
+     conditional component-level Position Information Processing are implemented.
+     Capability-owned optional/domain-specific exchanges, Capability-owned
+     Specific Functions if needed, source/traceability authoring, safe file
     write/apply workflow, YAML serialization policy, candidate-to-profile
     satisfaction analysis, source extraction, and broader independent consumers
     remain pending;

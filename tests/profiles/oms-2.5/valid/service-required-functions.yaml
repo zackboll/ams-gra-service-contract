@@ -14,7 +14,34 @@ functions:
     category: required
     required_group: service
     applicability: applicable
-    exchanges: []
+    exchanges:
+      - id: local-config-transfer
+        kind: data_transfer
+        direction: input
+        mandate: optional
+        name: ServiceConfigFile
+        protocol: HTTPS
+        data_type: Deployment Configuration
+        data_format: JSON
+        sharing_pattern: Shared Read Only
+        timing:
+          kind: asynchronous
+      - id: local-file-location
+        kind: oms_message
+        direction: input
+        mandate: optional
+        message: FileLocation
+        topic: local.initialization.location
+        timing:
+          kind: asynchronous
+      - id: local-file-metadata
+        kind: oms_message
+        direction: input
+        mandate: optional
+        message: FileMetadata
+        topic: local.initialization.metadata
+        timing:
+          kind: asynchronous
   - id: local-status-function
     name: Service Status
     category: required

@@ -200,8 +200,8 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
         for exchange_index, exchange in enumerate(exchanges):
             if not isinstance(exchange, dict):
                 continue
-            key = tuple(exchange.get(field) for field in ("kind", "message", "direction", "mandate", "timing_kind"))
-            if all(isinstance(value, str) for value in key):
+            key = required_exchange_identity(exchange)
+            if key is not None:
                 exchange_keys.append(key)
             for trace_index, trace in enumerate(exchange.get("traceability", [])):
                 if isinstance(trace, dict) and trace.get("source") not in source_id_set:
@@ -225,7 +225,7 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
                 Diagnostic(
                     f"$.required_functions[{index}].required_exchanges",
                     "duplicate required exchange rule "
-                    f"kind={key[0]!r}, message={key[1]!r}, direction={key[2]!r}, "
+                    f"kind={key[0]!r}, {'message' if key[0] == 'oms_message' else 'name'}={key[1]!r}, direction={key[2]!r}, "
                     f"mandate={key[3]!r}, timing_kind={key[4]!r}",
                 )
             )
@@ -247,6 +247,37 @@ def validate_profile_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
 
 def validate_document(document: Any) -> list[Diagnostic]:
     return schema_diagnostics(document) + semantic_diagnostics(document)
+
+
+def required_exchange_identity(requirement: dict[str, Any]) -> tuple[str, str, str, str, str] | None:
+    """Return the kind-specific semantic identity for a required exchange rule."""
+    kind = requirement.get("kind")
+    selector_field = {"oms_message": "message", "data_transfer": "name"}.get(kind)
+    if selector_field is None:
+        return None
+    values = (
+        kind,
+        requirement.get(selector_field),
+        requirement.get("direction"),
+        requirement.get("mandate"),
+        requirement.get("timing_kind"),
+    )
+    return values if all(isinstance(value, str) for value in values) else None
+
+
+def required_exchange_matches(actual: dict[str, Any], requirement: dict[str, Any]) -> bool:
+    """Match an actual exchange against a supported kind-specific profile rule."""
+    kind = requirement.get("kind")
+    selector_field = {"oms_message": "message", "data_transfer": "name"}.get(kind)
+    if selector_field is None:
+        return False
+    return (
+        actual.get("kind") == kind
+        and actual.get(selector_field) == requirement.get(selector_field)
+        and actual.get("direction") == requirement.get("direction")
+        and actual.get("mandate") == requirement.get("mandate")
+        and actual.get("timing", {}).get("kind") == requirement.get("timing_kind")
+    )
 
 
 def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
@@ -318,19 +349,16 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
                 )
         for exchange_requirement in requirement.get("required_exchanges", []):
             if any(
-                exchange.get("kind") == exchange_requirement["kind"]
-                and exchange.get("message") == exchange_requirement["message"]
-                and exchange.get("direction") == exchange_requirement["direction"]
-                and exchange.get("mandate") == exchange_requirement["mandate"]
-                and exchange.get("timing", {}).get("kind") == exchange_requirement["timing_kind"]
+                required_exchange_matches(exchange, exchange_requirement)
                 for exchange in function.get("exchanges", [])
             ):
                 continue
+            selector = exchange_requirement.get("message", exchange_requirement.get("name", "<unknown>"))
             diagnostics.append(
                 Diagnostic(
                     f"$.functions[{index}].exchanges",
                     f"OMS profile {profile_id!r} requires {requirement['name']!r} exchange "
-                    f"{exchange_requirement['message']!r} with direction "
+                    f"{selector!r} with direction "
                     f"{exchange_requirement['direction']!r}, mandate "
                     f"{exchange_requirement['mandate']!r}, and timing kind "
                     f"{exchange_requirement['timing_kind']!r} for {kind}",

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -170,6 +171,124 @@ def _complete_service_status_document() -> dict:
     return load_document(ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "service-required-functions.yaml")
 
 
+def _service_initialization(document: dict) -> dict:
+    return next(function for function in document["functions"] if function["name"] == "Service Initialization")
+
+
+def _exchange(function: dict, selector: str) -> dict:
+    return next(item for item in function["exchanges"] if item.get("message", item.get("name")) == selector)
+
+
+def test_oms_25_profile_service_initialization_exchange_order_and_local_ids_are_irrelevant() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    initialization = _service_initialization(document)
+    initialization["id"] = "entirely-local-function-id"
+    initialization["exchanges"].reverse()
+    assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_allows_additional_service_initialization_exchanges() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    _service_initialization(document)["exchanges"].append(
+        {
+            "id": "local-extra-initialization-row",
+            "kind": "non_oms_message",
+            "direction": "input",
+            "mandate": "optional",
+            "name": "LocalBootstrapMessage",
+            "timing": {"kind": "asynchronous"},
+        }
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    ("selector", "field", "value"),
+    [
+        ("FileMetadata", "direction", "output"),
+        ("FileMetadata", "mandate", "mandatory"),
+        ("FileMetadata", "timing.kind", "on_demand"),
+        ("FileLocation", "direction", "output"),
+        ("ServiceConfigFile", "direction", "output"),
+        ("ServiceConfigFile", "mandate", "mandatory"),
+        ("ServiceConfigFile", "timing.kind", "periodic"),
+    ],
+)
+def test_oms_25_profile_rejects_wrong_service_initialization_exchange_shape(
+    selector: str, field: str, value: str
+) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    exchange = _exchange(_service_initialization(document), selector)
+    if field == "timing.kind":
+        exchange["timing"]["kind"] = value
+    else:
+        exchange[field] = value
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert selector in diagnostics[0].message
+
+
+@pytest.mark.parametrize("selector", ["FileMetadata", "FileLocation", "ServiceConfigFile"])
+def test_oms_25_profile_rejects_each_missing_service_initialization_exchange(selector: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    initialization = _service_initialization(document)
+    initialization["exchanges"] = [item for item in initialization["exchanges"] if item.get("message", item.get("name")) != selector]
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert selector in diagnostics[0].message
+
+
+def test_oms_25_profile_does_not_match_exchange_kinds_by_local_selector_text() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    transfer = _exchange(_service_initialization(document), "ServiceConfigFile")
+    transfer["kind"] = "oms_message"
+    transfer["message"] = transfer.pop("name")
+    transfer["topic"] = "local.config"
+    for field in ("protocol", "data_type", "data_format", "sharing_pattern"):
+        transfer.pop(field)
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert "ServiceConfigFile" in diagnostics[0].message
+
+
+def test_oms_25_profile_leaves_data_transfer_implementation_details_configurable() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    transfer = _exchange(_service_initialization(document), "ServiceConfigFile")
+    transfer.update(
+        protocol="MQTT",
+        data_type="Program-Specific Configuration",
+        data_format="CBOR",
+        sharing_pattern="Shared Mutable",
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_does_not_apply_required_service_functions_to_subsystems() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["service"]["kind"] = "subsystem"
+    document["functions"] = []
+    assert profile_diagnostics(document, profile) == []
+
+
+
+
 @pytest.mark.parametrize(
     ("message", "field", "value"),
     [
@@ -241,6 +360,17 @@ def test_oms_25_profile_rejects_duplicate_required_exchange_rules() -> None:
     assert any("duplicate required exchange rule" in diagnostic.message for diagnostic in diagnostics)
 
 
+def test_oms_25_profile_rejects_duplicate_data_transfer_required_exchange_rules() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    duplicate = deepcopy(profile["required_functions"][0]["required_exchanges"][2])
+    duplicate["traceability"][0]["locator"] = "different prose"
+    profile["required_functions"][0]["required_exchanges"].append(duplicate)
+
+    diagnostics = validate_profile_document(profile)
+    assert any("duplicate required exchange rule" in diagnostic.message for diagnostic in diagnostics)
+
+
 def test_oms_25_profile_rejects_unknown_required_exchange_traceability_source() -> None:
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
@@ -259,6 +389,43 @@ def test_oms_25_profile_schema_rejects_required_exchange_primitive() -> None:
     assert any("primitive" in diagnostic.message for diagnostic in diagnostics)
 
 
+@pytest.mark.parametrize("field", ["protocol", "data_type", "data_format", "sharing_pattern"])
+def test_oms_25_profile_schema_rejects_data_transfer_implementation_requirements(field: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][0]["required_exchanges"][2][field] = "not-a-profile-constraint"
+
+    diagnostics = validate_profile_document(profile)
+    assert any(field in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_schema_rejects_data_transfer_rule_with_message() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][0]["required_exchanges"][2]["message"] = "FileMetadata"
+
+    diagnostics = validate_profile_document(profile)
+    assert any("message" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_schema_rejects_unsupported_required_exchange_kind() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][0]["required_exchanges"][2]["kind"] = "special_signal"
+
+    diagnostics = validate_profile_document(profile)
+    assert diagnostics
+
+
+def test_oms_25_profile_rejects_unknown_data_transfer_traceability_source() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][0]["required_exchanges"][2]["traceability"][0]["source"] = "unknown-source"
+
+    diagnostics = validate_profile_document(profile)
+    assert any("unknown source id 'unknown-source'" in diagnostic.message for diagnostic in diagnostics)
+
+
 def test_service_status_partial_example_lacks_only_service_initialization_for_oms_profile() -> None:
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
@@ -266,3 +433,12 @@ def test_service_status_partial_example_lacks_only_service_initialization_for_om
     diagnostics = validate_path(ROOT / "examples" / "service-status.yaml", profile)
     assert len(diagnostics) == 1
     assert "Service Initialization" in diagnostics[0].message
+
+
+def test_service_initialization_partial_example_lacks_only_service_status_for_oms_profile() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+
+    diagnostics = validate_path(ROOT / "examples" / "service-initialization.yaml", profile)
+    assert len(diagnostics) == 1
+    assert "Service Status" in diagnostics[0].message

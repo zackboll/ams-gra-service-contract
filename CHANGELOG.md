@@ -11,6 +11,10 @@ All notable changes to this experimental specification and tooling project are d
 - Opt-in OMS 2.5 Required Service Function profile validation.
 - OMS 2.5 minimum Service Status exchange-shape validation for Services and
   Isolators, with profile-source traceability and duplicate-rule checks.
+- OMS 2.5 minimum Service Initialization exchange-shape validation for Services
+  and Isolators: `FileMetadata`, `FileLocation`, and `ServiceConfigFile`.
+- Discriminated OMS-profile required-exchange rules for OMS Messages and Data
+  Transfers, with kind-specific duplicate detection and matching.
 - Automated repository text-hygiene enforcement.
 - UCI 2.5 schema-source manifest with immutable source revision and SHA-256 verification.
 - Deterministic schema-source set composition for one UCI baseline plus explicitly declared extension manifests, including exact extension-ID mapping, baseline compatibility checks, and contract-declaration ordering.

@@ -41,28 +41,42 @@ traceability prose. A future contract version may introduce explicit
 standard-function identity if real consumers show that name matching is
 insufficient.
 
-For the uniquely matched **Service Status** function, the profile additionally
-requires these minimum OMS-message exchange shapes, regardless of local
-function/exchange IDs or declaration order:
+For the uniquely matched required functions, the profile additionally requires
+these minimum exchange shapes, regardless of local function/exchange IDs or
+declaration order:
+
+**Service Initialization** (Table 3.1-1):
+
+- `FileMetadata`: OMS-message input, optional, asynchronous;
+- `FileLocation`: OMS-message input, optional, asynchronous; and
+- `ServiceConfigFile`: Data Transfer input, optional, asynchronous.
+
+The official table presents these as black-text rows. Per the Section 3 table
+instructions, black-text message rows cannot be removed; `optional` is the
+Level of Mandate for function execution, not permission to omit the profile row.
+
+**Service Status** (Table 3.1-2):
 
 - `ServiceStatus`: output, mandatory, periodic;
 - `ServiceStatusDataRequest`: input, mandatory, asynchronous; and
 - `ServiceStatusDataRequestStatus`: output, mandatory, on-demand.
 
 Additional valid exchange rows are allowed. The profile intentionally does not
-fix topics, operational attributes/SOAC selection, subscription groups,
-numerical timing values, Appendix C content, contract traceability, or UCI
-message primitives. It does not yet validate Service Initialization exchange
-inventory, complete Required Subsystem Function inventory, complete
-capability-related Function inventory, or workflow/state behavior.
+fix Service Initialization Data Transfer protocol, data type, data format, or
+sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
+subscription groups, numerical timing values, Appendix C content, contract
+traceability, or UCI message primitives. It does not yet validate complete
+Required Subsystem Function inventory, Required Capability-related Function
+inventory, workflow/state behavior, or other OMS-version profiles.
 
 ## Partial reference examples
 
 Files in `examples/` can be intentionally partial, source-backed function
 demonstrations. Ordinary v0.1 validation does not mean OMS profile completeness.
-For example, `examples/service-status.yaml` is a valid, source-backed v0.1
-fragment but is not a complete OMS Service contract and is expected to fail the
-whole-service OMS 2.5 profile.
+For example, `examples/service-status.yaml` and
+`examples/service-initialization.yaml` are valid, source-backed v0.1 fragments
+but are not complete OMS Service contracts. Under the whole-service OMS 2.5
+profile each fails only for the other required function.
 
 Future profiles can evolve independently for OMS 2.6 or additional conformance
 rules without changing the portable v0.1 grammar.

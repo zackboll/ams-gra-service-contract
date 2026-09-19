@@ -19,6 +19,31 @@ required_functions:
     traceability:
       - source: oms-service-contract-instructions-v25
         locator: 3.1.1 Service Initialization
+    required_exchanges:
+      - kind: oms_message
+        message: FileMetadata
+        direction: input
+        mandate: optional
+        timing_kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.1.1.4 / Table 3.1-1 / FileMetadata
+      - kind: oms_message
+        message: FileLocation
+        direction: input
+        mandate: optional
+        timing_kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.1.1.4 / Table 3.1-1 / FileLocation
+      - kind: data_transfer
+        name: ServiceConfigFile
+        direction: input
+        mandate: optional
+        timing_kind: asynchronous
+        traceability:
+          - source: oms-service-contract-instructions-v25
+            locator: 3.1.1.4 / Table 3.1-1 / ServiceConfigFile
   - name: Service Status
     applies_to: [service, isolator]
     category: required

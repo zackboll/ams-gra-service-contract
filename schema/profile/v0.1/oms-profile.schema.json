@@ -38,8 +38,14 @@
         "required_group": {"enum": ["service", "subsystem", "capability"]},
         "applicability": {"enum": ["applicable", "not_applicable"]},
         "traceability": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/traceRef"}},
-        "required_exchanges": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredOmsMessageExchange"}}
+        "required_exchanges": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requiredExchange"}}
       }
+    },
+    "requiredExchange": {
+      "oneOf": [
+        {"$ref": "#/$defs/requiredOmsMessageExchange"},
+        {"$ref": "#/$defs/requiredDataTransferExchange"}
+      ]
     },
     "requiredOmsMessageExchange": {
       "type": "object", "additionalProperties": false,
@@ -47,6 +53,18 @@
       "properties": {
         "kind": {"const": "oms_message"},
         "message": {"type": "string", "minLength": 1},
+        "direction": {"enum": ["input", "output"]},
+        "mandate": {"enum": ["mandatory", "optional"]},
+        "timing_kind": {"enum": ["asynchronous", "on_demand", "periodic"]},
+        "traceability": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/traceRef"}}
+      }
+    },
+    "requiredDataTransferExchange": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "name", "direction", "mandate", "timing_kind", "traceability"],
+      "properties": {
+        "kind": {"const": "data_transfer"},
+        "name": {"type": "string", "minLength": 1},
         "direction": {"enum": ["input", "output"]},
         "mandate": {"enum": ["mandatory", "optional"]},
         "timing_kind": {"enum": ["asynchronous", "on_demand", "periodic"]},

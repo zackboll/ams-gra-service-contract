@@ -6,6 +6,10 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Explicit tooling-only specific-function structural authoring, typed mapping,
+  scaffold, and fail-closed materialization. Structure never infers grouping or
+  portable IDs/names; Capability and standard-role inference remain absent.
+
 - Fail-closed completion-scaffold materialization into deterministic portable
   Service Contract JSON. It refuses unresolved required values and unmapped
   author decisions, preserves lower-layer `SC_*`/`OP_*` validation diagnostics,

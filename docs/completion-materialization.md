@@ -23,6 +23,7 @@ profile with `OP_*` validation before emission. Lower-layer diagnostics retain
 their original identity.
 
 Only resolved author-owned values are emitted; no IDs, topics, functions, or
-defaults are generated. Capability declarations, specific functions, sources,
+defaults are generated. Declared specific functions follow profile-required
+functions in structure order. Capability declarations, sources,
 and traceability are omitted. Completion candidate provenance is audit evidence,
 not automatically authored portable traceability.

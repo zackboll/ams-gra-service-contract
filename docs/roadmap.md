@@ -39,11 +39,11 @@ Potential goals driven by real implementation experience:
   changing core schema semantics or acting as an independent downstream
    consumer. Typed candidate/decision-to-destination mapping, profile-derived
    required-function authoring scaffold, and structural missing-field reporting
-   are implemented. Specific-function authoring, Capability declaration
-    completion, fail-closed portable contract materialization, SC validation of
+    are implemented. Specific-function structural authoring, typed mapping,
+    scaffold, and fail-closed portable contract materialization, SC validation of
     materialized output, and OMS profile validation of materialized output are
-    implemented. Specific-function authoring, Capability declaration
-    completion/materialization, source/traceability authoring, safe file
+     implemented. Capability declaration completion/materialization,
+     source/traceability authoring, safe file
     write/apply workflow, YAML serialization policy, candidate-to-profile
     satisfaction analysis, source extraction, and broader independent consumers
     remain pending;

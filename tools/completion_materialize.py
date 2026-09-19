@@ -10,11 +10,11 @@ from typing import Any
 
 try:
     from tools.completion_assistant import load_completion_path, load_decisions_path
-    from tools.completion_scaffold import build_scaffold, load_mapping_path
+    from tools.completion_scaffold import build_scaffold, load_mapping_path, load_specific_functions_path
     from tools.validate import Diagnostic, profile_diagnostics, validate_document, validate_profile_path
 except ModuleNotFoundError:  # Support direct execution as ``python tools/completion_materialize.py``.
     from completion_assistant import load_completion_path, load_decisions_path
-    from completion_scaffold import build_scaffold, load_mapping_path
+    from completion_scaffold import build_scaffold, load_mapping_path, load_specific_functions_path
     from validate import Diagnostic, profile_diagnostics, validate_document, validate_profile_path
 
 CA_MATERIALIZATION_INCOMPLETE = "CA_MATERIALIZATION_INCOMPLETE"
@@ -58,8 +58,11 @@ def _exchange(exchange: dict[str, Any]) -> dict[str, Any]:
             _optional(exchange, field, result)
     else:
         result["name"] = _resolved(exchange["name"])
-        for field in ("protocol", "data_type", "data_format", "sharing_pattern"):
-            result[field] = _resolved(exchange[field])
+        for field in ("protocol", "data_type", "data_format", "sharing_pattern", "details", "reference"):
+            _optional(exchange, field, result)
+        if kind == "data_transfer":
+            for field in ("protocol", "data_type", "data_format", "sharing_pattern"):
+                result[field] = _resolved(exchange[field])
     result["timing"] = _timing(exchange)
     return result
 
@@ -82,7 +85,10 @@ def materialize_contract(scaffold: dict[str, Any]) -> tuple[dict[str, Any] | Non
     _optional(scaffold["standards"], "ams_gra_version", standards)
     functions = []
     for function in scaffold["functions"]:
-        item = {"id": _resolved(function["id"]), "name": _resolved(function["name"]), "category": _resolved(function["category"]), "required_group": _resolved(function["required_group"]), "applicability": _resolved(function["applicability"])}
+        item = {"id": _resolved(function["id"]), "name": _resolved(function["name"]), "category": _resolved(function["category"])}
+        if "required_group" in function:
+            item["required_group"] = _resolved(function["required_group"])
+        item["applicability"] = _resolved(function["applicability"])
         _optional(function, "description", item)
         if item["applicability"] == "not_applicable":
             item["not_applicable_reason"] = _resolved(function["not_applicable_reason"])
@@ -102,15 +108,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--decisions", type=Path, required=True)
     parser.add_argument("--mapping", type=Path, required=True)
+    parser.add_argument("--specific-functions", type=Path)
     parser.add_argument("--profile", type=Path, required=True)
     args = parser.parse_args(argv)
     completion, diagnostics = load_completion_path(args.input.resolve())
     if not diagnostics: decisions, diagnostics = load_decisions_path(args.decisions.resolve(), completion)
+    specific = None
+    if not diagnostics and args.specific_functions: specific, diagnostics = load_specific_functions_path(args.specific_functions.resolve())
     if not diagnostics: profile, diagnostics = validate_profile_path(args.profile.resolve())
-    if not diagnostics: mapping, diagnostics = load_mapping_path(args.mapping.resolve(), completion, decisions, profile)
+    if not diagnostics: mapping, diagnostics = load_mapping_path(args.mapping.resolve(), completion, decisions, profile, specific)
     contract = None
     if not diagnostics:
-        contract, diagnostics = materialize_contract(build_scaffold(completion, decisions, mapping, profile))
+        contract, diagnostics = materialize_contract(build_scaffold(completion, decisions, mapping, profile, specific))
     if not diagnostics:
         diagnostics = validate_document(contract)
     if not diagnostics:

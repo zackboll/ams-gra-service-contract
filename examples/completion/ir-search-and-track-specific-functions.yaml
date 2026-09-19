@@ -1,0 +1,9 @@
+# Authoring exercise only: published sources do not establish this grouping.
+specific_functions_version: "0.1"
+functions:
+  - key: ir-authoring-exercise
+    exchanges:
+      - key: position-report
+        kind: oms_message
+      - key: observation-report
+        kind: oms_message

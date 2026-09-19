@@ -44,6 +44,15 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 `IP_*`; preparation failures retain `SC_*`, `SS_*`, or `UR_*`. See
 [docs/inputs-outputs-projection.md](docs/inputs-outputs-projection.md).
 
+## Completion worksheet
+
+The non-normative completion assistant records source-backed, unconfirmed
+authoring candidates separately from authored Service Contract semantics and
+separately from OMS profile requirements. It retains conflicts rather than
+resolving them and has no extraction, inference, confirmation, or contract
+generation/apply path. See [docs/completion-assistant.md](docs/completion-assistant.md)
+and [Task 035](docs/task-035-completion-worksheet-core.md).
+
 ## Published-contract exercises
 
 Evidence-driven exercises against five published OMS 2.5 Markdown Service

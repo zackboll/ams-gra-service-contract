@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-input:0.1",
+  "title": "Service Contract Completion Assistant Input",
+  "description": "Non-normative authoring worksheet input; not a Service Contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["completion_version", "target", "sources", "candidates"],
+  "properties": {
+    "completion_version": {"const": "0.1"},
+    "target": {"$ref": "#/$defs/target"},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "candidates": {"type": "array", "items": {"$ref": "#/$defs/candidate"}}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "minLength": 1},
+    "target": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contract_version", "oms_version", "service_kind"],
+      "properties": {
+        "contract_version": {"type": "string", "minLength": 1},
+        "oms_version": {"type": "string", "minLength": 1},
+        "service_kind": {"enum": ["service", "subsystem", "isolator"]},
+        "name": {"type": "string", "minLength": 1}
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "provenance", "title", "uri"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "provenance": {"enum": ["published_contract", "published_supporting_doc", "implementation", "oms_normative"]},
+        "title": {"type": "string", "minLength": 1},
+        "uri": {"type": "string", "format": "uri"},
+        "revision": {"type": "string", "minLength": 1},
+        "note": {"type": "string", "minLength": 1}
+      }
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "target", "value", "source", "locator"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "target": {"type": "string", "minLength": 1},
+        "value": {"type": ["string", "number", "boolean"]},
+        "source": {"$ref": "#/$defs/identifier"},
+        "locator": {"type": "string", "minLength": 1},
+        "note": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

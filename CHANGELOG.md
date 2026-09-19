@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Provenance-preserving, non-normative completion worksheet tooling with a
+  standalone tooling schema, `CA_*` diagnostics, deterministic Markdown/JSON
+  rendering, profile-derived fixed requirements, and the IR Search and Track
+  evidence exercise. Candidates remain unconfirmed and conflicts are retained;
+  no source extraction, inference, confirmation, core-schema change, or contract
+  generation/apply path is included.
 - Five-contract published OMS 2.5 evidence survey spanning RF FM Demod,
   Graupel, IR Search and Track, Supercell, and Squall OMS Adapters. It records
   pinned sources, provenance, profile and UCI resolver evidence, and selects an

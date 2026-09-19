@@ -1,0 +1,24 @@
+decision_version: "0.1"
+decisions:
+  - {target: service.name, value: Synthetic Completion Service}
+  - {target: service.version, value: 1.0.0}
+  - {target: standards.uci_schema_version, value: "2.5"}
+  - {target: "function[Service Initialization].id", value: service-initialization}
+  - {target: "exchange[FileMetadata].id", value: file-metadata}
+  - {target: "exchange[FileMetadata].topic", value: mission.file-metadata}
+  - {target: "exchange[FileLocation].id", value: file-location}
+  - {target: "exchange[FileLocation].topic", value: mission.file-location}
+  - {target: "exchange[ServiceConfigFile].id", value: service-config-file}
+  - {target: "exchange[ServiceConfigFile].protocol", value: https}
+  - {target: "exchange[ServiceConfigFile].data_type", value: ServiceConfigFile}
+  - {target: "exchange[ServiceConfigFile].data_format", value: application/json}
+  - {target: "exchange[ServiceConfigFile].sharing_pattern", value: request_response}
+  - {target: "function[Service Status].id", value: service-status}
+  - {target: "exchange[ServiceStatus].id", value: service-status-report}
+  - {target: "exchange[ServiceStatus].topic", value: mission.service-status}
+  - {target: "exchange[ServiceStatus].timing.nominal_rate_hz", value: 1.0}
+  - {target: "exchange[ServiceStatusDataRequest].id", value: service-status-request}
+  - {target: "exchange[ServiceStatusDataRequest].topic", value: mission.service-status-request}
+  - {target: "exchange[ServiceStatusDataRequestStatus].id", value: service-status-request-status}
+  - {target: "exchange[ServiceStatusDataRequestStatus].topic", value: mission.service-status-request-status}
+  - {target: "exchange[ServiceStatusDataRequestStatus].timing.nominal_response_seconds", value: 0.5}

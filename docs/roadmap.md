@@ -40,9 +40,13 @@ Potential goals driven by real implementation experience:
    consumer. Typed candidate/decision-to-destination mapping, profile-derived
    required-function authoring scaffold, and structural missing-field reporting
    are implemented. Specific-function authoring, Capability declaration
-   completion, portable contract materialization, safe apply/write workflow,
-   SC validation of materialized output, candidate-to-profile satisfaction
-   analysis, source extraction, and broader independent consumers remain pending;
+    completion, fail-closed portable contract materialization, SC validation of
+    materialized output, and OMS profile validation of materialized output are
+    implemented. Specific-function authoring, Capability declaration
+    completion/materialization, source/traceability authoring, safe file
+    write/apply workflow, YAML serialization policy, candidate-to-profile
+    satisfaction analysis, source extraction, and broader independent consumers
+    remain pending;
 - explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (OMS 2.5 Required Service
   Function inventory, minimum Service Initialization and Service Status exchange

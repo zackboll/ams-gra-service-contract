@@ -93,9 +93,12 @@ validation runs before profile application, so invalid portable documents yield
 | `CA_MAPPING_FIELD_INCOMPATIBLE` | A mapping field cannot be owned by the selected profile destination. |
 | `CA_MAPPING_VALUE_TYPE` | An explicit mapped decision value has the wrong scalar type. |
 | `CA_CONTEXT_ASSERTION_MISMATCH` | A context assertion decision disagrees with explicit completion target context. |
+| `CA_MATERIALIZATION_INCOMPLETE` | A required scaffold field remains unresolved, so no contract is emitted. |
+| `CA_UNMAPPED_AUTHOR_DECISION` | An explicit author decision lacks a typed mapping, so no contract is emitted. |
 
-`CA_*` applies only to the non-normative completion workspace. It is never a
-portable Service Contract validation result.
+`CA_*` applies only to the completion workspace. Materialization preconditions
+use `CA_*`; materialized-contract validation surfaces `SC_*` and selected OMS
+profile validation surfaces `OP_*` unchanged.
 
 ## Schema source (`SS_*`)
 

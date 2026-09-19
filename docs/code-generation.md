@@ -273,6 +273,10 @@ See [schema-source manifests](schema-sources.md).
 
 ## 13. Recommended diagnostic style
 
+The examples below are hypothetical future resolver diagnostics. `C102` and
+`C118` are not implemented canonical codes; current validator codes are
+documented in [validation diagnostics](diagnostics.md).
+
 Diagnostics should identify both the contract path and external source context:
 
 ```text

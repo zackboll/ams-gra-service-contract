@@ -29,14 +29,47 @@ ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "v0.1" / "service-contract.schema.json"
 PROFILE_SCHEMA_PATH = ROOT / "schema" / "profile" / "v0.1" / "oms-profile.schema.json"
 
+# Public, stable diagnostic identities for portable-contract and OMS-profile
+# validation. Other reference tools intentionally have no codes in this family.
+SC_SCHEMA = "SC_SCHEMA"
+SC_DUPLICATE_SOURCE = "SC_DUPLICATE_SOURCE"
+SC_DUPLICATE_FUNCTION = "SC_DUPLICATE_FUNCTION"
+SC_DUPLICATE_EXCHANGE = "SC_DUPLICATE_EXCHANGE"
+SC_UNKNOWN_TRACE_SOURCE = "SC_UNKNOWN_TRACE_SOURCE"
+
+OP_SCHEMA = "OP_SCHEMA"
+OP_DUPLICATE_SOURCE = "OP_DUPLICATE_SOURCE"
+OP_DUPLICATE_FUNCTION = "OP_DUPLICATE_FUNCTION"
+OP_DUPLICATE_APPLIES_TO = "OP_DUPLICATE_APPLIES_TO"
+OP_UNKNOWN_TRACE_SOURCE = "OP_UNKNOWN_TRACE_SOURCE"
+OP_DUPLICATE_EXCHANGE_RULE = "OP_DUPLICATE_EXCHANGE_RULE"
+OP_UNSUPPORTED_CONTRACT_VERSION = "OP_UNSUPPORTED_CONTRACT_VERSION"
+OP_OMS_VERSION_MISMATCH = "OP_OMS_VERSION_MISMATCH"
+OP_MISSING_REQUIRED_FUNCTION = "OP_MISSING_REQUIRED_FUNCTION"
+OP_AMBIGUOUS_REQUIRED_FUNCTION = "OP_AMBIGUOUS_REQUIRED_FUNCTION"
+OP_FUNCTION_METADATA = "OP_FUNCTION_METADATA"
+OP_FUNCTION_APPLICABILITY = "OP_FUNCTION_APPLICABILITY"
+OP_MISSING_REQUIRED_EXCHANGE = "OP_MISSING_REQUIRED_EXCHANGE"
+
+VALIDATION_DIAGNOSTIC_CODES = frozenset(
+    {
+        SC_SCHEMA, SC_DUPLICATE_SOURCE, SC_DUPLICATE_FUNCTION, SC_DUPLICATE_EXCHANGE, SC_UNKNOWN_TRACE_SOURCE,
+        OP_SCHEMA, OP_DUPLICATE_SOURCE, OP_DUPLICATE_FUNCTION, OP_DUPLICATE_APPLIES_TO,
+        OP_UNKNOWN_TRACE_SOURCE, OP_DUPLICATE_EXCHANGE_RULE, OP_UNSUPPORTED_CONTRACT_VERSION,
+        OP_OMS_VERSION_MISMATCH, OP_MISSING_REQUIRED_FUNCTION, OP_AMBIGUOUS_REQUIRED_FUNCTION,
+        OP_FUNCTION_METADATA, OP_FUNCTION_APPLICABILITY, OP_MISSING_REQUIRED_EXCHANGE,
+    }
+)
+
 
 @dataclass(frozen=True)
 class Diagnostic:
+    code: str
     path: str
     message: str
 
     def __str__(self) -> str:
-        return f"{self.path}: {self.message}" if self.path else self.message
+        return f"{self.code} {self.path}: {self.message}" if self.path else f"{self.code} {self.message}"
 
 
 def load_schema() -> dict[str, Any]:
@@ -65,14 +98,14 @@ def schema_diagnostics(document: Any) -> list[Diagnostic]:
     validator = Draft202012Validator(load_schema(), format_checker=FormatChecker())
     diagnostics: list[Diagnostic] = []
     for error in sorted(validator.iter_errors(document), key=lambda e: list(e.absolute_path)):
-        diagnostics.append(Diagnostic(_format_json_path(error.absolute_path), error.message))
+        diagnostics.append(Diagnostic(code=SC_SCHEMA, path=_format_json_path(error.absolute_path), message=error.message))
     return diagnostics
 
 
 def profile_schema_diagnostics(profile: Any) -> list[Diagnostic]:
     validator = Draft202012Validator(load_profile_schema(), format_checker=FormatChecker())
     return [
-        Diagnostic(_format_json_path(error.absolute_path), error.message)
+        Diagnostic(code=OP_SCHEMA, path=_format_json_path(error.absolute_path), message=error.message)
         for error in sorted(validator.iter_errors(profile), key=lambda e: list(e.absolute_path))
     ]
 
@@ -103,7 +136,7 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
     source_id_set = set(source_ids)
 
     for dup in sorted(_duplicates(source_ids)):
-        diagnostics.append(Diagnostic("$.sources", f"duplicate source id {dup!r}"))
+        diagnostics.append(Diagnostic(code=SC_DUPLICATE_SOURCE, path="$.sources", message=f"duplicate source id {dup!r}"))
 
     functions = document.get("functions", [])
     if not isinstance(functions, list):
@@ -111,7 +144,7 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
 
     function_ids = [f.get("id") for f in functions if isinstance(f, dict) and isinstance(f.get("id"), str)]
     for dup in sorted(_duplicates(function_ids)):
-        diagnostics.append(Diagnostic("$.functions", f"duplicate function id {dup!r}"))
+        diagnostics.append(Diagnostic(code=SC_DUPLICATE_FUNCTION, path="$.functions", message=f"duplicate function id {dup!r}"))
 
     def check_traceability(items: Any, base: str) -> None:
         if not isinstance(items, list):
@@ -122,7 +155,7 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
             source = item.get("source")
             if isinstance(source, str) and source not in source_id_set:
                 diagnostics.append(
-                    Diagnostic(f"{base}[{idx}].source", f"unknown source id {source!r}")
+                    Diagnostic(code=SC_UNKNOWN_TRACE_SOURCE, path=f"{base}[{idx}].source", message=f"unknown source id {source!r}")
                 )
 
     for f_idx, function in enumerate(functions):
@@ -137,7 +170,7 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
 
         exchange_ids = [e.get("id") for e in exchanges if isinstance(e, dict) and isinstance(e.get("id"), str)]
         for dup in sorted(_duplicates(exchange_ids)):
-            diagnostics.append(Diagnostic(f"{fbase}.exchanges", f"duplicate exchange id {dup!r}"))
+            diagnostics.append(Diagnostic(code=SC_DUPLICATE_EXCHANGE, path=f"{fbase}.exchanges", message=f"duplicate exchange id {dup!r}"))
 
         for e_idx, exchange in enumerate(exchanges):
             if isinstance(exchange, dict):
@@ -162,7 +195,7 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
         if isinstance(source, dict) and isinstance(source.get("id"), str)
     ]
     for duplicate in sorted(_duplicates(source_ids)):
-        diagnostics.append(Diagnostic("$.sources", f"duplicate source id {duplicate!r}"))
+        diagnostics.append(Diagnostic(code=OP_DUPLICATE_SOURCE, path="$.sources", message=f"duplicate source id {duplicate!r}"))
     source_id_set = set(source_ids)
 
     functions = profile.get("required_functions", [])
@@ -172,7 +205,7 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
         if isinstance(function, dict) and isinstance(function.get("name"), str)
     ]
     for duplicate in sorted(_duplicates(function_names)):
-        diagnostics.append(Diagnostic("$.required_functions", f"duplicate required function name {duplicate!r}"))
+        diagnostics.append(Diagnostic(code=OP_DUPLICATE_FUNCTION, path="$.required_functions", message=f"duplicate required function name {duplicate!r}"))
 
     for index, function in enumerate(functions):
         if not isinstance(function, dict):
@@ -183,15 +216,12 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
         applies_to = [kind for kind in applies_to if isinstance(kind, str)]
         for duplicate in sorted(_duplicates(applies_to)):
             diagnostics.append(
-                Diagnostic(f"$.required_functions[{index}].applies_to", f"duplicate component kind {duplicate!r}")
+                Diagnostic(code=OP_DUPLICATE_APPLIES_TO, path=f"$.required_functions[{index}].applies_to", message=f"duplicate component kind {duplicate!r}")
             )
         for trace_index, trace in enumerate(function.get("traceability", [])):
             if isinstance(trace, dict) and trace.get("source") not in source_id_set:
                 diagnostics.append(
-                    Diagnostic(
-                        f"$.required_functions[{index}].traceability[{trace_index}].source",
-                        f"unknown source id {trace.get('source')!r}",
-                    )
+                    Diagnostic(code=OP_UNKNOWN_TRACE_SOURCE, path=f"$.required_functions[{index}].traceability[{trace_index}].source", message=f"unknown source id {trace.get('source')!r}")
                 )
         exchanges = function.get("required_exchanges", [])
         if not isinstance(exchanges, list):
@@ -206,11 +236,7 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
             for trace_index, trace in enumerate(exchange.get("traceability", [])):
                 if isinstance(trace, dict) and trace.get("source") not in source_id_set:
                     diagnostics.append(
-                        Diagnostic(
-                            f"$.required_functions[{index}].required_exchanges[{exchange_index}]."
-                            f"traceability[{trace_index}].source",
-                            f"unknown source id {trace.get('source')!r}",
-                        )
+                    Diagnostic(code=OP_UNKNOWN_TRACE_SOURCE, path=f"$.required_functions[{index}].required_exchanges[{exchange_index}].traceability[{trace_index}].source", message=f"unknown source id {trace.get('source')!r}")
                     )
         seen_exchange_keys: set[tuple[str, str, str, str, str]] = set()
         duplicate_exchange_keys: set[tuple[str, str, str, str, str]] = set()
@@ -223,8 +249,9 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
                 continue
             diagnostics.append(
                 Diagnostic(
-                    f"$.required_functions[{index}].required_exchanges",
-                    "duplicate required exchange rule "
+                    code=OP_DUPLICATE_EXCHANGE_RULE,
+                    path=f"$.required_functions[{index}].required_exchanges",
+                    message="duplicate required exchange rule "
                     f"kind={key[0]!r}, {'message' if key[0] == 'oms_message' else 'name'}={key[1]!r}, direction={key[2]!r}, "
                     f"mandate={key[3]!r}, timing_kind={key[4]!r}",
                 )
@@ -241,7 +268,7 @@ def validate_profile_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
     try:
         profile = load_document(path)
     except YamlInputError as exc:
-        return None, [Diagnostic("", f"could not parse {path}: {exc}")]
+        return None, [Diagnostic(code=OP_SCHEMA, path="", message=f"could not parse {path}: {exc}")]
     return profile, validate_profile_document(profile)
 
 
@@ -290,20 +317,13 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
     contract_version = document.get("contract_version")
     if contract_version not in profile["contract_versions"]:
         compatibility_diagnostics.append(
-            Diagnostic(
-                "$.contract_version",
-                f"profile {profile_id!r} does not support contract version {contract_version!r}",
-            )
+            Diagnostic(code=OP_UNSUPPORTED_CONTRACT_VERSION, path="$.contract_version", message=f"profile {profile_id!r} does not support contract version {contract_version!r}")
         )
 
     contract_oms_version = document.get("standards", {}).get("oms_version")
     if contract_oms_version != profile["oms_version"]:
         compatibility_diagnostics.append(
-            Diagnostic(
-                "$.standards.oms_version",
-                f"profile {profile_id!r} requires OMS version {profile['oms_version']!r}, "
-                f"contract declares {contract_oms_version!r}",
-            )
+            Diagnostic(code=OP_OMS_VERSION_MISMATCH, path="$.standards.oms_version", message=f"profile {profile_id!r} requires OMS version {profile['oms_version']!r}, contract declares {contract_oms_version!r}")
         )
 
     if compatibility_diagnostics:
@@ -322,17 +342,15 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
         ]
         if not matches:
             diagnostics.append(
-                Diagnostic(
-                    "$.functions",
-                    f"OMS profile {profile_id!r} requires function {requirement['name']!r} for {kind}",
-                )
+                Diagnostic(code=OP_MISSING_REQUIRED_FUNCTION, path="$.functions", message=f"OMS profile {profile_id!r} requires function {requirement['name']!r} for {kind}")
             )
             continue
         if len(matches) > 1:
             diagnostics.append(
                 Diagnostic(
-                    "$.functions",
-                    f"OMS profile {profile_id!r} found multiple matches for required function "
+                    code=OP_AMBIGUOUS_REQUIRED_FUNCTION,
+                    path="$.functions",
+                    message=f"OMS profile {profile_id!r} found multiple matches for required function "
                     f"{requirement['name']!r} for {kind}",
                 )
             )
@@ -342,8 +360,9 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
             if function.get(field) != requirement[field]:
                 diagnostics.append(
                     Diagnostic(
-                        f"$.functions[{index}].{field}",
-                        f"OMS profile {profile_id!r} requires {requirement['name']!r} to have "
+                        code=OP_FUNCTION_METADATA,
+                        path=f"$.functions[{index}].{field}",
+                        message=f"OMS profile {profile_id!r} requires {requirement['name']!r} to have "
                         f"{field} {requirement[field]!r} for {kind}",
                     )
                 )
@@ -351,16 +370,18 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
             if function.get("applicability") != requirement["applicability"]:
                 diagnostics.append(
                     Diagnostic(
-                        f"$.functions[{index}].applicability",
-                        f"OMS profile {profile_id!r} requires applicability {requirement['applicability']!r} "
+                        code=OP_FUNCTION_APPLICABILITY,
+                        path=f"$.functions[{index}].applicability",
+                        message=f"OMS profile {profile_id!r} requires applicability {requirement['applicability']!r} "
                         f"for {requirement['name']!r} for {kind}",
                     )
                 )
         elif function.get("applicability") not in requirement["allowed_applicability"]:
             diagnostics.append(
                 Diagnostic(
-                    f"$.functions[{index}].applicability",
-                    f"OMS profile {profile_id!r} requires {requirement['name']!r} applicability to be one of "
+                    code=OP_FUNCTION_APPLICABILITY,
+                    path=f"$.functions[{index}].applicability",
+                    message=f"OMS profile {profile_id!r} requires {requirement['name']!r} applicability to be one of "
                     f"{requirement['allowed_applicability']!r} for {kind}",
                 )
             )
@@ -373,8 +394,9 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
             selector = exchange_requirement.get("message", exchange_requirement.get("name", "<unknown>"))
             diagnostics.append(
                 Diagnostic(
-                    f"$.functions[{index}].exchanges",
-                    f"OMS profile {profile_id!r} requires {requirement['name']!r} exchange "
+                    code=OP_MISSING_REQUIRED_EXCHANGE,
+                    path=f"$.functions[{index}].exchanges",
+                    message=f"OMS profile {profile_id!r} requires {requirement['name']!r} exchange "
                     f"{selector!r} with direction "
                     f"{exchange_requirement['direction']!r}, mandate "
                     f"{exchange_requirement['mandate']!r}, and timing kind "
@@ -388,7 +410,7 @@ def validate_path(path: Path, profile: Any | None = None) -> list[Diagnostic]:
     try:
         document = load_document(path)
     except YamlInputError as exc:
-        return [Diagnostic("", f"could not parse {path}: {exc}")]
+        return [Diagnostic(code=SC_SCHEMA, path="", message=f"could not parse {path}: {exc}")]
     diagnostics = validate_document(document)
     if diagnostics or profile is None:
         return diagnostics

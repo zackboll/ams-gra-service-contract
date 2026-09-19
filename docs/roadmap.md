@@ -44,7 +44,8 @@ Potential goals driven by real implementation experience:
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);
-- canonical diagnostic codes;
+- initial canonical contract/profile validation diagnostic codes implemented;
+  schema-source, resolver, and projection code families remain;
 - real Service Contract exercises, cross-version validation, mature diagnostics,
   and first independent downstream consumers.
 

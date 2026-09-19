@@ -64,6 +64,14 @@ Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).
 
+## Validation diagnostics
+
+The reference validator emits stable symbolic diagnostic codes before each
+path and descriptive message, for example
+`SC_DUPLICATE_FUNCTION $.functions: duplicate function id 'foo'`. See
+[docs/diagnostics.md](docs/diagnostics.md) for the current contract/profile
+code inventory and stability policy.
+
 ## Why this repository exists
 
 The upstream architecture already has two complementary kinds of information:

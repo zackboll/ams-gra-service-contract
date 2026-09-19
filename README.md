@@ -46,6 +46,14 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 
 ## Profile validation
 
+OMS 2.5 Position Information Processing exchange evidence is classified but not
+profile-enforced. Table 3.3-1's `PositionReport` and
+`PositionReportDetailed` rows are green removable guidance in every matcher-owned
+field; fixed prose is conceptual and does not establish machine-checkable
+cardinality. The current format also lacks independent Capability/
+position-dependency facts to condition the function. See
+[Task 027 evidence](docs/task-027-oms25-position-information.md).
+
 The generic v0.1 schema is OMS-version-neutral. Opt-in profiles provide
 version-specific conformance checks without coupling contract language version
 to OMS version. For the initial OMS 2.5 required-service profile:

@@ -183,6 +183,20 @@ replacement and copy-for-each-Capability instructions are green template
 guidance; no literal placeholder or name-pattern rule is encoded. See
 [Task 026 evidence](task-026-oms25-capability-function-inventory.md).
 
+Task 027 classifies Position Information Processing Table 3.3-1 separately.
+Both `PositionReport` and `PositionReportDetailed` rows have green guidance for
+every profile-matched field (kind, message, direction, LoM, and timing kind);
+their black Appendix C cells are not profile fields. Fixed black Description and
+Workflow prose conceptually names periodic incoming `PositionReport` or
+`PositionReportDetailed`, but does not establish a machine-checkable cardinality
+or individual mandatory shape. The green row-selection and example workflow
+instructions are removable authoring guidance. No Position Information function
+or exchange rule is profile-enforced: v0.1 also lacks the independent Capability
+and position-dependency facts needed to condition such a function. If future
+evidence establishes a fixed alternative group, v0.1 would additionally need a
+deliberately designed conditional-function and alternative-exchange model rather
+than encoding OR as an all-required list. See [Task 027 evidence](task-027-oms25-position-information.md).
+
 The profile also does not validate conditional Section 3.1 Service Functions for
 Platform-hosted Adapters or other OMS-version profiles. It does not claim full
 OMS Subsystem compliance.

@@ -86,13 +86,31 @@ Level of Mandate for function execution, not permission to omit the profile row.
 - `SubsystemStatusDataRequest`: OMS-message input, mandatory, asynchronous; and
 - `SubsystemStatusDataRequestStatus`: OMS-message output, mandatory, on-demand.
 
+**Subsystem Shutdown** (Section 3.2.6 and Table 3.2-6) has no profiled
+exchange minimum. The pinned official DOCX's three substantive rows
+(`SubsystemStateCommand`, `SubsystemStateCommandStatus`, and `Log_File`) use
+the `Table*Green` paragraph styles. Those styles explicitly set OOXML
+`w:color/@w:val` to `00B050`, so all three are removable green guidance/example
+content under the template instructions, rather than fixed black rows. This is
+why `Log_File` is not a profile rule: its `optional` LoM was not interpreted as
+permission to omit a fixed row; the independently established green source
+classification excludes the entire row from the portable minimum.
+
+The green guidance shows `SubsystemStateCommand` as input, mandatory, and
+asynchronous, and `SubsystemStateCommandStatus` as output, mandatory, and
+on-demand, with informative 0.5/3-second response values. If a program uses
+those exchanges, Table 3.2-6's status output direction is the relevant
+Section 3.2.6 evidence, rather than the conflicting Table 3.2-3 input row.
+None of those message shapes or timing numbers is profile-enforced because the
+rows are removable guidance.
+
 Additional valid exchange rows are allowed. The profile intentionally does not
 fix Service Initialization Data Transfer protocol, data type, data format, or
 sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
 subscription groups, numerical timing values, Appendix C content, contract
 traceability, or UCI message primitives. The currently unprofiled Section 3.2
-exchange surfaces are Subsystem Startup, State Command Processing, BIT,
-Calibration, and Shutdown; Startup requires separate source classification.
+exchange surfaces are Subsystem Startup, State Command Processing, BIT, and
+Calibration; Startup requires separate source classification.
 The profile also does not validate Required Capability-related Function
 inventory, conditional Section 3.1 Service Functions for Platform-hosted
 Adapters, or other OMS-version profiles. It does not claim full OMS Subsystem

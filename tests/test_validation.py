@@ -127,6 +127,8 @@ def test_oms_25_profile_manifest() -> None:
         "Subsystem Shutdown",
     ]
     assert all(len(function["applies_to"]) == len(set(function["applies_to"])) for function in profile["required_functions"])
+    shutdown = next(function for function in profile["required_functions"] if function["name"] == "Subsystem Shutdown")
+    assert "required_exchanges" not in shutdown
 
 
 @pytest.mark.parametrize(
@@ -249,6 +251,17 @@ def test_oms_25_profile_rejects_not_applicable_fixed_subsystem_function(name: st
     diagnostics = profile_diagnostics(document, profile)
     assert len(diagnostics) == 1
     assert "requires applicability 'applicable'" in diagnostics[0].message
+
+
+def test_oms_25_profile_shutdown_green_table_rows_do_not_require_exchanges() -> None:
+    """Table 3.2-6 uses removable green styles for all substantive rows."""
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    shutdown = _subsystem_function(document, "Subsystem Shutdown")
+
+    assert shutdown["exchanges"] == []
+    assert profile_diagnostics(document, profile) == []
 
 
 @pytest.mark.parametrize(

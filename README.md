@@ -70,8 +70,13 @@ C, or UCI primitives. Required inventory/section presence is distinct from
 `applicability: applicable`: State Command Processing, BIT, and Calibration may
 be explicitly `not_applicable` with the portable-contract rationale and empty
 exchange requirements. Remaining Section 3.2 exchange gaps are Subsystem
-Startup, State Command Processing, BIT, Calibration, and Shutdown. The profile
-does not claim full OMS Subsystem compliance.
+Startup, State Command Processing, BIT, and Calibration. Table 3.2-6
+Subsystem Shutdown rows (`SubsystemStateCommand`,
+`SubsystemStateCommandStatus`, and optional `Log_File`) are all green,
+removable DOCX guidance/example rows, so Shutdown has no profile exchange
+minimum. Its guidance shows command input and status output with informative
+0.5/3-second status response values; those facts are not profile conformance
+keys. The profile does not claim full OMS Subsystem compliance.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).

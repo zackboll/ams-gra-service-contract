@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Subsystem Shutdown Table 3.2-6 OOXML source classification: the
+  `SubsystemStateCommand`, `SubsystemStateCommandStatus`, and `Log_File` rows
+  are all removable green guidance/example content, so no Shutdown exchange
+  shape (including optional `Log_File`) is profile-enforced. The documented
+  command-input/status-output guidance and 0.5/3-second timing remain
+  informative only.
 - Stable symbolic `IP_*` diagnostics for fail-closed Inputs/Outputs projection
   joins, while preserving lower-layer `SC_*`, `SS_*`, and `UR_*` identities
   through projection orchestration.

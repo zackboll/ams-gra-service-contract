@@ -214,11 +214,11 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
     if not isinstance(document, dict) or not isinstance(profile, dict):
         return []
 
-    diagnostics: list[Diagnostic] = []
+    compatibility_diagnostics: list[Diagnostic] = []
     profile_id = profile["id"]
     contract_version = document.get("contract_version")
     if contract_version not in profile["contract_versions"]:
-        diagnostics.append(
+        compatibility_diagnostics.append(
             Diagnostic(
                 "$.contract_version",
                 f"profile {profile_id!r} does not support contract version {contract_version!r}",
@@ -227,7 +227,7 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
 
     contract_oms_version = document.get("standards", {}).get("oms_version")
     if contract_oms_version != profile["oms_version"]:
-        diagnostics.append(
+        compatibility_diagnostics.append(
             Diagnostic(
                 "$.standards.oms_version",
                 f"profile {profile_id!r} requires OMS version {profile['oms_version']!r}, "
@@ -235,6 +235,10 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
             )
         )
 
+    if compatibility_diagnostics:
+        return compatibility_diagnostics
+
+    diagnostics: list[Diagnostic] = []
     kind = document.get("service", {}).get("kind")
     functions = document.get("functions", [])
     for requirement in profile["required_functions"]:

@@ -1,0 +1,16 @@
+# Profile-validation fixture only. It is valid v0.1 but incompatible with the
+# OMS 2.5 profile, so required-function rules must not be evaluated.
+contract_version: "0.1"
+service:
+  name: wrong-version-no-required-functions
+  version: "0.1.0"
+  kind: service
+standards:
+  oms_version: "2.6"
+  uci_schema_version: "2.6"
+functions:
+  - id: arbitrary-function
+    name: Arbitrary Function
+    category: specific
+    applicability: applicable
+    exchanges: []

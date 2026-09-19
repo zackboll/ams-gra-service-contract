@@ -104,13 +104,24 @@ Section 3.2.6 evidence, rather than the conflicting Table 3.2-3 input row.
 None of those message shapes or timing numbers is profile-enforced because the
 rows are removable guidance.
 
+**Subsystem State Command Processing** (Section 3.2.3 and Table 3.2-3) has no
+profiled exchange minimum. Its command and status shape cells are fixed
+black/automatic OOXML content, but the command Appendix C cell and the status
+timing/Appendix C cells are green guidance, so both rows are mixed. More
+importantly, the fixed table marks `SubsystemStateCommandStatus` as input while
+the fixed workflow prose says the Subsystem responds with it. The profile does
+not guess a status direction from that conflict. An applicable function may
+therefore have `exchanges: []`; its permitted `not_applicable` form still needs
+the portable rationale and zero exchanges.
+
 Additional valid exchange rows are allowed. The profile intentionally does not
 fix Service Initialization Data Transfer protocol, data type, data format, or
 sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
 subscription groups, numerical timing values, Appendix C content, contract
-traceability, or UCI message primitives. The currently unprofiled Section 3.2
-exchange surfaces are Subsystem Startup, State Command Processing, BIT, and
-Calibration; Startup requires separate source classification.
+traceability, or UCI message primitives. The remaining unclassified Section 3.2
+exchange surfaces are Subsystem Startup,
+BIT, and Calibration; State Command Processing was classified with no fixed
+exchange minimum.
 The profile also does not validate Required Capability-related Function
 inventory, conditional Section 3.1 Service Functions for Platform-hosted
 Adapters, or other OMS-version profiles. It does not claim full OMS Subsystem

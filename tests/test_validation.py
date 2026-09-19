@@ -264,6 +264,52 @@ def test_oms_25_profile_shutdown_green_table_rows_do_not_require_exchanges() -> 
     assert profile_diagnostics(document, profile) == []
 
 
+def test_oms_25_profile_state_command_mixed_table_rows_do_not_require_exchanges() -> None:
+    """Table 3.2-3 has fixed shape cells but green Appendix C/timing cells.
+
+    Its fixed status input conflicts with the fixed workflow response wording,
+    so Task 022 deliberately does not guess a portable exchange direction.
+    """
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    state_command = _subsystem_function(document, "Subsystem State Command Processing")
+
+    assert state_command["applicability"] == "applicable"
+    assert state_command["exchanges"] == []
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda function: function.pop("not_applicable_reason"),
+        lambda function: function.update(
+            exchanges=[
+                {
+                    "id": "unexpected-state-command",
+                    "kind": "oms_message",
+                    "direction": "input",
+                    "mandate": "mandatory",
+                    "message": "SubsystemStateCommand",
+                    "timing": {"kind": "asynchronous"},
+                }
+            ]
+        ),
+    ],
+    ids=["missing-rationale", "exchanges-present"],
+)
+def test_state_command_not_applicable_portable_schema_requires_rationale_and_no_exchanges(mutation) -> None:
+    document = _complete_subsystem_document()
+    state_command = _subsystem_function(document, "Subsystem State Command Processing")
+    state_command["applicability"] = "not_applicable"
+    state_command["not_applicable_reason"] = "State commands are not supported."
+    state_command["exchanges"] = []
+    mutation(state_command)
+
+    assert {diagnostic.code for diagnostic in validate_document(document)} == {SC_SCHEMA}
+
+
 @pytest.mark.parametrize(
     "name",
     ["Subsystem State Command Processing", "Subsystem Built-In Test (BIT)", "Subsystem Calibration"],

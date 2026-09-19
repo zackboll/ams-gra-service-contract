@@ -74,8 +74,8 @@ exchange requirements. State Command Processing has a fixed minimum
 Its complete Table 3.2-3 rows are mixed, but all command fields matched by the
 profile are fixed and workflow receipt corroborates input. The status direction
 is intentionally not profile-enforced because fixed table-input and workflow-
-response evidence conflicts. Remaining unclassified Section 3.2 exchange
-surfaces are Subsystem Startup and Calibration. Table 3.2-4 BIT rows
+response evidence conflicts. The only remaining unclassified Section 3.2
+exchange surface is Subsystem Startup. Table 3.2-4 BIT rows
 (`SubsystemBIT_Status`, `SubsystemBIT_Configuration`, the State Command and
 BIT Command pairs, and `Log_File`) are all green, removable DOCX guidance, so
 BIT has no profile exchange minimum; its green workflow prose and informative
@@ -86,7 +86,15 @@ Subsystem Shutdown rows (`SubsystemStateCommand`,
 removable DOCX guidance/example rows, so Shutdown has no profile exchange
 minimum. Its guidance shows command input and status output with informative
 0.5/3-second status response values; those facts are not profile conformance
-keys. The profile does not claim full OMS Subsystem compliance.
+keys. Table 3.2-5 Calibration rows (`SubsystemCalibrationStatus`,
+`SubsystemCalibrationConfiguration`, both State Command rows, both Calibration
+Command rows, and `Log_File`) are likewise green, removable DOCX guidance for
+every matched field, and their message-specific workflow prose is green. Thus
+Calibration has no profile exchange minimum; an applicable fixture has zero
+source-backed exchanges, while a permitted N/A fixture still needs rationale and
+zero exchanges. Its Optional LoM values do not decide row presence, and 1 Hz,
+0.5-second, and 3-second values remain informative rather than profile keys.
+The profile does not claim full OMS Subsystem compliance.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).

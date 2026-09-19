@@ -16,7 +16,8 @@ upstream OMS commit `726272bd0390982a759c91a9cf4e13b81c2b510b`.
 Current OMS 2.5 coverage includes the Required Service Function inventory,
 Service Initialization exchange surface, Service Status exchange surface,
 Required Subsystem Function inventory, Subsystem Status exchange surface, and
-the completed BIT source classification.
+the completed State Command Processing, BIT, Calibration, and Shutdown source
+classifications.
 
 Section 3.1 says every OMS Service must provide the Required Service Functions
 and that the section also applies to Isolators. Sections 3.1.1 and 3.1.2 say
@@ -118,6 +119,21 @@ decide row presence or profile matching. An applicable BIT fixture therefore
 needs no source-backed exchanges; a permitted `not_applicable` BIT still
 requires rationale and zero exchanges under portable validation.
 
+**Subsystem Calibration** (Section 3.2.5 and Table 3.2-5) has no profiled
+exchange minimum. Every matcher-owned cell for all seven substantive rows
+(`SubsystemCalibrationStatus`, `SubsystemCalibrationConfiguration`,
+`SubsystemStateCommand`, `SubsystemStateCommandStatus`,
+`SubsystemCalibrationCommand`, `SubsystemCalibrationCommandStatus`, and
+`Log_File`) resolves to green `00B050` in the pinned official DOCX. The
+message-specific workflow prose is green guidance as well. This classification
+is independent of State Command Processing: no Calibration row inherits that
+section's fixed command rule. Optional LoM does not permit omitting a fixed row;
+these rows are unprofiled because their matched source fields are removable
+guidance. Numeric `1 Hz`, `0.5 sec`, and `3 sec` values remain informative and
+are not profile-enforced. An applicable Calibration fixture therefore needs no
+source-backed exchanges, and permitted `not_applicable` Calibration still
+requires rationale and zero exchanges under portable validation.
+
 **Subsystem State Command Processing** (Section 3.2.3 and Table 3.2-3) has one
 profiled minimum: `SubsystemStateCommand` as OMS-message input, mandatory, and
 asynchronous. Although the complete row is mixed because its Appendix C cell is
@@ -138,9 +154,9 @@ fix Service Initialization Data Transfer protocol, data type, data format, or
 sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
 subscription groups, numerical timing values, Appendix C content, contract
 traceability, or UCI message primitives. The remaining unclassified Section 3.2
-exchange surfaces are Subsystem Startup and Calibration; BIT is classified as
-green guidance with no fixed minimum, while State Command Processing has a
-fixed command minimum and a documented status-direction conflict.
+exchange surface is Subsystem Startup. BIT and Calibration are classified as
+green guidance with no fixed minimum, while State Command Processing has a fixed
+command minimum and a documented status-direction conflict.
 The profile also does not validate Required Capability-related Function
 inventory, conditional Section 3.1 Service Functions for Platform-hosted
 Adapters, or other OMS-version profiles. It does not claim full OMS Subsystem

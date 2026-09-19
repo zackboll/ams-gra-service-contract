@@ -13,12 +13,14 @@ Changes should preserve four boundaries:
 
 ## Change checklist
 
-For a schema or semantic change:
+For a schema, semantic, or tooling change:
 
 - explain the use case/rationale;
 - cite the upstream AMS GRA/OMS/UCI source when claiming to represent upstream behavior;
-- update `docs/specification.md`;
-- update `schema/v*/service-contract.schema.json`;
+- update the applicable specification and schema: portable contract changes use
+  `docs/specification.md` and `schema/v*/service-contract.schema.json`; OMS
+  profile-format changes use the profile schema/profile documentation; and
+  schema-source-format changes use the schema-source schema/documentation;
 - add/update valid examples;
 - add at least one invalid fixture when the change creates a new rejection rule;
 - update validator logic if the rule is cross-field/semantic;
@@ -45,8 +47,10 @@ Install dependencies and run:
 make check
 ```
 
-This includes repository text hygiene checks for UTF-8 encoding, LF line
-endings, final newlines on non-empty text files, and no trailing whitespace.
+This runs repository text hygiene checks (UTF-8 encoding, LF line endings, final
+newlines on non-empty text files, and no trailing whitespace), checked-in
+schema-source manifest validation, contract/example validation, and pytest. It
+does not fetch a UCI checkout or verify upstream UCI source bytes.
 
 A new semantic rule should normally have both positive and negative coverage.
 

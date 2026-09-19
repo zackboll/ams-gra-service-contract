@@ -51,6 +51,7 @@ class UciMessageDefinition:
 @dataclass(frozen=True)
 class ParsedXsdDocument:
     target_namespace: str
+    # Namespace bindings in scope on the document root only.
     namespace_bindings: tuple[tuple[str, str], ...]
     messages: tuple[UciMessageDefinition, ...]
     type_declarations: tuple[UciTypeDeclaration, ...]
@@ -75,16 +76,18 @@ def _context(manifest_id: str, source_path: str, local_name: str) -> str:
     return f"manifest {manifest_id!r}, file {source_path!r}, message {local_name!r}"
 
 def resolve_lexical_qname(lexical_name: str | None, namespace_bindings: dict[str, str], context: str) -> str:
-    """Resolve a lexical XSD QName using XML declarations, not prefix spelling."""
+    """Resolve a lexical XSD QName using the containing element's in-scope bindings."""
     if lexical_name is None or not lexical_name.strip():
         raise UciResolverError(f"missing or empty type QName in {context}")
     match = QNAME_PATTERN.fullmatch(lexical_name)
     if not match:
         raise UciResolverError(f"malformed type QName {lexical_name!r} in {context}")
     prefix = match.group("prefix") or ""
-    namespace = namespace_bindings.get(prefix)
-    if namespace is None:
+    if prefix not in namespace_bindings:
+        if not prefix:
+            return match.group("local")
         raise UciResolverError(f"unknown namespace prefix {(prefix or 'default')!r} for type QName {lexical_name!r} in {context}")
+    namespace = namespace_bindings[prefix]
     return f"{{{namespace}}}{match.group('local')}"
 
 def _primitive_from_element(element: Any, manifest_id: str, source_path: str) -> str | None:
@@ -102,15 +105,25 @@ def _primitive_from_element(element: Any, manifest_id: str, source_path: str) ->
 def parse_uci_schema_document(data: bytes, manifest_id: str, source_path: str) -> ParsedXsdDocument:
     """Parse one verified XSD snapshot and index direct global declarations."""
     try:
-        bindings: dict[str, str] = {}
+        pending_bindings: dict[str, str] = {}
+        scope_stack: list[dict[str, str]] = []
         root_bindings: dict[str, str] | None = None
-        events = ElementTree.iterparse(BytesIO(data), events=("start-ns", "start"))
+        element_scopes: dict[int, dict[str, str]] = {}
+        events = ElementTree.iterparse(BytesIO(data), events=("start-ns", "start", "end"))
         for event, value in events:
             if event == "start-ns":
                 prefix, namespace = value
-                bindings[prefix or ""] = namespace
-            elif root_bindings is None:
-                root_bindings = dict(bindings)
+                pending_bindings[prefix or ""] = namespace
+            elif event == "start":
+                scope = dict(scope_stack[-1]) if scope_stack else {}
+                scope.update(pending_bindings)
+                pending_bindings = {}
+                scope_stack.append(scope)
+                element_scopes[id(value)] = scope
+                if root_bindings is None:
+                    root_bindings = dict(scope)
+            else:
+                scope_stack.pop()
         root = events.root
     except (DefusedXmlException, ElementTree.ParseError) as exc:
         raise UciResolverError(f"could not parse manifest {manifest_id!r}, file {source_path!r}: {exc}") from exc
@@ -119,7 +132,6 @@ def parse_uci_schema_document(data: bytes, manifest_id: str, source_path: str) -
     namespace = root.get("targetNamespace")
     if not namespace:
         raise UciResolverError(f"manifest {manifest_id!r}, file {source_path!r}: xs:schema must declare targetNamespace")
-    bindings = root_bindings or {}
     messages: list[UciMessageDefinition] = []
     declarations: list[UciTypeDeclaration] = []
     for child in root:
@@ -134,8 +146,8 @@ def parse_uci_schema_document(data: bytes, manifest_id: str, source_path: str) -
         name = child.get("name")
         context = _context(manifest_id, source_path, name)
         lexical = child.get("type")
-        messages.append(UciMessageDefinition(name, namespace, f"{{{namespace}}}{name}", primitive, lexical or "", resolve_lexical_qname(lexical, bindings, context), None, manifest_id, source_path))
-    return ParsedXsdDocument(namespace, tuple(sorted(bindings.items())), tuple(messages), tuple(declarations), manifest_id, source_path)
+        messages.append(UciMessageDefinition(name, namespace, f"{{{namespace}}}{name}", primitive, lexical or "", resolve_lexical_qname(lexical, element_scopes[id(child)], context), None, manifest_id, source_path))
+    return ParsedXsdDocument(namespace, tuple(sorted((root_bindings or {}).items())), tuple(messages), tuple(declarations), manifest_id, source_path)
 
 def parse_uci_schema_bytes(data: bytes, manifest_id: str, source_path: str) -> list[UciMessageDefinition]:
     return list(parse_uci_schema_document(data, manifest_id, source_path).messages)

@@ -18,7 +18,7 @@ A **v0.1 contract document** conforms when it:
 
 A **resolved contract** additionally has all OMS Message references resolved against the declared UCI baseline schema and declared UCI extension schemas.
 
-Resolution consumes only the immutable verified schema-byte snapshot. It indexes direct global message and type declarations, resolves each primitive-tagged message's XSD `type` QName using that document's XML namespace declarations, and requires exactly one global type declaration with the resulting expanded QName. This identifies declaration identity only; type content/layout interpretation remains out of scope.
+Resolution consumes only the immutable verified schema-byte snapshot. It indexes direct global message and type declarations, resolves each primitive-tagged message's XSD `type` QName using the containing element's in-scope XML namespace bindings, and requires exactly one global type declaration with the resulting expanded QName. This identifies declaration identity only; type content/layout interpretation remains out of scope.
 
 Conformance of this file format does **not** imply conformance of a Service to AMS GRA, OMS, UCI, a platform, a mission package, or any acquisition/compliance requirement.
 

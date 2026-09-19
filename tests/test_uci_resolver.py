@@ -74,6 +74,56 @@ def test_message_type_resolves_using_declared_namespace_prefix() -> None:
     assert resolved[0].message_type_expanded_name == "{urn:types}MessageType"
 
 
+def schema_with_message(message: str, type_name: str, declarations: str, namespace_declarations: str = "") -> bytes:
+    return f"""<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:test" {namespace_declarations}>
+  <xs:element name="{message}" {type_name}><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-1.</xs:documentation></xs:annotation></xs:element>
+  {declarations}
+</xs:schema>""".encode()
+
+
+def test_message_type_uses_prefix_declared_on_message_element(tmp_path: Path) -> None:
+    data = schema_with_message("Message", 'xmlns:local="urn:test" type="local:MessageType"', '<xs:complexType name="MessageType"/>')
+    assert resolve(tmp_path, contract("Message"), {"scope.xsd": data})[0].message_type_expanded_name == "{urn:test}MessageType"
+
+
+def test_message_type_inherits_root_prefix_binding(tmp_path: Path) -> None:
+    data = schema_with_message("Message", 'type="root:MessageType"', '<xs:complexType name="MessageType"/>', 'xmlns:root="urn:test"')
+    assert resolve(tmp_path, contract("Message"), {"scope.xsd": data})[0].message_type_expanded_name == "{urn:test}MessageType"
+
+
+def test_message_type_child_binding_shadows_root_without_leaking_to_sibling(tmp_path: Path) -> None:
+    data = b"""<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:t="urn:wrong" targetNamespace="urn:right">
+  <xs:element name="Shadowed" xmlns:t="urn:right" type="t:RightType"><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-1.</xs:documentation></xs:annotation></xs:element>
+  <xs:element name="Sibling" type="t:WrongType"><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-2.</xs:documentation></xs:annotation></xs:element>
+  <xs:complexType name="RightType"/>
+</xs:schema>"""
+    wrong_type = b"""<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:wrong"><xs:complexType name="WrongType"/></xs:schema>"""
+    resolved = resolve(tmp_path, contract("Shadowed"), {"scope.xsd": data, "wrong.xsd": wrong_type})
+    assert resolved[0].message_type_expanded_name == "{urn:right}RightType"
+    definitions = load_message_definitions_from_files(tmp_path / "sibling", {"scope.xsd": data, "wrong.xsd": wrong_type})
+    assert next(item for item in definitions if item.local_name == "Sibling").type_expanded_name == "{urn:wrong}WrongType"
+
+
+def test_unprefixed_message_type_uses_default_namespace(tmp_path: Path) -> None:
+    data = schema_with_message("Message", 'type="MessageType"', '<xs:complexType name="MessageType"/>', 'xmlns="urn:test"')
+    assert resolve(tmp_path, contract("Message"), {"scope.xsd": data})[0].message_type_expanded_name == "{urn:test}MessageType"
+
+
+def test_unprefixed_message_type_without_default_namespace_does_not_use_target_namespace(tmp_path: Path) -> None:
+    data = schema_with_message("Message", 'type="MessageType"', '<xs:complexType name="MessageType"/>')
+    with pytest.raises(UciResolverError, match="unknown global UCI type MessageType"):
+        resolve(tmp_path, contract("Message"), {"scope.xsd": data})
+
+
+def load_message_definitions_from_files(tmp_path: Path, files: dict[str, bytes]):
+    baseline = manifest("baseline", files)
+    schema_set, diagnostics = compose_schema_source_set(contract("Shadowed"), baseline, [])
+    assert diagnostics == []
+    verified, diagnostics = load_verified_schema_source_set(schema_set, {"baseline": stage(tmp_path, files)})
+    assert diagnostics == []
+    return load_message_definitions(verified)
+
+
 @pytest.mark.parametrize(("raw_primitive", "expected"), [("Status-1", "Status-1"), ("Status-1.", "Status-1"), ("Status-1..", "Status-1.")])
 def test_parser_removes_exactly_one_final_prose_period(raw_primitive: str, expected: str) -> None:
     data = fixture("baseline.xsd").replace(b"Data-1.", raw_primitive.encode())

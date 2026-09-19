@@ -78,18 +78,19 @@ For each contract:
 1. Parse YAML/JSON.
 2. Validate against the matching contract-language JSON Schema.
 3. Run semantic contract checks.
-4. Map `standards.uci_schema_version` to a toolchain schema-source manifest.
-5. Verify the supplied local schema files against the manifest SHA-256 values.
-6. Load `manifest.root_schema` from those verified bytes.
-7. Load only the declared extension schemas according to explicit toolchain mapping.
-8. For every `kind: oms_message` exchange:
+4. Select one baseline manifest matching `standards.uci_schema_version`.
+5. Map only declared extension IDs by exact equality to supplied extension-manifest IDs.
+6. Validate extension baseline compatibility and compose the deterministic set in contract declaration order.
+7. Verify supplied local schema files against each selected manifest's SHA-256 values.
+8. Load roots from those verified bytes and parse the XSD set.
+9. For every `kind: oms_message` exchange:
    1. resolve `message` uniquely;
    2. find its UCI definition;
    3. derive `PRIMITIVE_TYPE` and any other generator-required schema metadata;
    4. preserve the contract's direction/mandate/topic/timing metadata;
    5. produce one resolved exchange entry.
-9. Apply OMS-version-specific profile checks, if the tool supports them.
-10. Lower the resolved model into the target backend.
+10. Apply OMS-version-specific profile checks, if the tool supports them.
+11. Lower the resolved model into the target backend.
 
 ### Fail-closed behavior
 
@@ -281,4 +282,5 @@ error[C118]: OMS message name resolves to multiple schema definitions
     - extension:...
 ```
 
-Never silently choose based on file order unless that ordering rule is an explicit part of the resolver's contract.
+Never silently choose based on baseline/extension role, extension order, manifest
+input order, or file order. Composition order is not message override precedence.

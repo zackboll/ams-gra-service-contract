@@ -1,6 +1,16 @@
 # Changelog
 
-All notable changes to the experimental contract language are documented here.
+All notable changes to this experimental specification and tooling project are documented here.
+
+## [Unreleased]
+
+### Added
+
+- Opt-in OMS 2.5 Required Service Function profile validation.
+- Automated repository text-hygiene enforcement.
+- UCI 2.5 schema-source manifest with immutable source revision and SHA-256 verification.
+- Deterministic schema-source set composition for one UCI baseline plus explicitly declared extension manifests, including exact extension-ID mapping, baseline compatibility checks, and contract-declaration ordering.
+- Fail-closed message-resolution ambiguity semantics for future UCI XSD resolvers: zero candidates are unknown, one resolves, and multiple candidates are ambiguous.
 
 ## [0.1.0] - 2026-09-18
 

@@ -2,7 +2,8 @@ import hashlib
 from copy import deepcopy
 from pathlib import Path
 
-from tools.schema_sources import validate_manifest, validate_manifest_path, verify_manifest
+from tools.schema_sources import compose_schema_source_set, validate_manifest, validate_manifest_path, verify_manifest
+from tools.validate import load_document
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "schema-sources" / "uci" / "2.5" / "manifest.yaml"
@@ -26,6 +27,26 @@ def synthetic_manifest(files: dict[str, bytes]) -> dict[str, object]:
             for path, data in sorted(files.items())
         ],
     }
+
+
+def synthetic_extension(manifest_id: str, compatible_versions: list[str] | None = None) -> dict[str, object]:
+    manifest = synthetic_manifest({"root.xsd": b"root"})
+    manifest.update(
+        id=manifest_id,
+        schema_version="1.0",
+        role="extension",
+        compatible_baseline_versions=["2.5"] if compatible_versions is None else compatible_versions,
+    )
+    return manifest
+
+
+def synthetic_contract(extension_ids: list[str] | None = None) -> dict[str, object]:
+    contract = load_document(ROOT / "tests" / "valid" / "service-status.yaml")
+    if extension_ids is None:
+        contract["standards"].pop("uci_extension_schemas", None)
+    else:
+        contract["standards"]["uci_extension_schemas"] = extension_ids
+    return contract
 
 
 def test_checked_in_uci_25_manifest_validates() -> None:
@@ -84,3 +105,73 @@ def test_local_verification_reports_tampered_bytes(tmp_path: Path) -> None:
 def test_local_verification_reports_missing_file(tmp_path: Path) -> None:
     diagnostics = verify_manifest(synthetic_manifest({"root.xsd": b"root"}), tmp_path)
     assert [diagnostic.message for diagnostic in diagnostics] == ["file listed by manifest is missing"]
+
+
+def test_extension_requires_compatible_baseline_versions() -> None:
+    manifest = synthetic_extension("ext-a")
+    del manifest["compatible_baseline_versions"]
+    assert any("required property" in diagnostic.message for diagnostic in validate_manifest(manifest))
+
+
+def test_baseline_forbids_compatible_baseline_versions() -> None:
+    manifest = synthetic_manifest({"root.xsd": b"root"})
+    manifest["compatible_baseline_versions"] = ["2.5"]
+    assert validate_manifest(manifest)
+
+
+def test_extension_compatibility_list_must_be_nonempty_and_unique() -> None:
+    for versions in ([], ["2.5", "2.5"]):
+        assert validate_manifest(synthetic_extension("ext-a", versions))
+
+
+def test_composition_accepts_matching_baseline_without_extensions() -> None:
+    schema_set, diagnostics = compose_schema_source_set(synthetic_contract(), synthetic_manifest({"root.xsd": b"root"}), [])
+    assert diagnostics == []
+    assert schema_set is not None
+    assert schema_set.extensions == ()
+
+
+def test_composition_rejects_invalid_contract_before_selection() -> None:
+    contract = synthetic_contract()
+    contract["standards"].pop("uci_schema_version")
+    schema_set, diagnostics = compose_schema_source_set(contract, synthetic_manifest({"root.xsd": b"root"}), [])
+    assert schema_set is None
+    assert any("uci_schema_version" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_composition_rejects_baseline_version_mismatch_and_wrong_role() -> None:
+    manifest = synthetic_manifest({"root.xsd": b"root"})
+    manifest["schema_version"] = "2.6"
+    _, diagnostics = compose_schema_source_set(synthetic_contract(), manifest, [])
+    assert any("must match contract UCI baseline" in diagnostic.message for diagnostic in diagnostics)
+    manifest["schema_version"] = "1.0"
+    manifest["role"] = "extension"
+    manifest["compatible_baseline_versions"] = ["2.5"]
+    _, diagnostics = compose_schema_source_set(synthetic_contract(), manifest, [])
+    assert any("must be 'baseline'" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_composition_selects_extensions_in_contract_declaration_order() -> None:
+    extensions = [synthetic_extension("ext-c"), synthetic_extension("ext-a"), synthetic_extension("ext-b")]
+    schema_set, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a", "ext-b", "ext-c"]), synthetic_manifest({"root.xsd": b"root"}), extensions)
+    assert diagnostics == []
+    assert [manifest["id"] for manifest in schema_set.extensions] == ["ext-a", "ext-b", "ext-c"]
+
+
+def test_composition_rejects_missing_undeclared_and_exact_id_mismatches() -> None:
+    _, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a", "ext-b"]), synthetic_manifest({"root.xsd": b"root"}), [synthetic_extension("Ext-A")])
+    messages = [diagnostic.message for diagnostic in diagnostics]
+    assert any("missing declared extension manifest id 'ext-a'" in message for message in messages)
+    assert any("missing declared extension manifest id 'ext-b'" in message for message in messages)
+    assert any("undeclared extension manifest id 'Ext-A'" in message for message in messages)
+
+
+def test_composition_rejects_duplicate_wrong_role_and_incompatible_extensions() -> None:
+    wrong_role = synthetic_manifest({"root.xsd": b"root"})
+    wrong_role["id"] = "ext-a"
+    incompatible = synthetic_extension("ext-b", ["2.6"])
+    _, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a", "ext-b"]), synthetic_manifest({"root.xsd": b"root"}), [wrong_role, synthetic_extension("ext-a"), incompatible])
+    messages = [diagnostic.message for diagnostic in diagnostics]
+    assert any("duplicate supplied manifest id 'ext-a'" in message for message in messages)
+    assert any("must have role 'extension'" in message for message in messages)
+    assert any("not compatible with UCI baseline version '2.5'" in message for message in messages)

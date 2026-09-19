@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate schema-source manifests and verify declared local source bytes."""
+"""Validate, compose, and verify schema-source manifests without network access."""
 
 from __future__ import annotations
 
@@ -14,6 +14,11 @@ from typing import Any, Iterable
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
 
+try:
+    from tools.validate import validate_document
+except ModuleNotFoundError:  # Support direct execution as ``python tools/schema_sources.py``.
+    from validate import validate_document
+
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schema" / "schema-source" / "v0.1" / "schema-source-manifest.schema.json"
 
@@ -25,6 +30,14 @@ class Diagnostic:
 
     def __str__(self) -> str:
         return f"{self.path}: {self.message}" if self.path else self.message
+
+
+@dataclass(frozen=True)
+class SchemaSourceSet:
+    """Internal deterministic selection of validated schema-source manifests."""
+
+    baseline: dict[str, Any]
+    extensions: tuple[dict[str, Any], ...]
 
 
 def load_schema() -> dict[str, Any]:
@@ -130,6 +143,76 @@ def verify_manifest(manifest: Any, source_root: Path) -> list[Diagnostic]:
     return diagnostics
 
 
+def compose_schema_source_set(
+    contract: Any, baseline_manifest: Any, extension_manifests: Iterable[Any]
+) -> tuple[SchemaSourceSet | None, list[Diagnostic]]:
+    """Compose a validated baseline and exactly the contract-declared extensions.
+
+    This operation validates metadata only; it does not verify source bytes.
+    """
+    diagnostics = [Diagnostic(diagnostic.path, diagnostic.message) for diagnostic in validate_document(contract)]
+    diagnostics.extend(validate_manifest(baseline_manifest))
+    extension_manifests = list(extension_manifests)
+    for index, manifest in enumerate(extension_manifests):
+        diagnostics.extend(
+            Diagnostic(f"$.extension_manifests[{index}]{diagnostic.path[1:]}", diagnostic.message)
+            for diagnostic in validate_manifest(manifest)
+        )
+    if diagnostics:
+        return None, diagnostics
+
+    baseline_version = contract["standards"]["uci_schema_version"]
+    if baseline_manifest["role"] != "baseline":
+        diagnostics.append(Diagnostic("$.baseline_manifest.role", "must be 'baseline'"))
+    if baseline_manifest["schema_family"] != "uci":
+        diagnostics.append(Diagnostic("$.baseline_manifest.schema_family", "must be 'uci'"))
+    if baseline_manifest["schema_version"] != baseline_version:
+        diagnostics.append(
+            Diagnostic(
+                "$.baseline_manifest.schema_version",
+                f"must match contract UCI baseline version {baseline_version!r}",
+            )
+        )
+
+    declared_ids = contract["standards"].get("uci_extension_schemas", [])
+    manifests_by_id: dict[str, dict[str, Any]] = {}
+    for index, manifest in enumerate(extension_manifests):
+        manifest_id = manifest["id"]
+        if manifest_id in manifests_by_id:
+            diagnostics.append(Diagnostic(f"$.extension_manifests[{index}].id", f"duplicate supplied manifest id {manifest_id!r}"))
+        else:
+            manifests_by_id[manifest_id] = manifest
+
+    declared_id_set = set(declared_ids)
+    for manifest_id in sorted(set(manifests_by_id) - declared_id_set):
+        diagnostics.append(Diagnostic("$.extension_manifests", f"undeclared extension manifest id {manifest_id!r}"))
+    for manifest_id in declared_ids:
+        if manifest_id not in manifests_by_id:
+            diagnostics.append(Diagnostic("$.standards.uci_extension_schemas", f"missing declared extension manifest id {manifest_id!r}"))
+
+    ordered_extensions: list[dict[str, Any]] = []
+    for manifest_id in declared_ids:
+        manifest = manifests_by_id.get(manifest_id)
+        if manifest is None:
+            continue
+        if manifest["role"] != "extension":
+            diagnostics.append(Diagnostic("$.extension_manifests", f"manifest {manifest_id!r} must have role 'extension'"))
+        if manifest["schema_family"] != "uci":
+            diagnostics.append(Diagnostic("$.extension_manifests", f"manifest {manifest_id!r} must have schema_family 'uci'"))
+        if manifest["role"] == "extension" and baseline_version not in manifest["compatible_baseline_versions"]:
+            diagnostics.append(
+                Diagnostic(
+                    "$.extension_manifests",
+                    f"manifest {manifest_id!r} is not compatible with UCI baseline version {baseline_version!r}",
+                )
+            )
+        ordered_extensions.append(manifest)
+
+    if diagnostics:
+        return None, diagnostics
+    return SchemaSourceSet(baseline_manifest, tuple(ordered_extensions)), []
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -138,7 +221,46 @@ def main(argv: list[str] | None = None) -> int:
     verify_parser = subparsers.add_parser("verify", help="verify declared bytes in a local source tree")
     verify_parser.add_argument("manifest", type=Path)
     verify_parser.add_argument("--source-root", type=Path, required=True)
+    compose_parser = subparsers.add_parser("compose", help="compose a contract's schema-source manifest set")
+    compose_parser.add_argument("--contract", type=Path, required=True)
+    compose_parser.add_argument("--baseline-manifest", type=Path, required=True)
+    compose_parser.add_argument("--extension-manifest", type=Path, action="append", default=[])
     args = parser.parse_args(argv)
+
+    if args.command == "compose":
+        try:
+            with args.contract.open("r", encoding="utf-8") as stream:
+                contract = yaml.safe_load(stream)
+        except (OSError, yaml.YAMLError) as exc:
+            print(f"FAIL {args.contract.resolve()}\n  could not parse contract: {exc}")
+            return 1
+        baseline_path = args.baseline_manifest.resolve()
+        baseline_manifest, baseline_diagnostics = validate_manifest_path(baseline_path)
+        extension_paths = [path.resolve() for path in args.extension_manifest]
+        extension_results = [validate_manifest_path(path) for path in extension_paths]
+        diagnostics = baseline_diagnostics[:]
+        for path, (_, manifest_diagnostics) in zip(extension_paths, extension_results):
+            diagnostics.extend(Diagnostic(str(path), diagnostic.message) for diagnostic in manifest_diagnostics)
+        if not diagnostics:
+            schema_set, diagnostics = compose_schema_source_set(
+                contract, baseline_manifest, [manifest for manifest, _ in extension_results]
+            )
+        else:
+            schema_set = None
+        if diagnostics:
+            print("FAIL schema-source set")
+            for diagnostic in diagnostics:
+                print(f"  {diagnostic}")
+            return 1
+        print("OK schema-source set")
+        print(f"  baseline: {schema_set.baseline['id']}")
+        if schema_set.extensions:
+            print("  extensions:")
+            for manifest in schema_set.extensions:
+                print(f"    - {manifest['id']}")
+        else:
+            print("  extensions: none")
+        return 0
 
     manifest_path = args.manifest.resolve()
     manifest, diagnostics = validate_manifest_path(manifest_path)

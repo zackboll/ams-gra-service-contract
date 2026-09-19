@@ -81,10 +81,16 @@ uci_extension_schemas:
   - program-extension-1.3
 ```
 
-The generator/toolchain owns the mapping from this stable identifier to a
-toolchain-selected extension schema-source manifest and then to verified
-extension schema bytes. Extension precedence and namespace resolution are not
-yet defined.
+The generator/toolchain maps this stable identifier by exact, case-sensitive
+equality to a supplied extension schema-source manifest `id`. Each extension
+manifest declares its own `schema_version` and the baseline versions it supports
+through `compatible_baseline_versions`; it does not pretend its own version is
+the UCI baseline version. Contract declaration order gives deterministic schema
+set composition order, not implicit override precedence.
+
+XSD namespace/message parsing remains future work. Until a resolver implements
+it, toolchains must not infer message resolution or precedence from extension
+ordering.
 
 ## 7. AMS GRA version
 

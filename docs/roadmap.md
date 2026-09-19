@@ -22,7 +22,8 @@ Goals:
 
 Explicitly out of scope:
 
-- UCI XSD resolver implementation;
+- UCI XSD resolver implementation (schema-source set composition is implemented,
+  but XSD parsing/message resolution remains future work);
 - code generators;
 - behavioral DSL;
 - formal proof semantics.
@@ -31,9 +32,8 @@ Explicitly out of scope:
 
 Potential goals driven by real implementation experience:
 
-- standardized schema-source manifest/digest representation (initial UCI 2.5
-  baseline manifest implemented; resolver integration and extension mapping remain);
-- deterministic extension-schema namespace resolution rules;
+- schema-source set integration with a UCI XSD parser/message resolver;
+- explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (initial OMS 2.5 Required
   Service Functions profile implemented; further profile/resolver work remains);
 - richer Data Transfer metadata if required by real contracts;

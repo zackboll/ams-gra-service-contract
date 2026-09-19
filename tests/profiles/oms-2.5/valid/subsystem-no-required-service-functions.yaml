@@ -1,0 +1,15 @@
+# Subsystem applicability is conditional upstream and is not inferred here.
+contract_version: "0.1"
+service:
+  name: profile-subsystem
+  version: "0.1.0"
+  kind: subsystem
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+functions:
+  - id: subsystem-specific-function
+    name: Subsystem Specific Function
+    category: specific
+    applicability: applicable
+    exchanges: []

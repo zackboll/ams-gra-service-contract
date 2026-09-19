@@ -10,6 +10,25 @@ The central design rule is:
 
 The format deliberately does **not** copy UCI message layouts or message primitive metadata. A resolver or code generator loads the selected UCI schema and resolves the message names declared by the contract.
 
+## Profile validation
+
+The generic v0.1 schema is OMS-version-neutral. Opt-in profiles provide
+version-specific conformance checks without coupling contract language version
+to OMS version. For the initial OMS 2.5 required-service profile:
+
+```bash
+python tools/validate.py \
+  --profile profiles/oms/2.5/profile.yaml \
+  my-complete-service.yaml
+```
+
+For `service` and `isolator`, it requires the canonical functions **Service
+Initialization** and **Service Status** with required/service/applicable
+metadata. Subsystem applicability is conditional upstream and is not inferred.
+Normal `--all` validation remains profile-free because examples can be valid
+source-backed function fragments rather than complete Service Contracts. See
+[docs/profiles.md](docs/profiles.md).
+
 ## Why this repository exists
 
 The upstream architecture already has two complementary kinds of information:
@@ -364,6 +383,11 @@ The deployment configuration is not the Service Contract itself. It is one imple
 ├── schema/
 │   └── v0.1/
 │       └── service-contract.schema.json
+├── profiles/
+│   └── oms/2.5/
+│       └── profile.yaml
+├── schema/profile/v0.1/
+│   └── oms-profile.schema.json
 ├── docs/
 │   ├── specification.md
 │   ├── rationale.md
@@ -371,6 +395,7 @@ The deployment configuration is not the Service Contract itself. It is one imple
 │   ├── code-generation.md
 │   ├── versioning.md
 │   ├── references.md
+│   ├── profiles.md
 │   └── roadmap.md
 ├── examples/
 │   ├── minimal.yaml
@@ -380,6 +405,7 @@ The deployment configuration is not the Service Contract itself. It is one imple
 ├── tests/
 │   ├── valid/
 │   ├── invalid/
+│   ├── profiles/oms-2.5/
 │   └── test_validation.py
 └── tools/
     └── validate.py

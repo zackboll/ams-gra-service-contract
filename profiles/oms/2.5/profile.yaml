@@ -1,0 +1,29 @@
+profile_version: "0.1"
+id: oms-2.5
+oms_version: "2.5"
+contract_versions:
+  - "0.1"
+sources:
+  - id: oms-service-contract-instructions-v25
+    title: OMS Service Contract Instructions v2.5
+    document_number: OMSC-INS-003
+    revision: M
+    date: "2026-01-22"
+    uri: https://github.com/open-arsenal/oms/blob/726272bd0390982a759c91a9cf4e13b81c2b510b/docs_official/14_2_OMSC-INS-003_RevM_ServiceContractInstructions_DandD_v2_5.docx
+required_functions:
+  - name: Service Initialization
+    applies_to: [service, isolator]
+    category: required
+    required_group: service
+    applicability: applicable
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.1.1 Service Initialization
+  - name: Service Status
+    applies_to: [service, isolator]
+    category: required
+    required_group: service
+    applicability: applicable
+    traceability:
+      - source: oms-service-contract-instructions-v25
+        locator: 3.1.2 Service Status

@@ -1,0 +1,21 @@
+contract_version: "0.1"
+service:
+  name: wrong-oms-version
+  version: "0.1.0"
+  kind: service
+standards:
+  oms_version: "2.6"
+  uci_schema_version: "2.6"
+functions:
+  - id: service-initialization
+    name: Service Initialization
+    category: required
+    required_group: service
+    applicability: applicable
+    exchanges: []
+  - id: service-status
+    name: Service Status
+    category: required
+    required_group: service
+    applicability: applicable
+    exchanges: []

@@ -33,7 +33,8 @@ Potential goals driven by real implementation experience:
 
 - standardized schema-source manifest/digest representation;
 - deterministic extension-schema namespace resolution rules;
-- OMS-version-specific profile validation hooks;
+- OMS-version-specific profile validation hooks (initial OMS 2.5 Required
+  Service Functions profile implemented; further profile/resolver work remains);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection;
 - canonical diagnostic codes.

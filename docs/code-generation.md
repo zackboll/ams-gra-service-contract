@@ -81,8 +81,8 @@ For each contract:
 4. Select one baseline manifest matching `standards.uci_schema_version`.
 5. Map only declared extension IDs by exact equality to supplied extension-manifest IDs.
 6. Validate extension baseline compatibility and compose the deterministic set in contract declaration order.
-7. Verify supplied local schema files against each selected manifest's SHA-256 values.
-8. Load only manifest-declared XSD files from those verified bytes; resolve global message identity, expanded QName, and primitive metadata.
+7. Read each selected manifest-declared local schema file once, verify its SHA-256 value, and retain its verified bytes in an immutable snapshot.
+8. Parse only that snapshot's manifest-declared XSD bytes; resolve global message identity, expanded QName, and primitive metadata without reopening source files.
 9. For every `kind: oms_message` exchange:
    1. resolve `message` uniquely;
    2. find its UCI definition;

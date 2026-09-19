@@ -469,9 +469,10 @@ A future version may add a separate, explicitly normative timing-requirement mod
 ## 16. Message primitive resolution
 
 v0.1 has no `primitive` field for an OMS Message. The resolver validates the
-contract, composes its baseline and declared extension manifests, and verifies
-the local bytes of every selected manifest before parsing any XSD. Only files
-explicitly listed by those manifests contribute definitions.
+contract, composes its baseline and declared extension manifests, reads and
+verifies the local bytes of every selected manifest file, then retains that
+verified byte snapshot for XSD parsing. Only files explicitly listed by those
+manifests contribute definitions; parsing MUST NOT trust a later filesystem read.
 
 A resolver performs conceptually:
 
@@ -493,9 +494,10 @@ ResolvedExchange
 
 The implemented resolver indexes only direct `xs:element` children of an
 `xs:schema` document with a `targetNamespace`. A global element is a UCI message
-declaration for this slice only when its annotation has exactly one
-`xs:documentation` item beginning `UCI_PRIMITIVE:`. Its non-empty value is
-trimmed and one final prose period is removed. Nested elements and global
+declaration for this slice only when its own direct `xs:annotation` has exactly
+one direct `xs:documentation` item beginning `UCI_PRIMITIVE:`. Its non-empty
+value is trimmed, one final prose period is removed, and the resulting value
+must remain non-empty. Nested elements, inline type annotations, and global
 elements without that marker are not indexed. This is message identity and
 primitive extraction, not full XSD type-system resolution.
 

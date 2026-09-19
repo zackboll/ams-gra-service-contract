@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Iterable
 
 from defusedxml import ElementTree
@@ -13,16 +13,17 @@ from defusedxml.common import DefusedXmlException
 import yaml
 
 try:
-    from tools.schema_sources import SchemaSourceSet, compose_schema_source_set, validate_manifest_path, verify_manifest
-    from tools.validate import Diagnostic, validate_document
+    from tools.schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
+    from tools.validate import validate_document
 except ModuleNotFoundError:  # Support direct execution as ``python tools/uci_resolver.py``.
-    from schema_sources import SchemaSourceSet, compose_schema_source_set, validate_manifest_path, verify_manifest
-    from validate import Diagnostic, validate_document
+    from schema_sources import VerifiedSchemaSourceSet, compose_schema_source_set, load_verified_schema_source_set, validate_manifest_path
+    from validate import validate_document
 
 
 XSD_NAMESPACE = "http://www.w3.org/2001/XMLSchema"
 XSD_SCHEMA = f"{{{XSD_NAMESPACE}}}schema"
 XSD_ELEMENT = f"{{{XSD_NAMESPACE}}}element"
+XSD_ANNOTATION = f"{{{XSD_NAMESPACE}}}annotation"
 XSD_DOCUMENTATION = f"{{{XSD_NAMESPACE}}}documentation"
 PRIMITIVE_PREFIX = "UCI_PRIMITIVE:"
 
@@ -61,7 +62,7 @@ def _primitive_from_element(element: Any, manifest_id: str, source_path: str) ->
     local_name = element.get("name", "<unnamed>")
     values = [
         (documentation.text or "").strip()[len(PRIMITIVE_PREFIX) :].strip()
-        for documentation in element.findall(f".//{XSD_DOCUMENTATION}")
+        for documentation in element.findall(f"{XSD_ANNOTATION}/{XSD_DOCUMENTATION}")
         if (documentation.text or "").strip().startswith(PRIMITIVE_PREFIX)
     ]
     if len(values) > 1:
@@ -71,7 +72,10 @@ def _primitive_from_element(element: Any, manifest_id: str, source_path: str) ->
     primitive = values[0]
     if not primitive:
         raise UciResolverError(f"empty UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
-    return primitive[:-1] if primitive.endswith(".") else primitive
+    primitive = primitive[:-1] if primitive.endswith(".") else primitive
+    if not primitive:
+        raise UciResolverError(f"empty UCI_PRIMITIVE metadata in {_context(manifest_id, source_path, local_name)}")
+    return primitive
 
 
 def parse_uci_schema_bytes(data: bytes, manifest_id: str, source_path: str) -> list[UciMessageDefinition]:
@@ -108,31 +112,21 @@ def parse_uci_schema_bytes(data: bytes, manifest_id: str, source_path: str) -> l
     return definitions
 
 
-def load_message_definitions(schema_source_set: SchemaSourceSet, source_roots_by_manifest_id: dict[str, Path]) -> list[UciMessageDefinition]:
-    """Re-verify and load only the files explicitly selected by manifests."""
+def load_message_definitions(verified_schema_source_set: VerifiedSchemaSourceSet) -> list[UciMessageDefinition]:
+    """Parse only immutable bytes retained by verified schema-source snapshots."""
     definitions: list[UciMessageDefinition] = []
-    for manifest in (schema_source_set.baseline, *schema_source_set.extensions):
-        manifest_id = manifest["id"]
-        source_root = source_roots_by_manifest_id.get(manifest_id)
-        if source_root is None:
-            raise UciResolverError(f"no source root supplied for manifest {manifest_id!r}")
-        diagnostics = verify_manifest(manifest, source_root)
-        if diagnostics:
-            raise UciResolverError("manifest verification failed:\n" + "\n".join(f"  {diagnostic}" for diagnostic in diagnostics))
-        root = source_root.resolve()
-        for entry in manifest["files"]:
-            source_path = entry["path"]
-            data = (root / PurePosixPath(source_path)).read_bytes()
-            definitions.extend(parse_uci_schema_bytes(data, manifest_id, source_path))
+    for source in (verified_schema_source_set.baseline, *verified_schema_source_set.extensions):
+        for file in source.files:
+            definitions.extend(parse_uci_schema_bytes(file.data, source.manifest_id, file.path))
     return definitions
 
 
-def resolve_contract_messages(contract: Any, schema_source_set: SchemaSourceSet, source_roots_by_manifest_id: dict[str, Path]) -> list[ResolvedOmsExchange]:
+def resolve_contract_messages(contract: Any, verified_schema_source_set: VerifiedSchemaSourceSet) -> list[ResolvedOmsExchange]:
     """Resolve OMS exchanges in function/exchange declaration order."""
     diagnostics = validate_document(contract)
     if diagnostics:
         raise UciResolverError("contract validation failed:\n" + "\n".join(f"  {diagnostic}" for diagnostic in diagnostics))
-    definitions = load_message_definitions(schema_source_set, source_roots_by_manifest_id)
+    definitions = load_message_definitions(verified_schema_source_set)
     resolved: list[ResolvedOmsExchange] = []
     for function in contract["functions"]:
         for exchange in function["exchanges"]:
@@ -195,7 +189,10 @@ def main(argv: list[str] | None = None) -> int:
     roots = {baseline["id"]: args.baseline_source_root}
     roots.update({manifest["id"]: Path(source_root) for (manifest, _), (_, source_root) in zip(extension_results, args.extension)})
     try:
-        resolved = resolve_contract_messages(contract, schema_source_set, roots)
+        verified_schema_source_set, diagnostics = load_verified_schema_source_set(schema_source_set, roots)
+        if diagnostics:
+            raise UciResolverError("manifest verification failed:\n" + "\n".join(f"  {diagnostic}" for diagnostic in diagnostics))
+        resolved = resolve_contract_messages(contract, verified_schema_source_set)
     except UciResolverError as exc:
         print(f"FAIL {exc}")
         return 1

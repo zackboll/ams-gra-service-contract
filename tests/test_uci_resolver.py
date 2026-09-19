@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.schema_sources import compose_schema_source_set
+from tools.schema_sources import compose_schema_source_set, load_verified_schema_source_set
 from tools.validate import load_document
 from tools.uci_resolver import UciResolverError, load_message_definitions, parse_uci_schema_bytes, resolve_contract_messages
 
@@ -54,7 +54,9 @@ def resolve(tmp_path: Path, contract_data: dict[str, object], baseline_files: di
     roots = {"baseline": stage(tmp_path / "baseline", baseline_files)}
     for extension_manifest, files in extensions:
         roots[extension_manifest["id"]] = stage(tmp_path / str(extension_manifest["id"]), files)
-    return resolve_contract_messages(contract_data, schema_set, roots)
+    verified_schema_set, diagnostics = load_verified_schema_source_set(schema_set, roots)
+    assert diagnostics == []
+    return resolve_contract_messages(contract_data, verified_schema_set)
 
 
 def test_parser_indexes_global_message_and_normalizes_trailing_period() -> None:
@@ -62,10 +64,20 @@ def test_parser_indexes_global_message_and_normalizes_trailing_period() -> None:
     assert [(item.local_name, item.primitive, item.expanded_name) for item in definitions] == [("MessageA", "Data-1", "{urn:baseline}MessageA")]
 
 
+@pytest.mark.parametrize(("raw_primitive", "expected"), [("Status-1", "Status-1"), ("Status-1.", "Status-1"), ("Status-1..", "Status-1.")])
+def test_parser_removes_exactly_one_final_prose_period(raw_primitive: str, expected: str) -> None:
+    data = fixture("baseline.xsd").replace(b"Data-1.", raw_primitive.encode())
+    assert parse_uci_schema_bytes(data, "baseline", "baseline.xsd")[0].primitive == expected
+
+
 def test_parser_excludes_nested_and_unmarked_global_elements() -> None:
     names = [item.local_name for item in parse_uci_schema_bytes(fixture("baseline.xsd"), "baseline", "baseline.xsd")]
     assert "NestedMessage" not in names
     assert "NoPrimitive" not in names
+
+
+def test_parser_excludes_primitive_metadata_on_inline_complex_type() -> None:
+    assert parse_uci_schema_bytes(fixture("inline-primitive.xsd"), "baseline", "inline-primitive.xsd") == []
 
 
 @pytest.mark.parametrize(("name", "match"), [("duplicate-primitive.xsd", "duplicate UCI_PRIMITIVE"), ("empty-primitive.xsd", "empty UCI_PRIMITIVE"), ("malformed.xsd", "could not parse")])
@@ -77,6 +89,19 @@ def test_parser_rejects_bad_metadata_and_xml(name: str, match: str) -> None:
 def test_one_candidate_resolves(tmp_path: Path) -> None:
     resolved = resolve(tmp_path, contract(), {"baseline.xsd": fixture("baseline.xsd")})
     assert resolved[0].primitive == "Data-1"
+
+
+def test_resolver_parses_verified_snapshot_after_filesystem_mutation(tmp_path: Path) -> None:
+    original = fixture("baseline.xsd")
+    replacement = original.replace(b"Data-1.", b"Status-1.")
+    baseline = manifest("baseline", {"baseline.xsd": original})
+    schema_set, diagnostics = compose_schema_source_set(contract(), baseline, [])
+    assert diagnostics == []
+    root = stage(tmp_path, {"baseline.xsd": original})
+    verified_schema_set, diagnostics = load_verified_schema_source_set(schema_set, {"baseline": root})
+    assert diagnostics == []
+    (root / "baseline.xsd").write_bytes(replacement)
+    assert resolve_contract_messages(contract(), verified_schema_set)[0].primitive == "Data-1"
 
 
 def test_zero_candidates_fails_unknown(tmp_path: Path) -> None:

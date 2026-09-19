@@ -2,7 +2,7 @@ import hashlib
 from copy import deepcopy
 from pathlib import Path
 
-from tools.schema_sources import compose_schema_source_set, validate_manifest, validate_manifest_path, verify_manifest
+from tools.schema_sources import compose_schema_source_set, load_verified_schema_source, load_verified_schema_source_set, validate_manifest, validate_manifest_path, verify_manifest
 from tools.validate import load_document
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +93,58 @@ def test_local_verification_accepts_exact_declared_subset(tmp_path: Path) -> Non
     assert verify_manifest(synthetic_manifest(files), tmp_path) == []
 
 
+def test_verified_source_retains_the_exact_digest_verified_bytes(tmp_path: Path) -> None:
+    data = b"verified bytes"
+    manifest = synthetic_manifest({"root.xsd": data})
+    (tmp_path / "root.xsd").write_bytes(data)
+    verified, diagnostics = load_verified_schema_source(manifest, tmp_path)
+    assert diagnostics == []
+    assert verified.files[0].data == data
+
+
+def test_verified_loading_reads_each_manifest_file_once(tmp_path: Path, monkeypatch) -> None:
+    files = {"dependency.xsd": b"dependency", "root.xsd": b"root"}
+    for path, data in files.items():
+        (tmp_path / path).write_bytes(data)
+    calls: list[Path] = []
+    original_read_bytes = Path.read_bytes
+
+    def read_bytes_once(path: Path) -> bytes:
+        calls.append(path)
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", read_bytes_once)
+    _, diagnostics = load_verified_schema_source(synthetic_manifest(files), tmp_path)
+    assert diagnostics == []
+    assert len(calls) == len(files)
+
+
+def test_verified_source_set_requires_exact_source_root_ids(tmp_path: Path) -> None:
+    baseline = synthetic_manifest({"root.xsd": b"root"})
+    extension = synthetic_extension("ext-a")
+    schema_set, diagnostics = compose_schema_source_set(synthetic_contract(["ext-a"]), baseline, [extension])
+    assert diagnostics == []
+    _, diagnostics = load_verified_schema_source_set(schema_set, {baseline["id"]: tmp_path})
+    assert any("missing source root for manifest 'ext-a'" in diagnostic.message for diagnostic in diagnostics)
+    _, diagnostics = load_verified_schema_source_set(schema_set, {baseline["id"]: tmp_path, "ext-a": tmp_path, "extra": tmp_path})
+    assert any("source root supplied for unselected manifest 'extra'" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_verified_source_set_preserves_composed_extension_order(tmp_path: Path) -> None:
+    baseline = synthetic_manifest({"root.xsd": b"baseline"})
+    extension_a = synthetic_extension("ext-a")
+    extension_b = synthetic_extension("ext-b")
+    schema_set, diagnostics = compose_schema_source_set(synthetic_contract(["ext-b", "ext-a"]), baseline, [extension_a, extension_b])
+    assert diagnostics == []
+    roots = {"test-baseline": tmp_path / "baseline", "ext-a": tmp_path / "ext-a", "ext-b": tmp_path / "ext-b"}
+    for manifest_id, root in roots.items():
+        root.mkdir()
+        (root / "root.xsd").write_bytes(b"baseline" if manifest_id == "test-baseline" else b"root")
+    verified_set, diagnostics = load_verified_schema_source_set(schema_set, roots)
+    assert diagnostics == []
+    assert [source.manifest_id for source in verified_set.extensions] == ["ext-b", "ext-a"]
+
+
 def test_local_verification_reports_tampered_bytes(tmp_path: Path) -> None:
     manifest = synthetic_manifest({"root.xsd": b"root"})
     (tmp_path / "root.xsd").write_bytes(b"tampered")
@@ -175,3 +227,10 @@ def test_composition_rejects_duplicate_wrong_role_and_incompatible_extensions() 
     assert any("duplicate supplied manifest id 'ext-a'" in message for message in messages)
     assert any("must have role 'extension'" in message for message in messages)
     assert any("not compatible with UCI baseline version '2.5'" in message for message in messages)
+
+
+def test_composition_rejects_extension_id_collision_with_baseline() -> None:
+    baseline = synthetic_manifest({"root.xsd": b"root"})
+    extension = synthetic_extension("test-baseline")
+    _, diagnostics = compose_schema_source_set(synthetic_contract(["test-baseline"]), baseline, [extension])
+    assert any("collides with baseline manifest id" in diagnostic.message for diagnostic in diagnostics)

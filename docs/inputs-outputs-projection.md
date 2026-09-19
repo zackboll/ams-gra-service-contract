@@ -30,6 +30,13 @@ Use `--format json` for deterministic reference-tool output. The CLI accepts
 `--extension MANIFEST SOURCE_ROOT` with the same manifest composition and
 immutable verified-byte loading behavior as `tools/uci_resolver.py`.
 
+## Diagnostics
+
+The projection join reports stable `IP_*` diagnostics for unexpected,
+ambiguous, message-mismatched, or missing OMS resolutions. Failures during
+contract validation, schema-source selection/verification, or UCI resolution
+retain their existing `SC_*`, `SS_*`, or `UR_*` diagnostic codes unchanged.
+
 ## Rendering semantics
 
 Functions and exchanges retain declaration order. Applicable functions receive

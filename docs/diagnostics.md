@@ -1,4 +1,4 @@
-# Validation diagnostics
+# Diagnostics
 
 The validation and schema-source tools report a stable symbolic code, a path,
 and a human-readable message for every diagnostic. Codes let tests and
@@ -18,6 +18,19 @@ The published validation taxonomy is pre-1.0 but symbolic codes are intended to
 remain more stable than prose once published. JSON-Schema failures are
 deliberately coarse-grained rather than assigning a public code per schema
 keyword.
+
+## Ownership chain
+
+| Family | Owner |
+| --- | --- |
+| `SC_*` | Service Contract |
+| `OP_*` | OMS profile |
+| `SS_*` | Schema-source selection and verification |
+| `UR_*` | UCI parsing and resolution |
+| `IP_*` | Inputs/Outputs projection join |
+
+A higher-level tool can surface a lower-layer code unchanged; it does not take
+ownership merely by orchestrating that layer.
 
 ## Portable Service Contract (`SC_*`)
 
@@ -95,5 +108,15 @@ failures receive `UR_*`.
 | `UR_UNKNOWN_MESSAGE` | A contract OMS Message has no global UCI message candidate. |
 | `UR_AMBIGUOUS_MESSAGE` | A contract OMS Message has multiple global UCI message candidates. |
 
-The initial Inputs/Outputs projection has no projection-specific diagnostic
-taxonomy yet.
+## Inputs/Outputs projection (`IP_*`)
+
+`IP_*` means the failure is owned by the fail-closed join between an already
+prepared contract and resolved OMS entries. Preparation failures retain their
+`SC_*`, `SS_*`, or `UR_*` identity.
+
+| Code | Meaning |
+| --- | --- |
+| `IP_UNEXPECTED_RESOLUTION` | A resolved OMS entry has no matching contract OMS exchange. |
+| `IP_AMBIGUOUS_RESOLUTION` | More than one resolved entry matches one contract OMS exchange. |
+| `IP_MESSAGE_MISMATCH` | Matching function/exchange IDs have different contract and resolved message names. |
+| `IP_MISSING_RESOLUTION` | A contract OMS exchange has no resolved entry. |

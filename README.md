@@ -29,7 +29,8 @@ baseline compatibility is incomplete.
 
 Schema-source manifest, composition, and byte-verification failures use stable
 `SS_*` diagnostics; invalid contracts retain their `SC_*` identity during
-composition; UCI XSD parsing and resolver semantics use `UR_*`. See
+composition; UCI XSD parsing and resolver semantics use `UR_*`; Inputs/Outputs
+projection joins use `IP_*` while surfacing lower-layer codes unchanged. See
 [docs/diagnostics.md](docs/diagnostics.md).
 
 ## Inputs/Outputs projection
@@ -39,7 +40,8 @@ human-readable Markdown summary or JSON tooling output from a validated contract
 and manifest-verified UCI bytes. It retains authored function/exchange order and
 keeps ownership clear: the contract supplies use, direction, mandate, topic, and
 timing; UCI supplies primitive and QName/type identity. It is not official OMS
-Service Contract or DOCX generation. See
+Service Contract or DOCX generation. Its fail-closed join diagnostics use
+`IP_*`; preparation failures retain `SC_*`, `SS_*`, or `UR_*`. See
 [docs/inputs-outputs-projection.md](docs/inputs-outputs-projection.md).
 
 ## Profile validation

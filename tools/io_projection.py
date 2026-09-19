@@ -9,9 +9,22 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from tools.uci_resolver import ResolvedOmsExchange, UciResolverError, prepare_resolution
+    from tools.uci_resolver import ResolvedOmsExchange, UciResolutionPreparationError, UciResolverError, prepare_resolution
 except ModuleNotFoundError:
-    from uci_resolver import ResolvedOmsExchange, UciResolverError, prepare_resolution
+    from uci_resolver import ResolvedOmsExchange, UciResolutionPreparationError, UciResolverError, prepare_resolution
+
+
+IP_UNEXPECTED_RESOLUTION = "IP_UNEXPECTED_RESOLUTION"
+IP_AMBIGUOUS_RESOLUTION = "IP_AMBIGUOUS_RESOLUTION"
+IP_MESSAGE_MISMATCH = "IP_MESSAGE_MISMATCH"
+IP_MISSING_RESOLUTION = "IP_MISSING_RESOLUTION"
+
+INPUTS_OUTPUTS_DIAGNOSTIC_CODES = frozenset(
+    {
+        IP_UNEXPECTED_RESOLUTION, IP_AMBIGUOUS_RESOLUTION,
+        IP_MESSAGE_MISMATCH, IP_MISSING_RESOLUTION,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -59,6 +72,11 @@ class ProjectedInputsOutputs:
 class InputsOutputsProjectionError(Exception):
     """Expected fail-closed projection error."""
 
+    def __init__(self, code: str, message: str):
+        self.code = code
+        self.message = message
+        super().__init__(f"{code} {message}")
+
 
 def _resolved_index(contract: dict[str, Any], resolved: list[ResolvedOmsExchange]) -> dict[tuple[str, str], ResolvedOmsExchange]:
     oms_messages = {(function["id"], exchange["id"]): exchange["message"] for function in contract["functions"] for exchange in function["exchanges"] if exchange["kind"] == "oms_message"}
@@ -66,16 +84,16 @@ def _resolved_index(contract: dict[str, Any], resolved: list[ResolvedOmsExchange
     for item in resolved:
         key = (item.function_id, item.exchange_id)
         if key not in oms_messages:
-            raise InputsOutputsProjectionError(f"resolved OMS exchange does not exist in contract: {key[0]!r}/{key[1]!r}")
+            raise InputsOutputsProjectionError(IP_UNEXPECTED_RESOLUTION, f"resolved OMS exchange does not exist in contract: {key[0]!r}/{key[1]!r}")
         if key in index:
-            raise InputsOutputsProjectionError(f"ambiguous OMS resolution for contract exchange: {key[0]!r}/{key[1]!r}")
+            raise InputsOutputsProjectionError(IP_AMBIGUOUS_RESOLUTION, f"ambiguous OMS resolution for contract exchange: {key[0]!r}/{key[1]!r}")
         if item.message != oms_messages[key]:
-            raise InputsOutputsProjectionError(f"OMS resolution message mismatch for contract exchange: {key[0]!r}/{key[1]!r}; contract message {oms_messages[key]!r}, resolved message {item.message!r}")
+            raise InputsOutputsProjectionError(IP_MESSAGE_MISMATCH, f"OMS resolution message mismatch for contract exchange: {key[0]!r}/{key[1]!r}; contract message {oms_messages[key]!r}, resolved message {item.message!r}")
         index[key] = item
     missing = oms_messages.keys() - index.keys()
     if missing:
         function_id, exchange_id = sorted(missing)[0]
-        raise InputsOutputsProjectionError(f"missing OMS resolution for contract exchange: {function_id!r}/{exchange_id!r}")
+        raise InputsOutputsProjectionError(IP_MISSING_RESOLUTION, f"missing OMS resolution for contract exchange: {function_id!r}/{exchange_id!r}")
     return index
 
 
@@ -160,6 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         contract, _, resolved = prepare_resolution(args.contract, args.baseline_manifest, args.baseline_source_root, [(Path(manifest), Path(root)) for manifest, root in args.extension])
         projection = project_inputs_outputs(contract, resolved)
+    except UciResolutionPreparationError as exc:
+        print(f"FAIL {exc}")
+        return 1
     except (UciResolverError, InputsOutputsProjectionError) as exc:
         print(f"FAIL {exc}")
         return 1

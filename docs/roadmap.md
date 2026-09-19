@@ -67,9 +67,16 @@ Potential goals driven by real implementation experience:
      command/status rows are removable green examples, while mixed generic prose
      establishes Capability-relative command input, status output, and response
      behavior only; Capability identity/ownership and separate response-pair
-     behavioral modeling remain future boundaries; Table 3.3-4 Capability
-     Operations, broader profile coverage, and real Service Contract exercises
-     remain);
+      behavioral modeling remain future boundaries; Table 3.3-4 Capability
+      Operations classification completed: its ESM `Entity`/`SignalReport` and
+      PO/POST `ProductMetadata`/`ProductLocation`/`ImageFile` groups are
+      removable green domain examples in all matcher-owned fields, so no
+      universal Operations exchange minimum; all Section 3.3 exchange tables
+      (3.3-1 through 3.3-4) now have explicit evidence classifications, but
+      exact Section 3.3 validation still needs Capability identity/presence,
+      ownership, position dependency, Capability-relative selectors,
+      conditional-function rules, and relevant behavioral relationships;
+      broader profile coverage and real Service Contract exercises remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

@@ -46,6 +46,14 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 
 ## Profile validation
 
+OMS 2.5 Capability Operations evidence is classified but not profile-enforced.
+Table 3.3-4's `Entity`/`SignalReport` rows are green ESM examples, while
+`ProductMetadata`/`ProductLocation`/`ImageFile` are green PO/POST examples; all
+matcher-owned fields and `ImageFile` Data Transfer metadata are removable
+guidance. Mixed generic prose identifies only a Capability Operations role, not
+a universal exchange family. See
+[Task 030 evidence](docs/task-030-oms25-capability-operations.md).
+
 OMS 2.5 Capability Enable/Disable evidence is classified but not
 profile-enforced. Table 3.3-3's `ESM_SettingsCommand` and
 `ESM_SettingsCommandStatus` rows are removable green template examples in every

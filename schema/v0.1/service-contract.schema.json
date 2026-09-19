@@ -28,6 +28,12 @@
       },
       "default": []
     },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/capability"
+      }
+    },
     "functions": {
       "type": "array",
       "items": {
@@ -130,6 +136,27 @@
         }
       }
     },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "requires_position_information"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requires_position_information": {
+          "type": "boolean"
+        }
+      }
+    },
     "standards": {
       "type": "object",
       "additionalProperties": false,
@@ -191,6 +218,9 @@
             "subsystem",
             "capability"
           ]
+        },
+        "capability": {
+          "$ref": "#/$defs/identifier"
         },
         "applicability": {
           "enum": [

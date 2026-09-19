@@ -19,6 +19,13 @@ Required Subsystem Function inventory, Subsystem Status exchange surface, and
 the completed Startup, State Command Processing, BIT, Calibration, Shutdown,
 and Required Capability-related Function source classifications.
 
+Task 031 adds portable Capability identity, explicit presence, ownership, and
+position-dependency facts, but the OMS 2.5 profile still does **not** enforce the
+deferred Section 3.3 Capability family. In particular, it adds no per-Capability
+function inventory, conditional Position Information Processing, Capability
+Status, Enable/Disable, Operations, alternative-exchange, or response-relationship
+rules. Those require Task 032 or later profile-model work.
+
 Section 3.1 says every OMS Service must provide the Required Service Functions
 and that the section also applies to Isolators. Sections 3.1.1 and 3.1.2 say
 that **Service Initialization** and **Service Status**, respectively, are

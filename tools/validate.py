@@ -33,8 +33,10 @@ PROFILE_SCHEMA_PATH = ROOT / "schema" / "profile" / "v0.1" / "oms-profile.schema
 # validation. Other reference tools intentionally have no codes in this family.
 SC_SCHEMA = "SC_SCHEMA"
 SC_DUPLICATE_SOURCE = "SC_DUPLICATE_SOURCE"
+SC_DUPLICATE_CAPABILITY = "SC_DUPLICATE_CAPABILITY"
 SC_DUPLICATE_FUNCTION = "SC_DUPLICATE_FUNCTION"
 SC_DUPLICATE_EXCHANGE = "SC_DUPLICATE_EXCHANGE"
+SC_UNKNOWN_CAPABILITY = "SC_UNKNOWN_CAPABILITY"
 SC_UNKNOWN_TRACE_SOURCE = "SC_UNKNOWN_TRACE_SOURCE"
 
 OP_SCHEMA = "OP_SCHEMA"
@@ -53,7 +55,8 @@ OP_MISSING_REQUIRED_EXCHANGE = "OP_MISSING_REQUIRED_EXCHANGE"
 
 VALIDATION_DIAGNOSTIC_CODES = frozenset(
     {
-        SC_SCHEMA, SC_DUPLICATE_SOURCE, SC_DUPLICATE_FUNCTION, SC_DUPLICATE_EXCHANGE, SC_UNKNOWN_TRACE_SOURCE,
+        SC_SCHEMA, SC_DUPLICATE_SOURCE, SC_DUPLICATE_CAPABILITY, SC_DUPLICATE_FUNCTION, SC_DUPLICATE_EXCHANGE,
+        SC_UNKNOWN_CAPABILITY, SC_UNKNOWN_TRACE_SOURCE,
         OP_SCHEMA, OP_DUPLICATE_SOURCE, OP_DUPLICATE_FUNCTION, OP_DUPLICATE_APPLIES_TO,
         OP_UNKNOWN_TRACE_SOURCE, OP_DUPLICATE_EXCHANGE_RULE, OP_UNSUPPORTED_CONTRACT_VERSION,
         OP_OMS_VERSION_MISMATCH, OP_MISSING_REQUIRED_FUNCTION, OP_AMBIGUOUS_REQUIRED_FUNCTION,
@@ -138,6 +141,21 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
     for dup in sorted(_duplicates(source_ids)):
         diagnostics.append(Diagnostic(code=SC_DUPLICATE_SOURCE, path="$.sources", message=f"duplicate source id {dup!r}"))
 
+    capabilities = document.get("capabilities", [])
+    if isinstance(capabilities, list):
+        capability_ids = [
+            capability.get("id")
+            for capability in capabilities
+            if isinstance(capability, dict) and isinstance(capability.get("id"), str)
+        ]
+    else:
+        capability_ids = []
+    capability_id_set = set(capability_ids)
+    for duplicate in sorted(_duplicates(capability_ids)):
+        diagnostics.append(
+            Diagnostic(code=SC_DUPLICATE_CAPABILITY, path="$.capabilities", message=f"duplicate capability id {duplicate!r}")
+        )
+
     functions = document.get("functions", [])
     if not isinstance(functions, list):
         return diagnostics
@@ -162,6 +180,15 @@ def semantic_diagnostics(document: Any) -> list[Diagnostic]:
         if not isinstance(function, dict):
             continue
         fbase = f"$.functions[{f_idx}]"
+        capability = function.get("capability")
+        if isinstance(capability, str) and capability not in capability_id_set:
+            diagnostics.append(
+                Diagnostic(
+                    code=SC_UNKNOWN_CAPABILITY,
+                    path=f"{fbase}.capability",
+                    message=f"unknown capability id {capability!r}",
+                )
+            )
         check_traceability(function.get("traceability", []), f"{fbase}.traceability")
 
         exchanges = function.get("exchanges", [])

@@ -1,0 +1,44 @@
+contract_version: "0.1"
+
+service:
+  name: multi-capability-example
+  version: "0.1.0"
+  kind: service
+  description: Portable Capability identity and function-ownership example; not an OMS profile-completeness claim.
+
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+
+capabilities:
+  - id: esm
+    name: ESM
+    requires_position_information: true
+  - id: radar
+    name: Radar Processing
+    requires_position_information: false
+
+functions:
+  - id: esm-operations
+    name: ESM Capability Operations
+    category: specific
+    applicability: applicable
+    capability: esm
+    exchanges: []
+  - id: esm-maintenance
+    name: ESM Maintenance
+    category: specific
+    applicability: applicable
+    capability: esm
+    exchanges: []
+  - id: radar-operations
+    name: ESM Capability Enable/Disable
+    category: specific
+    applicability: applicable
+    capability: radar
+    exchanges: []
+  - id: display-only-name
+    name: ESM Capability Status
+    category: specific
+    applicability: applicable
+    exchanges: []

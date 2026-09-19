@@ -6,6 +6,14 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Capability Enable/Disable (Section 3.3.2.2/Table 3.3-3) OOXML
+  exchange classification. `ESM_SettingsCommand` and
+  `ESM_SettingsCommandStatus` are removable green examples in every
+  matcher-owned field. Mixed generic prose fixes only Capability-relative
+  command input, status output, and response behavior; it does not fix kind,
+  mandate, or an OMS timing category. The public ESM example is clarified as an
+  illustrative transcription, not a profile minimum. No ESM/literal-placeholder
+  requirement, name heuristic, schema, validator, or diagnostic was added.
 - OMS 2.5 Capability and Capability Status (Section 3.3.2.1/Table 3.3-2)
   OOXML exchange classification. `ESM_Capability` and
   `ESM_CapabilityStatus` are removable green examples in every matcher-owned

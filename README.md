@@ -46,6 +46,14 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 
 ## Profile validation
 
+OMS 2.5 Capability Enable/Disable evidence is classified but not
+profile-enforced. Table 3.3-3's `ESM_SettingsCommand` and
+`ESM_SettingsCommandStatus` rows are removable green template examples in every
+matcher-owned field. Mixed generic prose fixes Capability-relative command
+input, status output, and a conceptual response relationship, but not kind,
+mandate, or OMS timing category. See
+[Task 029 evidence](docs/task-029-oms25-capability-enable-disable.md).
+
 OMS 2.5 Capability and Capability Status evidence is classified but not
 profile-enforced. Table 3.3-2's `ESM_Capability` and
 `ESM_CapabilityStatus` rows are removable green examples. Mixed generic prose
@@ -314,9 +322,9 @@ generated OMS Service Contracts:
 - [`examples/service-status.yaml`](examples/service-status.yaml): Required
   Service Function / status example.
 - [`examples/capability-enable-disable.yaml`](examples/capability-enable-disable.yaml):
-  portable Required Capability-related Enable/Disable fragment using the
-  upstream ESM replacement example; it is not evidence of a complete or
-  universally named Capability inventory.
+  illustrative portable transcription of the upstream ESM Capability
+  Enable/Disable template example. Its exact kind, mandate, and timing values
+  are green example content, not OMS profile requirements.
 - [`examples/service-initialization.yaml`](examples/service-initialization.yaml):
   Required Service Function containing both OMS Message and Data Transfer inputs.
 - [`examples/subsystem-status.yaml`](examples/subsystem-status.yaml): Required

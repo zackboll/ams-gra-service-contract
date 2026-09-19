@@ -8,12 +8,39 @@ standards:
   oms_version: "2.5"
   uci_schema_version: "2.5"
 functions:
-  - id: service-initialization
+  - id: isolator-local-bootstrap
     name: Service Initialization
     category: required
     required_group: service
     applicability: applicable
-    exchanges: []
+    exchanges:
+      - id: isolator-file-location
+        kind: oms_message
+        direction: input
+        mandate: optional
+        message: FileLocation
+        topic: isolator.initialization.location
+        timing:
+          kind: asynchronous
+      - id: isolator-config-transfer
+        kind: data_transfer
+        direction: input
+        mandate: optional
+        name: ServiceConfigFile
+        protocol: SFTP
+        data_type: Isolator Settings
+        data_format: YAML
+        sharing_pattern: Per Consumer Copy
+        timing:
+          kind: asynchronous
+      - id: isolator-file-metadata
+        kind: oms_message
+        direction: input
+        mandate: optional
+        message: FileMetadata
+        topic: isolator.initialization.metadata
+        timing:
+          kind: asynchronous
   - id: service-status
     name: Service Status
     category: required

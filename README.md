@@ -38,10 +38,16 @@ For `service` and `isolator`, it requires the canonical functions **Service
 Initialization** and **Service Status** with required/service/applicable
 metadata. It also requires the three minimum Service Status OMS-message shapes:
 periodic `ServiceStatus` output, asynchronous `ServiceStatusDataRequest` input,
-and on-demand `ServiceStatusDataRequestStatus` output. It does not yet validate
-Service Initialization exchanges, numerical timing values, SOAC selection,
-Appendix C content, UCI primitives, or workflow/state behavior. Subsystem
-applicability is conditional upstream and is not inferred.
+and on-demand `ServiceStatusDataRequestStatus` output; and the Service
+Initialization inventory: optional asynchronous `FileMetadata` and
+`FileLocation` OMS-message inputs plus optional asynchronous `ServiceConfigFile`
+Data Transfer input. Required profile rows still exist when their LoM is
+optional. Service Initialization matching does not fix Data Transfer protocol,
+data type, data format, sharing pattern, topics, SOAC, numerical timing,
+Appendix C, or primitives. It does not yet validate Required Subsystem
+Functions, Required Capability-related Functions, workflow/state behavior, or
+other OMS-version profiles. Subsystem applicability is conditional upstream and
+is not inferred.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).

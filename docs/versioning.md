@@ -115,15 +115,16 @@ The code generator is outside this repository and should have its own release/ve
 Generated output should ideally record a manifest similar to:
 
 ```text
-contract language: 0.1
-contract digest:   sha256:...
-OMS profile:       2.5
-UCI logical version: 2.5
-schema-source manifest: uci-2.5-baseline / 0.1
-manifest digest:   sha256:...
-UCI revision:      093610...
-generator:         0.4.2 / commit ...
-backend:           ada 0.3
+contract language:      0.1
+contract digest:        sha256:...
+OMS version:            2.5
+OMS profile:            oms-2.5 / format 0.1
+UCI logical version:    2.5
+schema-source manifest: uci-2.5-baseline / format 0.1
+manifest digest:        sha256:...
+UCI revision:           093610...
+generator:              0.4.2 / commit ...
+backend:                ada 0.3
 ```
 
 This example does not prescribe a generated-manifest serialization format.
@@ -132,11 +133,13 @@ This example does not prescribe a generated-manifest serialization format.
 
 A generator should publish an explicit support matrix rather than guessing. Example shape:
 
-| Generator | Contract language | OMS profile validation | UCI parser support |
+| Generator | Contract language | OMS profiles | UCI parser support |
 |---|---|---|---|
-| 0.4.x | 0.1 | 2.5 | 2.5, 2.6 |
+| 0.4.x | 0.1 | oms-2.5 | 2.5, 2.6 |
 
-The presence of two UCI versions in a parser does not mean an OMS profile is automatically compatible with both. Compatibility claims require explicit validation.
+Profile support, UCI parser support, and OMS-version compatibility are separate
+claims. Supporting UCI 2.6 does not mean the `oms-2.5` profile applies to OMS
+2.6; compatibility claims require explicit validation.
 
 ## 11. Source pinning
 

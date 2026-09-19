@@ -6,5 +6,6 @@ __pycache__/
 htmlcov/
 build/
 dist/
+.vscode/
 *.egg-info/
 .DS_Store

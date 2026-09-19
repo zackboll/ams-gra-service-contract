@@ -61,16 +61,18 @@ class InputsOutputsProjectionError(Exception):
 
 
 def _resolved_index(contract: dict[str, Any], resolved: list[ResolvedOmsExchange]) -> dict[tuple[str, str], ResolvedOmsExchange]:
-    oms_keys = {(function["id"], exchange["id"]) for function in contract["functions"] for exchange in function["exchanges"] if exchange["kind"] == "oms_message"}
+    oms_messages = {(function["id"], exchange["id"]): exchange["message"] for function in contract["functions"] for exchange in function["exchanges"] if exchange["kind"] == "oms_message"}
     index: dict[tuple[str, str], ResolvedOmsExchange] = {}
     for item in resolved:
         key = (item.function_id, item.exchange_id)
-        if key not in oms_keys:
+        if key not in oms_messages:
             raise InputsOutputsProjectionError(f"resolved OMS exchange does not exist in contract: {key[0]!r}/{key[1]!r}")
         if key in index:
             raise InputsOutputsProjectionError(f"ambiguous OMS resolution for contract exchange: {key[0]!r}/{key[1]!r}")
+        if item.message != oms_messages[key]:
+            raise InputsOutputsProjectionError(f"OMS resolution message mismatch for contract exchange: {key[0]!r}/{key[1]!r}; contract message {oms_messages[key]!r}, resolved message {item.message!r}")
         index[key] = item
-    missing = oms_keys - index.keys()
+    missing = oms_messages.keys() - index.keys()
     if missing:
         function_id, exchange_id = sorted(missing)[0]
         raise InputsOutputsProjectionError(f"missing OMS resolution for contract exchange: {function_id!r}/{exchange_id!r}")

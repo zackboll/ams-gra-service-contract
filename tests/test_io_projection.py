@@ -108,10 +108,32 @@ def test_duplicate_resolution_join_fails_closed() -> None:
         project_inputs_outputs(contract(), [oms_resolution("first", "message"), oms_resolution("first", "message")])
 
 
+def test_resolution_join_fails_closed_when_message_differs() -> None:
+    with pytest.raises(InputsOutputsProjectionError, match=r"MessageA.*MessageB"):
+        project_inputs_outputs(contract(), [oms_resolution("first", "message", "MessageB")])
+
+
 def test_resolver_cli_output_is_unchanged_for_invalid_contract() -> None:
     result = subprocess.run([sys.executable, "tools/uci_resolver.py", "resolve", "--contract", "missing.yaml", "--baseline-manifest", "missing.yaml", "--baseline-source-root", "."], cwd=ROOT, text=True, capture_output=True, check=False)
     assert result.returncode == 1
     assert result.stdout.startswith("FAIL could not parse contract missing.yaml:")
+
+
+def test_schema_source_cli_failures_are_clear_and_resolver_compatible(tmp_path: Path) -> None:
+    contract_path = tmp_path / "contract.json"
+    contract_path.write_text(json.dumps(contract()), encoding="utf-8")
+    invalid_manifest = tmp_path / "invalid-manifest.json"
+    invalid_manifest.write_text("{}", encoding="utf-8")
+    xsd = b"<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:test\"/>"
+    composition_manifest = tmp_path / "composition-manifest.json"
+    composition_manifest.write_text(json.dumps({"manifest_version": "0.1", "id": "baseline", "schema_family": "uci", "schema_version": "2.4", "role": "baseline", "source": {"kind": "git", "repository": "https://example.test/uci.git", "revision": "a" * 40}, "root_schema": "message.xsd", "files": [{"path": "message.xsd", "sha256": hashlib.sha256(xsd).hexdigest()}]}), encoding="utf-8")
+    for manifest_path, expected in ((invalid_manifest, "FAIL schema-source manifests"), (composition_manifest, "FAIL schema-source set")):
+        resolver = subprocess.run([sys.executable, "tools/uci_resolver.py", "resolve", "--contract", str(contract_path), "--baseline-manifest", str(manifest_path), "--baseline-source-root", str(tmp_path)], cwd=ROOT, text=True, capture_output=True, check=False)
+        projection = subprocess.run([sys.executable, "tools/io_projection.py", "--contract", str(contract_path), "--baseline-manifest", str(manifest_path), "--baseline-source-root", str(tmp_path), "--format", "json"], cwd=ROOT, text=True, capture_output=True, check=False)
+        assert resolver.returncode == projection.returncode == 1
+        assert resolver.stdout.splitlines()[0] == expected
+        assert projection.stdout.splitlines()[0] == f"{expected} failed:"
+        assert "Traceback" not in resolver.stderr + projection.stderr
 
 
 def test_projection_cli_handles_a_synthetic_verified_source(tmp_path: Path) -> None:

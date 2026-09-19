@@ -73,6 +73,15 @@ class ResolvedOmsExchange:
 class UciResolverError(Exception):
     """Expected fail-closed UCI resolver input or resolution failure."""
 
+
+class UciResolutionPreparationError(UciResolverError):
+    """Expected manifest-selection failure with a CLI presentation stage."""
+
+    def __init__(self, stage: str, diagnostics: list[Any]):
+        self.stage = stage
+        self.diagnostics = tuple(str(item) for item in diagnostics)
+        super().__init__(f"{stage} failed:\n" + "\n".join(f"  {item}" for item in self.diagnostics))
+
 def _context(manifest_id: str, source_path: str, local_name: str) -> str:
     return f"manifest {manifest_id!r}, file {source_path!r}, message {local_name!r}"
 
@@ -215,10 +224,10 @@ def prepare_resolution(
     extension_results = [validate_manifest_path(manifest.resolve()) for manifest, _ in extensions]
     diagnostics.extend(item for _, items in extension_results for item in items)
     if diagnostics:
-        raise UciResolverError("schema-source manifests failed:\n" + "\n".join(f"  {item}" for item in diagnostics))
+        raise UciResolutionPreparationError("schema-source manifests", diagnostics)
     schema_set, diagnostics = compose_schema_source_set(contract, baseline, [item for item, _ in extension_results])
     if diagnostics:
-        raise UciResolverError("schema-source set failed:\n" + "\n".join(f"  {item}" for item in diagnostics))
+        raise UciResolutionPreparationError("schema-source set", diagnostics)
     roots = {baseline["id"]: baseline_source_root}
     roots.update({manifest["id"]: root for (manifest, _), (_, root) in zip(extension_results, extensions)})
     verified, diagnostics = load_verified_schema_source_set(schema_set, roots)
@@ -240,6 +249,9 @@ def main(argv: list[str] | None = None) -> int:
             args.contract, args.baseline_manifest, args.baseline_source_root,
             [(Path(manifest), Path(root)) for manifest, root in args.extension],
         )
+    except UciResolutionPreparationError as exc:
+        print(f"FAIL {exc.stage}", *(f"  {item}" for item in exc.diagnostics), sep="\n")
+        return 1
     except UciResolverError as exc:
         print(f"FAIL {exc}")
         return 1

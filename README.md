@@ -46,12 +46,12 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 
 ## Published-contract exercises
 
-The first evidence-driven exercises against published OMS 2.5 Markdown Service
-Contracts are recorded in
-[docs/task-033-real-service-contract-exercises.md](docs/task-033-real-service-contract-exercises.md).
+Evidence-driven exercises against five published OMS 2.5 Markdown Service
+Contracts are recorded in [Task 033](docs/task-033-real-service-contract-exercises.md)
+and the [five-contract survey](docs/task-034-real-contract-evidence-survey.md).
 They intentionally do not turn incomplete published documentation into invented
-v0.1 YAML. The exercise distinguishes complete authored-contract semantics from
-partial observations extracted from existing documentation.
+v0.1 YAML. The evidence favors author-confirmed completion over weakening
+complete authored-contract semantics or conflating them with partial observations.
 
 ## Capability identity and ownership
 

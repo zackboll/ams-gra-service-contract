@@ -8,7 +8,7 @@ The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**
 
-The format deliberately does **not** copy UCI message layouts or message primitive metadata. The included offline resolver verifies selected external UCI schema bytes and derives message QNames and UCI primitives for the message names declared by the contract.
+The format deliberately does **not** copy UCI message layouts or message primitive metadata. The included offline resolver verifies selected external UCI schema bytes, indexes global declarations, and derives message QNames, UCI primitives, and exact global message type QNames for the message names declared by the contract. It identifies type declarations only; it does not yet model type contents or layouts.
 
 ## Schema-source manifests
 

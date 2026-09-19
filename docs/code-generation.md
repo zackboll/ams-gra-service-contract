@@ -38,10 +38,10 @@ Contract Model -- uci_schema_version --> toolchain schema-source selection
                                   verify local schema bytes
                                              |
                                              v
-                                  UCI XSD set --> UCI parser
+                                   verified schema snapshot --> UCI parser
                                                        |
                                                        v
-                           Message identity/QName/primitive resolver
+                     global declaration index --> message QName/primitive/type QName resolver
                                              |
        Contract Model + UCI Schema Model
                      |
@@ -66,6 +66,7 @@ ResolvedExchange
   message_name
   message_qname
   primitive          <- derived from UCI `UCI_PRIMITIVE:` documentation
+   message_type_qname <- resolved exact global UCI type declaration
   generated_type     <- backend mapping
   timing
   source_locations
@@ -82,11 +83,11 @@ For each contract:
 5. Map only declared extension IDs by exact equality to supplied extension-manifest IDs.
 6. Validate extension baseline compatibility and compose the deterministic set in contract declaration order.
 7. Read each selected manifest-declared local schema file once, verify its SHA-256 value, and retain its verified bytes in an immutable snapshot.
-8. Parse only that snapshot's manifest-declared XSD bytes; resolve global message identity, expanded QName, and primitive metadata without reopening source files.
+8. Parse only that snapshot's manifest-declared XSD bytes; index direct global `xs:complexType` and `xs:simpleType` declarations, then resolve global message identity, expanded QName, primitive metadata, and each message `type` QName without reopening source files.
 9. For every `kind: oms_message` exchange:
    1. resolve `message` uniquely;
    2. find its UCI definition;
-   3. derive `UCI_PRIMITIVE:` metadata and any other generator-required schema metadata;
+    3. derive `UCI_PRIMITIVE:` metadata and resolve its exact global type declaration by expanded QName;
    4. preserve the contract's direction/mandate/topic/timing metadata;
    5. produce one resolved exchange entry.
 10. Apply OMS-version-specific profile checks, if the tool supports them.
@@ -284,3 +285,7 @@ error[C118]: OMS message name resolves to multiple schema definitions
 
 Never silently choose based on baseline/extension role, extension order, manifest
 input order, or file order. Composition order is not message override precedence.
+
+The current resolver stops at type declaration identity. It does not interpret
+sequences, choices, inheritance, members, attributes, restrictions, or anonymous
+types; a later type-model layer may consume the resolved declaration.

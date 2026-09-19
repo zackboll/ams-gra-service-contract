@@ -13,6 +13,7 @@ All notable changes to this experimental specification and tooling project are d
 - Offline UCI message resolution against verified schema-source bytes, including expanded-name identity, fail-closed ambiguity detection, and primitive extraction from public UCI XSD metadata.
 - Immutable verified schema-source snapshots: XSD parsing consumes the exact single-read bytes whose SHA-256 digests were checked.
 - Fail-closed message-resolution ambiguity semantics: zero candidates are unknown, one resolves, and multiple candidates are ambiguous.
+- Namespace-aware global UCI type declaration indexing and fail-closed resolution of each primitive-tagged message's XSD `type` QName to exactly one global declaration. Type contents/layouts remain unmodeled.
 
 ## [0.1.0] - 2026-09-18
 

@@ -46,8 +46,9 @@ Potential goals driven by real implementation experience:
   projection implemented; DOCX/template adaptation remains later work);
 - initial canonical contract/profile validation diagnostic codes implemented;
   schema-source, resolver, and projection code families remain;
-- real Service Contract exercises, cross-version validation, mature diagnostics,
-  and first independent downstream consumers.
+- real Service Contract exercises, mature diagnostics, and first independent
+  downstream consumers. An initial real UCI 2.5 -> 2.6 resolver/schema
+  transition has been exercised; broader upstream-version mapping remains.
 
 A full UCI type-layout parser is not an implied next milestone. It would require
 substantial XSD support (content models, inheritance, members, cardinality,
@@ -92,7 +93,9 @@ Consider 1.0 only after:
 
 - at least two independent language/tool consumers exist;
 - the format has been exercised against multiple real Service Contract examples;
-- upstream-version mapping has been tested across at least one OMS update or carefully simulated transition;
+- upstream-version mapping has been tested across at least one OMS update or
+  carefully simulated transition (the UCI 2.5 -> 2.6 resolver/schema exercise is
+  initial evidence, not completion of this broader OMS-inclusive criterion);
 - extension/version policy is stable;
 - diagnostics and conformance fixtures are mature; and
 - the project can make a clear compatibility commitment.

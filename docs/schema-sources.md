@@ -86,6 +86,23 @@ At present `v2.5` resolves directly to that immutable revision. Reproducibility
 relies on the stored revision and digests rather than trusting a tag name alone.
 The manifest is the source of truth for exact raw-byte SHA-256 values.
 
+## Checked-in UCI 2.6 baseline
+
+[`schema-sources/uci/2.6/manifest.yaml`](../schema-sources/uci/2.6/manifest.yaml)
+pins tag `v2.6` to revision `78eb61b6112c8bffa40820c33124b57787fc5bd9`.
+Unlike UCI 2.5, its official schema is distributed in the repository archive
+`UCI Release Documentation - UCI Schema/03_UCI-STD-002_Rev6_UCI_Schema_v2_6-CDRL.zip`.
+At that revision the archive SHA-256 is
+`073dafd85f0a1cf2f1668f75a73aca6a5af28895e0b4645186ed7b23014c145e`.
+
+Obtain the pinned repository material, verify that archive digest, and extract
+the archive outside this repository. Point `--source-root` at its extracted
+root, which directly contains `UCI_MessageDefinitions_v2_6_0.xsd`. The resolver
+does not download or extract ZIP files. The root includes only
+`UCI_SecurityMarkings_v2_6_0.xsd`, so the manifest closure is those two XSDs;
+the archive's `UCI_Versioning_v2_6_0.xsd` imports the root and is not needed by
+the current resolver.
+
 ## Version independence
 
 These version values are independent unless an explicit toolchain compatibility
@@ -110,6 +127,7 @@ Validate the checked-in manifest without network access:
 
 ```bash
 python tools/schema_sources.py validate schema-sources/uci/2.5/manifest.yaml
+python tools/schema_sources.py validate schema-sources/uci/2.6/manifest.yaml
 ```
 
 This validates the manifest JSON Schema, manifest semantic rules, path rules,
@@ -124,6 +142,9 @@ Verify raw bytes in an already obtained local checkout:
 ```bash
 python tools/schema_sources.py verify schema-sources/uci/2.5/manifest.yaml \
   --source-root /path/to/uci
+
+python tools/schema_sources.py verify schema-sources/uci/2.6/manifest.yaml \
+  --source-root /path/to/extracted-uci-2.6-schema
 ```
 
 This additionally reads and verifies raw bytes of the manifest-declared local

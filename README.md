@@ -18,6 +18,11 @@ manifest that pins an immutable upstream revision, root XSD, required file set,
 and SHA-256 digests. This manifest is not part of the portable Service Contract
 grammar. See [docs/schema-sources.md](docs/schema-sources.md).
 
+This repository checks in reproducibility manifests for UCI 2.5 and UCI 2.6.
+The offline resolver has been exercised against the real UCI 2.5 -> 2.6 release
+transition; it does not upgrade a contract automatically or establish OMS/UCI
+cross-version compatibility.
+
 Toolchains compose one matching baseline manifest plus only the extension
 manifests explicitly declared by the contract, failing when exact ID mapping or
 baseline compatibility is incomplete.
@@ -461,8 +466,9 @@ The deployment configuration is not the Service Contract itself. It is one imple
 │       └── v0.1/
 │           └── schema-source-manifest.schema.json
 ├── schema-sources/
-│   └── uci/2.5/
-│       └── manifest.yaml
+│   └── uci/
+│       ├── 2.5/manifest.yaml
+│       └── 2.6/manifest.yaml
 ├── profiles/
 │   └── oms/2.5/
 │       └── profile.yaml

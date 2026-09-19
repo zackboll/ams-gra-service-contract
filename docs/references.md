@@ -134,11 +134,13 @@ An OMS Service Contract may target a different UCI release than the latest avail
 
 ### Checked-in reproducibility artifact
 
-The baseline UCI 2.5 schema-source manifest is
-[`schema-sources/uci/2.5/manifest.yaml`](../schema-sources/uci/2.5/manifest.yaml).
-It pins UCI tag `v2.5` to immutable revision
-`093610b7753944059360d3236770ab446d039556`. The manifest, not this references
-page, is authoritative for exact file hashes.
+The baseline UCI 2.5 and UCI 2.6 schema-source manifests are
+[`schema-sources/uci/2.5/manifest.yaml`](../schema-sources/uci/2.5/manifest.yaml)
+and [`schema-sources/uci/2.6/manifest.yaml`](../schema-sources/uci/2.6/manifest.yaml).
+They pin tags `v2.5` and `v2.6` to immutable revisions
+`093610b7753944059360d3236770ab446d039556` and
+`78eb61b6112c8bffa40820c33124b57787fc5bd9`, respectively. The manifests, not
+this references page, are authoritative for exact file hashes.
 
 ## 4. Public implementation/reference examples
 

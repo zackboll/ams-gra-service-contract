@@ -10,6 +10,7 @@ text-check:
 
 schema-source-check:
 	$(PYTHON) tools/schema_sources.py validate schema-sources/uci/2.5/manifest.yaml
+	$(PYTHON) tools/schema_sources.py validate schema-sources/uci/2.6/manifest.yaml
 
 test:
 	$(PYTHON) -m pytest -q

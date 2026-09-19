@@ -6,9 +6,13 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 minimum Subsystem Status exchange-shape validation: periodic
+  `SubsystemStatus` output, asynchronous `SubsystemStatusDataRequest` input,
+  and on-demand `SubsystemStatusDataRequestStatus` output. Other Section 3.2
+  exchange surfaces remain out of scope.
 - OMS 2.5 Required Subsystem Function inventory validation, including explicit
   conditional applicability for State Command Processing, BIT, and Calibration;
-  Section 3.2 exchange inventories remain out of scope.
+  other Section 3.2 exchange inventories remain out of scope.
 - Deterministic non-normative Inputs/Outputs Markdown and JSON projection
   tooling, joining contract-owned fields with manifest-verified UCI message
   primitive/QName/type identity without changing the portable grammar.

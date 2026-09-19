@@ -188,6 +188,10 @@ def _subsystem_function(document: dict, name: str) -> dict:
     return next(function for function in document["functions"] if function["name"] == name)
 
 
+def _subsystem_status(document: dict) -> dict:
+    return _subsystem_function(document, "Subsystem Status")
+
+
 @pytest.mark.parametrize(
     "name",
     [
@@ -294,6 +298,100 @@ def test_oms_25_profile_subsystem_version_mismatch_stops_before_required_functio
     assert len(diagnostics) == 1
     assert "requires OMS version '2.5'" in diagnostics[0].message
     assert not any("requires function" in diagnostic.message for diagnostic in diagnostics)
+    assert not any("required exchange" in diagnostic.message for diagnostic in diagnostics)
+
+
+def test_oms_25_profile_subsystem_status_exchange_order_local_ids_and_topics_are_irrelevant() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    status = _subsystem_status(document)
+    status["id"] = "entirely-local-subsystem-status-id"
+    status["exchanges"].reverse()
+    for index, exchange in enumerate(status["exchanges"]):
+        exchange["id"] = f"local-id-{index}"
+        exchange["topic"] = f"unrelated/topic/{index}"
+    assert profile_diagnostics(document, profile) == []
+
+
+def test_oms_25_profile_allows_additional_subsystem_status_exchanges() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    _subsystem_status(document)["exchanges"].append(
+        {
+            "id": "local-extra-status-row",
+            "kind": "non_oms_message",
+            "direction": "input",
+            "mandate": "optional",
+            "name": "LocalSubsystemIntegrationMessage",
+            "timing": {"kind": "asynchronous"},
+        }
+    )
+    assert profile_diagnostics(document, profile) == []
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["SubsystemStatus", "SubsystemStatusDataRequest", "SubsystemStatusDataRequestStatus"],
+)
+def test_oms_25_profile_rejects_each_missing_subsystem_status_exchange(message: str) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    status = _subsystem_status(document)
+    status["exchanges"] = [item for item in status["exchanges"] if item["message"] != message]
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert message in diagnostics[0].message
+
+
+@pytest.mark.parametrize(
+    ("message", "field", "value"),
+    [
+        ("SubsystemStatus", "direction", "input"),
+        ("SubsystemStatus", "mandate", "optional"),
+        ("SubsystemStatus", "timing.kind", "asynchronous"),
+        ("SubsystemStatusDataRequest", "direction", "output"),
+        ("SubsystemStatusDataRequest", "mandate", "optional"),
+        ("SubsystemStatusDataRequest", "timing.kind", "periodic"),
+        ("SubsystemStatusDataRequestStatus", "direction", "input"),
+        ("SubsystemStatusDataRequestStatus", "mandate", "optional"),
+        ("SubsystemStatusDataRequestStatus", "timing.kind", "asynchronous"),
+    ],
+)
+def test_oms_25_profile_rejects_subsystem_status_exchange_shape_mismatches(
+    message: str, field: str, value: str
+) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    exchange = _exchange(_subsystem_status(document), message)
+    if field == "timing.kind":
+        exchange["timing"]["kind"] = value
+    else:
+        exchange[field] = value
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert message in diagnostics[0].message
+
+
+def test_oms_25_profile_requires_oms_message_kind_for_subsystem_status() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_subsystem_document()
+    exchange = _exchange(_subsystem_status(document), "SubsystemStatus")
+    exchange["kind"] = "non_oms_message"
+    exchange["name"] = exchange.pop("message")
+    exchange.pop("topic")
+
+    diagnostics = profile_diagnostics(document, profile)
+    assert len(diagnostics) == 1
+    assert "SubsystemStatus" in diagnostics[0].message
+
+
 
 
 def test_oms_25_profile_schema_requires_exactly_one_applicability_form() -> None:
@@ -588,3 +686,22 @@ def test_service_initialization_partial_example_lacks_only_service_status_for_om
     diagnostics = validate_path(ROOT / "examples" / "service-initialization.yaml", profile)
     assert len(diagnostics) == 1
     assert "Service Status" in diagnostics[0].message
+
+
+def test_subsystem_status_partial_example_lacks_only_other_required_subsystem_functions() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+
+    assert validate_path(ROOT / "examples" / "subsystem-status.yaml") == []
+    diagnostics = validate_path(ROOT / "examples" / "subsystem-status.yaml", profile)
+    messages = [diagnostic.message for diagnostic in diagnostics]
+    assert len(messages) == 5
+    for name in [
+        "Subsystem Startup",
+        "Subsystem State Command Processing",
+        "Subsystem Built-In Test (BIT)",
+        "Subsystem Calibration",
+        "Subsystem Shutdown",
+    ]:
+        assert any(name in message for message in messages)
+    assert not any("Subsystem Status" in message or "required exchange" in message for message in messages)

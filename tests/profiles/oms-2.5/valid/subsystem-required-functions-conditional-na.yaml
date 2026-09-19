@@ -18,7 +18,31 @@ functions:
     category: required
     required_group: subsystem
     applicability: applicable
-    exchanges: []
+    exchanges:
+      - id: local-status-request
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: SubsystemStatusDataRequest
+        topic: local.request.topic
+        timing:
+          kind: asynchronous
+      - id: local-status-report
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: SubsystemStatus
+        topic: local.report.topic
+        timing:
+          kind: periodic
+      - id: local-status-response
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: SubsystemStatusDataRequestStatus
+        topic: local.response.topic
+        timing:
+          kind: on_demand
   - id: local-subsystem-state-command
     name: Subsystem State Command Processing
     category: required

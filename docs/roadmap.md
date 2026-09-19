@@ -36,9 +36,11 @@ Potential goals driven by real implementation experience:
 - explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (OMS 2.5 Required Service
   Function inventory, minimum Service Initialization and Service Status exchange
-  shapes, and Required Subsystem Function inventory implemented; Required
-  Subsystem exchange shapes, Required Capability-related Functions, and broader
-  profile coverage remain);
+  shapes, Required Subsystem Function inventory, and minimum Subsystem Status
+  exchange shape implemented; Subsystem Startup source classification/exchanges,
+  State Command Processing exchanges, BIT exchanges, Calibration exchanges,
+  Shutdown exchanges, Required Capability-related Functions, and broader profile
+  coverage remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

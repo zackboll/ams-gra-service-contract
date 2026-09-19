@@ -13,6 +13,10 @@ opt-in, machine-readable profile manifests rather than in
 Rev M, *OMS Service Contract Instructions v2.5*, dated 2026-01-22, pinned to
 upstream OMS commit `726272bd0390982a759c91a9cf4e13b81c2b510b`.
 
+Current OMS 2.5 coverage includes the Required Service Function inventory,
+Service Initialization exchange surface, Service Status exchange surface,
+Required Subsystem Function inventory, and Subsystem Status exchange surface.
+
 Section 3.1 says every OMS Service must provide the Required Service Functions
 and that the section also applies to Isolators. Sections 3.1.1 and 3.1.2 say
 that **Service Initialization** and **Service Status**, respectively, are
@@ -76,15 +80,23 @@ Level of Mandate for function execution, not permission to omit the profile row.
 - `ServiceStatusDataRequest`: input, mandatory, asynchronous; and
 - `ServiceStatusDataRequestStatus`: output, mandatory, on-demand.
 
+**Subsystem Status** (Section 3.2.2 and Table 3.2-2):
+
+- `SubsystemStatus`: OMS-message output, mandatory, periodic;
+- `SubsystemStatusDataRequest`: OMS-message input, mandatory, asynchronous; and
+- `SubsystemStatusDataRequestStatus`: OMS-message output, mandatory, on-demand.
+
 Additional valid exchange rows are allowed. The profile intentionally does not
 fix Service Initialization Data Transfer protocol, data type, data format, or
 sharing pattern; nor does it fix topics, operational attributes/SOAC selection,
 subscription groups, numerical timing values, Appendix C content, contract
-traceability, or UCI message primitives. It does not yet validate complete
-Section 3.2 Inputs/Outputs exchange inventories, Subsystem workflow/state
-behavior, Required Capability-related Function inventory, conditional Section
-3.1 Service Functions for Platform-hosted Adapters, or other OMS-version
-profiles. It does not claim full OMS Subsystem compliance.
+traceability, or UCI message primitives. The currently unprofiled Section 3.2
+exchange surfaces are Subsystem Startup, State Command Processing, BIT,
+Calibration, and Shutdown; Startup requires separate source classification.
+The profile also does not validate Required Capability-related Function
+inventory, conditional Section 3.1 Service Functions for Platform-hosted
+Adapters, or other OMS-version profiles. It does not claim full OMS Subsystem
+compliance.
 
 ## Partial reference examples
 

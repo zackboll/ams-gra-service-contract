@@ -1,11 +1,34 @@
 from copy import deepcopy
 from pathlib import Path
+import re
+import subprocess
+import sys
 
 import pytest
 
 from tools.validate import (
+    OP_AMBIGUOUS_REQUIRED_FUNCTION,
+    OP_DUPLICATE_APPLIES_TO,
+    OP_DUPLICATE_EXCHANGE_RULE,
+    OP_DUPLICATE_FUNCTION,
+    OP_DUPLICATE_SOURCE,
+    OP_FUNCTION_APPLICABILITY,
+    OP_FUNCTION_METADATA,
+    OP_MISSING_REQUIRED_EXCHANGE,
+    OP_MISSING_REQUIRED_FUNCTION,
+    OP_OMS_VERSION_MISMATCH,
+    OP_SCHEMA,
+    OP_UNKNOWN_TRACE_SOURCE,
+    OP_UNSUPPORTED_CONTRACT_VERSION,
+    SC_DUPLICATE_EXCHANGE,
+    SC_DUPLICATE_FUNCTION,
+    SC_DUPLICATE_SOURCE,
+    SC_SCHEMA,
+    SC_UNKNOWN_TRACE_SOURCE,
+    VALIDATION_DIAGNOSTIC_CODES,
     load_document,
     profile_diagnostics,
+    semantic_diagnostics,
     validate_document,
     validate_path,
     validate_profile_document,
@@ -705,3 +728,113 @@ def test_subsystem_status_partial_example_lacks_only_other_required_subsystem_fu
     ]:
         assert any(name in message for message in messages)
     assert not any("Subsystem Status" in message or "required exchange" in message for message in messages)
+
+
+def test_validation_diagnostic_code_inventory_is_unique_and_well_formed() -> None:
+    assert len(VALIDATION_DIAGNOSTIC_CODES) == 18
+    assert all(re.fullmatch(r"(?:SC|OP)_[A-Z0-9_]+", code) for code in VALIDATION_DIAGNOSTIC_CODES)
+
+
+def test_contract_diagnostic_codes_and_order() -> None:
+    document = load_document(ROOT / "tests" / "valid" / "non-oms-message.yaml")
+    document["sources"] = [{"id": "same"}, {"id": "same"}]
+    document["functions"][0]["id"] = "same-function"
+    document["functions"].append(deepcopy(document["functions"][0]))
+    document["functions"][0]["exchanges"] = [
+        {"id": "same-exchange", "kind": "non_oms_message", "direction": "input", "mandate": "optional", "name": "one", "timing": {"kind": "asynchronous"}},
+        {"id": "same-exchange", "kind": "non_oms_message", "direction": "input", "mandate": "optional", "name": "two", "timing": {"kind": "asynchronous"}, "traceability": [{"source": "missing"}]},
+    ]
+    document["functions"][0]["traceability"] = [{"source": "missing"}]
+
+    diagnostics = semantic_diagnostics(document)
+
+    assert [diagnostic.code for diagnostic in diagnostics] == [
+        SC_DUPLICATE_SOURCE,
+        SC_DUPLICATE_FUNCTION,
+        SC_UNKNOWN_TRACE_SOURCE,
+        SC_DUPLICATE_EXCHANGE,
+        SC_UNKNOWN_TRACE_SOURCE,
+    ]
+
+
+def test_schema_diagnostics_have_contract_and_profile_codes() -> None:
+    contract = load_document(ROOT / "tests" / "invalid" / "bad-direction.yaml")
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["required_functions"][0]["required_exchanges"][0]["primitive"] = "D"
+
+    assert {diagnostic.code for diagnostic in validate_document(contract)} == {SC_SCHEMA}
+    assert {diagnostic.code for diagnostic in validate_profile_document(profile)} == {OP_SCHEMA}
+
+
+def test_profile_definition_semantic_diagnostic_codes() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    profile["sources"].append(deepcopy(profile["sources"][0]))
+    duplicate_function = deepcopy(profile["required_functions"][0])
+    duplicate_function["applies_to"] = ["service", "service"]
+    duplicate_function["traceability"] = [{"source": "missing"}]
+    duplicate_function["required_exchanges"].append(deepcopy(duplicate_function["required_exchanges"][0]))
+    duplicate_function["required_exchanges"][1]["traceability"] = [{"source": "missing"}]
+    profile["required_functions"].append(duplicate_function)
+
+    codes = [diagnostic.code for diagnostic in validate_profile_document(profile)]
+
+    assert OP_DUPLICATE_SOURCE in codes
+    assert OP_DUPLICATE_FUNCTION in codes
+    assert OP_DUPLICATE_APPLIES_TO in codes
+    assert codes.count(OP_UNKNOWN_TRACE_SOURCE) == 2
+    assert OP_DUPLICATE_EXCHANGE_RULE in codes
+
+
+def test_profile_application_diagnostic_codes_and_structural_first_validation() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["functions"].append(deepcopy(document["functions"][1]))
+    document["functions"][1]["category"] = "specific"
+    document["functions"][1]["required_group"] = "capability"
+    document["functions"][1]["applicability"] = "not_applicable"
+    document["functions"][1]["not_applicable_reason"] = "test"
+    document["functions"][1]["exchanges"] = []
+
+    codes = [diagnostic.code for diagnostic in profile_diagnostics(document, profile)]
+    assert codes == [OP_AMBIGUOUS_REQUIRED_FUNCTION]
+
+    document = _complete_service_status_document()
+    document["functions"] = [document["functions"][1]]
+    assert [diagnostic.code for diagnostic in profile_diagnostics(document, profile)] == [OP_MISSING_REQUIRED_FUNCTION]
+    document["functions"][0]["category"] = "specific"
+    document["functions"][0]["required_group"] = "capability"
+    document["functions"][0]["applicability"] = "not_applicable"
+    document["functions"][0]["not_applicable_reason"] = "test"
+    document["functions"][0]["exchanges"] = []
+    assert [diagnostic.code for diagnostic in profile_diagnostics(document, profile)] == [OP_MISSING_REQUIRED_FUNCTION, OP_FUNCTION_METADATA, OP_FUNCTION_METADATA, OP_FUNCTION_APPLICABILITY, OP_MISSING_REQUIRED_EXCHANGE, OP_MISSING_REQUIRED_EXCHANGE, OP_MISSING_REQUIRED_EXCHANGE]
+
+    document = _complete_service_status_document()
+    document["functions"][1]["applicability"] = "not_applicable"
+    document["functions"][1].pop("not_applicable_reason", None)
+    assert {diagnostic.code for diagnostic in validate_document(document)} == {SC_SCHEMA}
+
+
+def test_profile_compatibility_codes_short_circuit() -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = _complete_service_status_document()
+    document["contract_version"] = "9.9"
+    assert [diagnostic.code for diagnostic in profile_diagnostics(document, profile)] == [OP_UNSUPPORTED_CONTRACT_VERSION]
+    document = _complete_service_status_document()
+    document["standards"]["oms_version"] = "9.9"
+    assert [diagnostic.code for diagnostic in profile_diagnostics(document, profile)] == [OP_OMS_VERSION_MISMATCH]
+
+
+def test_validator_cli_renders_code_path_and_message() -> None:
+    result = subprocess.run(
+        [sys.executable, "tools/validate.py", "tests/invalid/duplicate-function-id.yaml"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert "SC_DUPLICATE_FUNCTION $.functions: duplicate function id 'same'" in result.stdout

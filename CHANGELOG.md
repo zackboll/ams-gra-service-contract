@@ -6,6 +6,8 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Stable symbolic `SC_*` and `OP_*` diagnostics for portable-contract and OMS
+  profile validation, with code-first CLI rendering and public inventory.
 - OMS 2.5 minimum Subsystem Status exchange-shape validation: periodic
   `SubsystemStatus` output, asynchronous `SubsystemStatusDataRequest` input,
   and on-demand `SubsystemStatusDataRequestStatus` output. Other Section 3.2

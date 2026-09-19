@@ -45,3 +45,29 @@ def test_capability_enable_disable_reference_example() -> None:
     assert exchanges["ESM_SettingsCommandStatus"]["mandate"] == "mandatory"
     assert exchanges["ESM_SettingsCommandStatus"]["timing"] == {"kind": "on_demand"}
     assert all("primitive" not in exchange for exchange in exchanges.values())
+
+
+def test_service_initialization_data_transfer_reference_example() -> None:
+    document = load_document(ROOT / "examples" / "service-initialization.yaml")
+    function = document["functions"][0]
+
+    assert function["category"] == "required"
+    assert function["required_group"] == "service"
+
+    exchanges = {
+        exchange.get("message", exchange.get("name")): exchange
+        for exchange in function["exchanges"]
+    }
+
+    assert exchanges["FileMetadata"]["kind"] == "oms_message"
+    assert exchanges["FileLocation"]["kind"] == "oms_message"
+
+    transfer = exchanges["ServiceConfigFile"]
+    assert transfer["kind"] == "data_transfer"
+    assert transfer["direction"] == "input"
+    assert transfer["mandate"] == "optional"
+    assert transfer["protocol"] == "NFS"
+    assert transfer["data_type"] == "Configuration File"
+    assert transfer["data_format"] == "Custom Text"
+    assert transfer["sharing_pattern"] == "Exclusive Use"
+    assert transfer["timing"] == {"kind": "asynchronous"}

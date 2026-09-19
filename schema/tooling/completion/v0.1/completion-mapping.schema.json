@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-mapping:0.1",
+  "title": "Service Contract Completion Mapping",
+  "description": "Non-normative typed destinations for completion author decisions; not a Service Contract.",
+  "type": "object", "additionalProperties": false,
+  "required": ["mapping_version", "bindings"],
+  "properties": {
+    "mapping_version": {"const": "0.1"},
+    "bindings": {"type": "array", "items": {"$ref": "#/$defs/binding"}}
+  },
+  "$defs": {
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target", "destination"],
+      "properties": {"target": {"type": "string", "minLength": 1}, "destination": {"$ref": "#/$defs/destination"}}
+    },
+    "destination": {
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["kind", "field"], "properties": {"kind": {"const": "service_field"}, "field": {"enum": ["name", "version", "description"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "field"], "properties": {"kind": {"const": "standards_field"}, "field": {"enum": ["uci_schema_version", "ams_gra_version"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "field"], "properties": {"kind": {"const": "context_assertion"}, "field": {"enum": ["contract_version", "oms_version", "service_kind"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "profile_function", "field"], "properties": {"kind": {"const": "required_function_field"}, "profile_function": {"type": "string", "minLength": 1}, "field": {"enum": ["id", "description", "applicability", "not_applicable_reason"]}}},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "profile_function", "selector", "field"], "properties": {"kind": {"const": "required_exchange_field"}, "profile_function": {"type": "string", "minLength": 1}, "selector": {"type": "string", "minLength": 1}, "field": {"enum": ["id", "topic", "operational_attribute", "subscription_group", "appendix_c_mapping", "nominal_rate_hz", "max_rate_hz", "nominal_response_seconds", "max_response_seconds", "protocol", "data_type", "data_format", "sharing_pattern"]}}}
+      ]
+    }
+  }
+}

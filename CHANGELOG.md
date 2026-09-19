@@ -6,6 +6,11 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Typed completion-decision mappings and deterministic profile-derived authoring
+  scaffold tooling. Bounded `CA_*` mapping diagnostics validate typed future
+  destinations while preserving unmapped decisions and structural missing fields.
+  No contract materialization, generated identity/topic/function, Capability
+  scaffold, satisfaction analysis, or output/apply path is included.
 - Optional explicit author-decision overlays for completion worksheets. Decisions
   separately select exact evidence candidates or supply scalar author values,
   retain evidence/provenance, and use stable decision-specific `CA_*`

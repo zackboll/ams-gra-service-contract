@@ -57,6 +57,11 @@ generation/apply path. See [docs/completion-assistant.md](docs/completion-assist
 [Task 035](docs/task-035-completion-worksheet-core.md), and
 [Task 036](docs/task-036-completion-author-decisions.md).
 
+Typed completion mappings and the profile-derived authoring scaffold are also
+tooling-only: **candidate → decision → mapping → scaffold → future contract**.
+They expose where an author decision would belong without materializing a
+portable Service Contract. See [docs/completion-scaffold.md](docs/completion-scaffold.md).
+
 ## Published-contract exercises
 
 Evidence-driven exercises against five published OMS 2.5 Markdown Service

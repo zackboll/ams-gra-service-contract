@@ -6,6 +6,11 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Subsystem Built-In Test (BIT) Table 3.2-4 OOXML source
+  classification: all seven substantive rows are green removable guidance for
+  every profile-matched field, so BIT has no exchange minimum. Optional LoM is
+  kept distinct from row presence, and informative numeric timing is not
+  profile-enforced.
 - OMS 2.5 Subsystem State Command Processing Table 3.2-3 OOXML source
   classification and minimum command-input exchange validation:
   `SubsystemStateCommand` is OMS-message input, mandatory, and asynchronous.

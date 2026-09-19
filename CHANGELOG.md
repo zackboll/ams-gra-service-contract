@@ -6,6 +6,13 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Optional portable Capability identity and ownership model: explicit
+  `capabilities` declarations preserve omitted-versus-empty semantics; each
+  Capability has an ID, display name, and explicit position-information Boolean;
+  functions may reference a declared Capability ID. Deterministic `SC_*`
+  diagnostics reject duplicate Capability IDs and unknown references. This is
+  infrastructure only: no OMS Section 3.3 inventory, name heuristic, or profile
+  enforcement is added.
 - OMS 2.5 Capability Operations (Section 3.3.2.3/Table 3.3-4) OOXML exchange
   classification. `Entity`/`SignalReport` are removable green ESM examples and
   `ProductMetadata`/`ProductLocation`/`ImageFile` removable green PO/POST

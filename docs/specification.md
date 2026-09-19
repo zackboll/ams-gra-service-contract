@@ -51,13 +51,14 @@ The OMS Service Contract material describes the Message Primitive as UCI-owned m
 
 ## 3. Document root
 
-A contract document contains four required root members and one optional member:
+A contract document contains four required root members and two optional members:
 
 ```yaml
 contract_version: "0.1"
 service: { ... }
 standards: { ... }
 sources: [ ... ]     # optional
+capabilities: [ ... ] # optional; omitted and empty are distinct
 functions: [ ... ]
 ```
 
@@ -183,7 +184,41 @@ A URI SHOULD identify the exact upstream document/revision where practical. A re
 
 A source link provides traceability. It does not cause arbitrary text from the linked document to become executable semantics of this contract.
 
-## 7. `traceability`
+## 7. `capabilities`
+
+`capabilities` is optional explicit portable information about the Capabilities
+provided by the described component. It represents facts supplied by the contract
+author; it is not reconstructed from functions, exchanges, UCI types,
+descriptions, or names.
+
+```yaml
+capabilities:
+  - id: esm
+    name: ESM
+    requires_position_information: true
+```
+
+If `capabilities` is omitted, Capability facts have not been supplied in this
+portable contract. If it is present as `capabilities: []`, the contract
+affirmatively declares zero Capabilities. Consumers MUST preserve this
+distinction and MUST NOT normalize an omitted member to an empty array.
+
+Each declared Capability has these required members:
+
+- `id`: a local Capability identity using the document identifier grammar. It is
+  the only value that functions may reference and MUST be unique within the
+  contract.
+- `name`: a non-empty human-readable display name. It is not an identity and
+  need not be globally unique.
+- `requires_position_information`: an explicit Boolean fact for that Capability.
+  Consumers MUST NOT derive it from exchange content, function names, UCI types,
+  descriptions, or other heuristics.
+
+This portable representation does not claim that an OMS DOCX contains a
+machine-readable `capabilities` array. It supplies the independent facts needed
+for future profile validation without name-based inference.
+
+## 8. `traceability`
 
 Functions and exchanges may include traceability records:
 
@@ -198,7 +233,7 @@ traceability:
 
 `locator` and `note` are descriptive. Tools MUST NOT infer executable semantics from prose in these fields.
 
-## 8. `functions`
+## 9. `functions`
 
 `functions` is the service-function inventory represented by the machine-readable contract.
 
@@ -212,15 +247,15 @@ functions:
     exchanges: []
 ```
 
-### 8.1 `id`
+### 9.1 `id`
 
 Machine-stable local identifier. Function IDs MUST be unique within the document.
 
-### 8.2 `name`
+### 9.2 `name`
 
 Human-readable function name.
 
-### 8.3 `category`
+### 9.3 `category`
 
 One of:
 
@@ -229,7 +264,7 @@ One of:
 
 This preserves the minimum category split described by the OMS Service Contract function-list guidance.
 
-### 8.4 `required_group`
+### 9.4 `required_group`
 
 Optional refinement for a required function:
 
@@ -239,7 +274,7 @@ Optional refinement for a required function:
 
 This field is a convenience for tooling/document generation and is not a replacement for the official template's organization. It MUST NOT be present when `category: specific`.
 
-### 8.5 `applicability`
+### 9.5 `applicability`
 
 One of:
 
@@ -250,15 +285,15 @@ A `not_applicable` function MUST include `not_applicable_reason` and MUST contai
 
 This permits a machine-readable document to preserve an explicit N/A decision when useful. A producer MAY omit unrelated functions entirely if its workflow does not require round-trip regeneration of template sections.
 
-### 8.6 `description`
+### 9.6 `description`
 
 Optional prose. It is informative to machines unless a future specification explicitly defines a behavioral language.
 
-### 8.7 `exchanges`
+### 9.7 `exchanges`
 
 An ordered list of input/output exchanges associated with the function. Ordering is for stable display/diff generation and MUST NOT be interpreted as runtime execution order.
 
-## 9. Exchange common semantics
+## 10. Exchange common semantics
 
 Every exchange has:
 
@@ -271,7 +306,7 @@ Every exchange has:
 
 Exchange IDs MUST be unique within their containing function.
 
-### 9.1 `direction`
+### 10.1 `direction`
 
 Exactly one of:
 
@@ -280,7 +315,7 @@ Exactly one of:
 
 The upstream Service Contract instructions require two unique rows when the same message is both an input and an output. v0.1 mirrors that rule structurally: one exchange object has exactly one direction. Authors MUST create separate exchange objects to represent both directions.
 
-### 9.2 `mandate`
+### 10.2 `mandate`
 
 Exactly one of:
 
@@ -301,7 +336,7 @@ A consumer MUST NOT reinterpret `mandatory` as, by itself:
 
 A code generator MAY have an explicit backend policy that turns mandatory exchanges into required stubs or abstract methods, provided that policy is documented separately.
 
-### 9.3 `kind`
+### 10.3 `kind`
 
 Maps to the OMS Service Contract Data Exchange (DE) category:
 
@@ -313,7 +348,7 @@ Maps to the OMS Service Contract Data Exchange (DE) category:
 | `security_exchange` | Security Exchange (`SE`) |
 | `non_oms_message` | Non-OMS Message (blank DE in the upstream table) |
 
-## 10. OMS Message exchange
+## 11. OMS Message exchange
 
 Example:
 
@@ -330,7 +365,7 @@ Example:
     nominal_rate_hz: 1.0
 ```
 
-### 10.1 `message`
+### 11.1 `message`
 
 The UCI/OMS message name referenced by the exchange.
 
@@ -338,25 +373,25 @@ A **resolved contract** requires this value to resolve uniquely in the declared 
 
 The message's structure and primitive are not defined by this string alone; they come from the selected UCI schema.
 
-### 10.2 `topic`
+### 11.2 `topic`
 
 The specific topic name/configuration value represented in the Service Contract Data Exchange Information column for an OMS Message.
 
 A runtime CAL implementation may have additional deployment-specific addressing or authorization. Those deployment details are not implied unless explicitly represented by the contract/toolchain.
 
-### 10.3 `operational_attribute`
+### 11.3 `operational_attribute`
 
 Optional operational-attribute/configuration token associated with the topic.
 
-### 10.4 `subscription_group`
+### 11.4 `subscription_group`
 
 Optional subscription-group information when the Service Contract uses it.
 
-### 10.5 `appendix_c_mapping`
+### 11.5 `appendix_c_mapping`
 
 Optional human/document-generation mapping token. It has no executable semantics in v0.1.
 
-## 11. Data Transfer exchange
+## 12. Data Transfer exchange
 
 Example:
 
@@ -378,7 +413,7 @@ The upstream Service Contract instructions describe Data Transfer information us
 
 A consumer MUST NOT invent transfer semantics based only on matching strings.
 
-## 12. Special Signal exchange
+## 13. Special Signal exchange
 
 Example:
 
@@ -395,7 +430,7 @@ Example:
 
 v0.1 intentionally keeps Special Signal metadata shallow. `details` and `reference` are informational. A later version may add typed semantics based on demonstrated tooling needs and upstream definitions.
 
-## 13. Security Exchange
+## 14. Security Exchange
 
 Example:
 
@@ -411,7 +446,7 @@ Example:
 
 v0.1 identifies the exchange and its Service Contract metadata but does not define authorization, cryptographic, classification, labeling, or cybersecurity-policy semantics.
 
-## 14. Non-OMS Message
+## 15. Non-OMS Message
 
 Example:
 
@@ -428,11 +463,11 @@ Example:
 
 The OMS v2.5 Service Contract instructions specify that the DE column is left blank for a Non-OMS Message and that the Data Exchange Name should match the corresponding entry in the Non-OMS Messages section. v0.1 uses the explicit `non_oms_message` discriminator so the machine representation does not depend on a semantically meaningful blank cell. `details` and `reference` are informational.
 
-## 15. Timing
+## 16. Timing
 
 OMS Service Contract periodicity is represented by a discriminated `timing` object.
 
-### 15.1 Asynchronous
+### 16.1 Asynchronous
 
 ```yaml
 timing:
@@ -441,7 +476,7 @@ timing:
 
 Maps to the upstream asynchronous/aperiodic category (`A`): exchanges occur at an irregular, non-periodic rate.
 
-### 15.2 On demand
+### 16.2 On demand
 
 ```yaml
 timing:
@@ -452,7 +487,7 @@ timing:
 
 Maps to the upstream on-demand category (`OD`). The numeric fields represent the corresponding Service Contract timing columns when supplied.
 
-### 15.3 Periodic
+### 16.3 Periodic
 
 ```yaml
 timing:
@@ -463,7 +498,7 @@ timing:
 
 Maps to the upstream periodic category (`P`). The numeric fields represent the corresponding Service Contract rate columns when supplied.
 
-### 15.4 Informative status of numeric timing values
+### 16.4 Informative status of numeric timing values
 
 The OMS v2.5 Service Contract instructions mark the nominal/max response/rate columns **INFORMATIVE (not normative)**. v0.1 preserves that status.
 
@@ -476,7 +511,7 @@ Therefore:
 
 A future version may add a separate, explicitly normative timing-requirement model. Such a model must not retroactively change v0.1 timing semantics.
 
-## 16. Message primitive resolution
+## 17. Message primitive resolution
 
 v0.1 has no `primitive` field for an OMS Message. The resolver validates the
 contract, composes its baseline and declared extension manifests, reads and
@@ -531,7 +566,7 @@ to namespace equality; uniqueness concerns the resolved declaration.
 
 A producer MUST NOT add a private `primitive` property to bypass resolution; unknown fields are intentionally rejected.
 
-## 17. Required Service Functions
+## 18. Required Service Functions
 
 The OMS v2.5 Service Contract material identifies Required Service Functions that every OMS Service is required to provide, including Service Initialization and Service Status, subject to the upstream tailoring/applicability rules.
 
@@ -544,26 +579,48 @@ This v0.1 schema does **not** hard-code the complete OMS function catalog. The r
 
 A production OMS-aware validator SHOULD load a profile for the selected `oms_version` and verify required functions/applicability separately.
 
-## 18. Semantic validation rules
+### 18.1 Function Capability ownership
+
+A function MAY contain `capability`, an identifier reference to a declared
+`capabilities[].id`:
+
+```yaml
+functions:
+  - id: esm-operations
+    name: ESM Capability Operations
+    capability: esm
+    # other required function members omitted here
+```
+
+The reference is explicit and is never parsed from, generated from, or compared
+to the function name or Capability display name. A function need not have a
+Capability reference. When present, it MUST resolve to a declared Capability.
+No v0.1 rule requires a Capability to own a particular number or category of
+functions.
+
+## 19. Semantic validation rules
 
 After JSON Schema validation, a conforming repository validator MUST enforce at least:
 
 1. source IDs are unique;
-2. function IDs are unique;
-3. exchange IDs are unique within each function;
-4. every traceability source reference resolves to a source registry entry.
+2. Capability IDs are unique;
+3. function IDs are unique;
+4. exchange IDs are unique within each function;
+5. every function Capability reference resolves to a declared Capability; and
+6. every traceability source reference resolves to a source registry entry.
 
 A UCI-aware resolver additionally MUST enforce message resolution as described above.
 
 Future validators may add diagnostics that do not change acceptance semantics. A warning MUST NOT silently become a rejection in the same contract-language version without a specification update.
 
-## 19. Round-trip and canonicalization
+## 20. Round-trip and canonicalization
 
 v0.1 does not define a canonical YAML serialization.
 
 Tools SHOULD preserve:
 
 - function ordering;
+- Capability declaration ordering and the presence or absence of `capabilities`;
 - exchange ordering;
 - human-readable descriptions; and
 - source traceability
@@ -572,7 +629,7 @@ when round-tripping, because stable diffs are a principal use case.
 
 Tools MUST NOT rely on YAML mapping key order for semantics.
 
-## 20. Security considerations
+## 21. Security considerations
 
 Contracts may influence generated interfaces and deployment configuration. Consumers should treat contract files as source code:
 
@@ -583,7 +640,7 @@ Contracts may influence generated interfaces and deployment configuration. Consu
 - do not execute text from `description`, `note`, `details`, `locator`, or `reference`; and
 - treat generated deployment permissions as security-sensitive outputs requiring review.
 
-## 21. Extensibility policy
+## 22. Extensibility policy
 
 v0.1 intentionally rejects unknown fields rather than offering an unrestricted extension map. This keeps the experimental core small and makes typos visible.
 

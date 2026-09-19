@@ -38,8 +38,10 @@ ownership merely by orchestrating that layer.
 | --- | --- |
 | `SC_SCHEMA` | Contract JSON-Schema or input parsing failure. |
 | `SC_DUPLICATE_SOURCE` | Duplicate contract source ID. |
+| `SC_DUPLICATE_CAPABILITY` | Duplicate contract Capability ID. |
 | `SC_DUPLICATE_FUNCTION` | Duplicate contract function ID. |
 | `SC_DUPLICATE_EXCHANGE` | Duplicate exchange ID within one function. |
+| `SC_UNKNOWN_CAPABILITY` | Function Capability reference refers to an undeclared Capability. |
 | `SC_UNKNOWN_TRACE_SOURCE` | Function or exchange traceability refers to an unknown source. |
 
 ## OMS profile (`OP_*`)

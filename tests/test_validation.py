@@ -21,9 +21,11 @@ from tools.validate import (
     OP_UNKNOWN_TRACE_SOURCE,
     OP_UNSUPPORTED_CONTRACT_VERSION,
     SC_DUPLICATE_EXCHANGE,
+    SC_DUPLICATE_CAPABILITY,
     SC_DUPLICATE_FUNCTION,
     SC_DUPLICATE_SOURCE,
     SC_SCHEMA,
+    SC_UNKNOWN_CAPABILITY,
     SC_UNKNOWN_TRACE_SOURCE,
     VALIDATION_DIAGNOSTIC_CODES,
     load_document,
@@ -42,6 +44,60 @@ PROFILE_PATH = ROOT / "profiles" / "oms" / "2.5" / "profile.yaml"
 @pytest.mark.parametrize("path", sorted((ROOT / "tests" / "valid").glob("*.yaml")))
 def test_valid_contracts(path: Path) -> None:
     assert validate_path(path) == []
+
+
+def test_capabilities_preserve_omitted_and_explicit_empty_declarations() -> None:
+    omitted = load_document(ROOT / "tests" / "valid" / "non-oms-message.yaml")
+    explicitly_empty = load_document(ROOT / "tests" / "valid" / "capabilities-empty.yaml")
+
+    assert "capabilities" not in omitted
+    assert explicitly_empty["capabilities"] == []
+    assert validate_document(omitted) == []
+    assert validate_document(explicitly_empty) == []
+
+
+def test_multiple_capabilities_and_explicit_function_ownership() -> None:
+    document = load_document(ROOT / "tests" / "valid" / "capabilities-multiple.yaml")
+
+    assert document["capabilities"] == [
+        {"id": "esm", "name": "ESM", "requires_position_information": True},
+        {"id": "radar", "name": "Radar Processing", "requires_position_information": False},
+    ]
+    owners = {function["id"]: function.get("capability") for function in document["functions"]}
+    assert owners == {
+        "esm-operations": "esm",
+        "esm-maintenance": "esm",
+        "radar-operations": "radar",
+        "display-only-name": None,
+    }
+    assert validate_document(document) == []
+
+
+def test_capability_name_is_not_used_to_infer_function_ownership() -> None:
+    document = load_document(ROOT / "tests" / "valid" / "capabilities-multiple.yaml")
+    function = next(item for item in document["functions"] if item["id"] == "display-only-name")
+
+    assert function["name"] == "ESM Capability Status"
+    assert "capability" not in function
+    assert validate_document(document) == []
+
+
+def test_duplicate_capability_id_has_deterministic_diagnostic() -> None:
+    document = load_document(ROOT / "tests" / "invalid" / "duplicate-capability-id.yaml")
+
+    diagnostics = validate_document(document)
+    assert [(diagnostic.code, diagnostic.path, diagnostic.message) for diagnostic in diagnostics] == [
+        (SC_DUPLICATE_CAPABILITY, "$.capabilities", "duplicate capability id 'esm'"),
+    ]
+
+
+def test_unknown_capability_reference_has_deterministic_diagnostic() -> None:
+    document = load_document(ROOT / "tests" / "invalid" / "unknown-capability-reference.yaml")
+
+    diagnostics = validate_document(document)
+    assert [(diagnostic.code, diagnostic.path, diagnostic.message) for diagnostic in diagnostics] == [
+        (SC_UNKNOWN_CAPABILITY, "$.functions[0].capability", "unknown capability id 'esm'"),
+    ]
 
 
 @pytest.mark.parametrize("path", sorted((ROOT / "tests" / "invalid").glob("*.yaml")))
@@ -254,6 +310,17 @@ def _complete_subsystem_document() -> dict:
     return load_document(
         ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-all-applicable.yaml"
     )
+
+
+@pytest.mark.parametrize("document_factory", [_complete_service_status_document, _complete_subsystem_document])
+def test_oms_25_profile_valid_contracts_without_capabilities_retain_their_results(document_factory) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+    document = document_factory()
+
+    assert "capabilities" not in document
+    assert all("capability" not in function for function in document["functions"])
+    assert profile_diagnostics(document, profile) == []
 
 
 def _subsystem_function(document: dict, name: str) -> dict:
@@ -1159,7 +1226,7 @@ def test_subsystem_status_partial_example_lacks_only_other_required_subsystem_fu
 
 
 def test_validation_diagnostic_code_inventory_is_unique_and_well_formed() -> None:
-    assert len(VALIDATION_DIAGNOSTIC_CODES) == 18
+    assert len(VALIDATION_DIAGNOSTIC_CODES) == 20
     assert all(re.fullmatch(r"(?:SC|OP)_[A-Z0-9_]+", code) for code in VALIDATION_DIAGNOSTIC_CODES)
 
 

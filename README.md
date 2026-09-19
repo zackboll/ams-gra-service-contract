@@ -44,6 +44,26 @@ Service Contract or DOCX generation. Its fail-closed join diagnostics use
 `IP_*`; preparation failures retain `SC_*`, `SS_*`, or `UR_*`. See
 [docs/inputs-outputs-projection.md](docs/inputs-outputs-projection.md).
 
+## Capability identity and ownership
+
+Portable v0.1 contracts may optionally declare explicit Capability facts:
+
+```yaml
+capabilities:
+  - id: esm
+    name: ESM
+    requires_position_information: true
+```
+
+`id` is the local identity; `name` is human-readable display text; and
+`requires_position_information` is an explicit Boolean fact. A function may
+explicitly identify its owner with `capability: esm`. References use the ID, not
+the display name, and are never inferred from function names, exchange names,
+UCI types, or descriptions. The omission of `capabilities` means Capability
+facts were not supplied; `capabilities: []` affirmatively declares zero
+Capabilities. This infrastructure does not itself impose OMS Section 3.3
+inventory rules. See [Task 031 design note](docs/task-031-capability-identity-ownership-model.md).
+
 ## Profile validation
 
 OMS 2.5 Capability Operations evidence is classified but not profile-enforced.

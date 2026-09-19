@@ -1,0 +1,17 @@
+contract_version: "0.1"
+service:
+  name: missing-position-dependency-service
+  version: "0.1"
+  kind: service
+standards:
+  oms_version: "2.5"
+  uci_schema_version: "2.5"
+capabilities:
+  - id: esm
+    name: ESM
+functions:
+  - id: local-function
+    name: Local Function
+    category: specific
+    applicability: applicable
+    exchanges: []

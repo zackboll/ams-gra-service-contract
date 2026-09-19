@@ -73,10 +73,12 @@ Potential goals driven by real implementation experience:
       removable green domain examples in all matcher-owned fields, so no
       universal Operations exchange minimum; all Section 3.3 exchange tables
       (3.3-1 through 3.3-4) now have explicit evidence classifications, but
-      exact Section 3.3 validation still needs Capability identity/presence,
-      ownership, position dependency, Capability-relative selectors,
-      conditional-function rules, and relevant behavioral relationships;
-      broader profile coverage and real Service Contract exercises remain);
+       portable Capability identity/presence, ownership, and position dependency
+       are implemented; Capability-relative profile selectors,
+       conditional-function rules, per-Capability required-function validation,
+       any required alternative-exchange semantics, and response/behavior
+       relationships remain pending; broader real Service Contract exercises and
+       profile coverage remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

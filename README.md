@@ -22,6 +22,16 @@ Toolchains compose one matching baseline manifest plus only the extension
 manifests explicitly declared by the contract, failing when exact ID mapping or
 baseline compatibility is incomplete.
 
+## Inputs/Outputs projection
+
+The non-normative reference tool `tools/io_projection.py` derives a deterministic
+human-readable Markdown summary or JSON tooling output from a validated contract
+and manifest-verified UCI bytes. It retains authored function/exchange order and
+keeps ownership clear: the contract supplies use, direction, mandate, topic, and
+timing; UCI supplies primitive and QName/type identity. It is not official OMS
+Service Contract or DOCX generation. See
+[docs/inputs-outputs-projection.md](docs/inputs-outputs-projection.md).
+
 ## Profile validation
 
 The generic v0.1 schema is OMS-version-neutral. Opt-in profiles provide

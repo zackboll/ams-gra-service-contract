@@ -39,7 +39,8 @@ Potential goals driven by real implementation experience:
   shapes implemented; Required Subsystem, Required Capability-related, and
   broader inventory rules remain);
 - richer Data Transfer metadata if required by real contracts;
-- generated Inputs/Outputs table projection;
+- generated Inputs/Outputs table projection (initial non-normative reference
+  projection implemented; DOCX/template adaptation remains later work);
 - canonical diagnostic codes;
 - real Service Contract exercises, cross-version validation, mature diagnostics,
   and first independent downstream consumers.

@@ -249,6 +249,11 @@ The same resolved model can generate an Inputs/Outputs summary containing:
 
 This allows human documentation and source interfaces to share one machine source while retaining UCI as the source for schema-owned facts.
 
+The repository provides a non-normative deterministic implementation at
+[`inputs-outputs-projection.md`](inputs-outputs-projection.md). It is an
+Inputs/Outputs summary, not official OMS DOCX generation or a resolved-contract
+interchange format.
+
 ## 12. Reproducibility
 
 A serious toolchain should record:

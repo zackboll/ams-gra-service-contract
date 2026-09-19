@@ -1,5 +1,5 @@
-# Profile-validation fixture only. Exchange inventories are intentionally
-# minimal; source-backed exchange shapes are covered by examples/.
+# Complete profile-validation fixture using deliberately local IDs and
+# non-upstream exchange order.
 contract_version: "0.1"
 service:
   name: profile-service
@@ -9,15 +9,39 @@ standards:
   oms_version: "2.5"
   uci_schema_version: "2.5"
 functions:
-  - id: service-initialization
+  - id: local-bootstrap-function
     name: Service Initialization
     category: required
     required_group: service
     applicability: applicable
     exchanges: []
-  - id: service-status
+  - id: local-status-function
     name: Service Status
     category: required
     required_group: service
     applicability: applicable
-    exchanges: []
+    exchanges:
+      - id: local-response-row
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: ServiceStatusDataRequestStatus
+        topic: integration.response
+        timing:
+          kind: on_demand
+      - id: local-status-row
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: ServiceStatus
+        topic: integration.status
+        timing:
+          kind: periodic
+      - id: local-request-row
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: ServiceStatusDataRequest
+        topic: integration.request
+        timing:
+          kind: asynchronous

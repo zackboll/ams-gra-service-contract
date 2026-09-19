@@ -1,5 +1,4 @@
-# Profile-validation fixture only. Exchange inventories are intentionally
-# minimal; source-backed exchange shapes are covered by examples/.
+# Complete profile-validation fixture using deliberately local IDs.
 contract_version: "0.1"
 service:
   name: profile-isolator
@@ -20,4 +19,28 @@ functions:
     category: required
     required_group: service
     applicability: applicable
-    exchanges: []
+    exchanges:
+      - id: isolator-status-output
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: ServiceStatus
+        topic: ServiceStatus
+        timing:
+          kind: periodic
+      - id: isolator-request-input
+        kind: oms_message
+        direction: input
+        mandate: mandatory
+        message: ServiceStatusDataRequest
+        topic: ServiceStatusDataRequest
+        timing:
+          kind: asynchronous
+      - id: isolator-response-output
+        kind: oms_message
+        direction: output
+        mandate: mandatory
+        message: ServiceStatusDataRequestStatus
+        topic: ServiceStatusDataRequestStatus
+        timing:
+          kind: on_demand

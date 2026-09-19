@@ -193,6 +193,43 @@ def profile_semantic_diagnostics(profile: Any) -> list[Diagnostic]:
                         f"unknown source id {trace.get('source')!r}",
                     )
                 )
+        exchanges = function.get("required_exchanges", [])
+        if not isinstance(exchanges, list):
+            exchanges = []
+        exchange_keys: list[tuple[str, str, str, str, str]] = []
+        for exchange_index, exchange in enumerate(exchanges):
+            if not isinstance(exchange, dict):
+                continue
+            key = tuple(exchange.get(field) for field in ("kind", "message", "direction", "mandate", "timing_kind"))
+            if all(isinstance(value, str) for value in key):
+                exchange_keys.append(key)
+            for trace_index, trace in enumerate(exchange.get("traceability", [])):
+                if isinstance(trace, dict) and trace.get("source") not in source_id_set:
+                    diagnostics.append(
+                        Diagnostic(
+                            f"$.required_functions[{index}].required_exchanges[{exchange_index}]."
+                            f"traceability[{trace_index}].source",
+                            f"unknown source id {trace.get('source')!r}",
+                        )
+                    )
+        seen_exchange_keys: set[tuple[str, str, str, str, str]] = set()
+        duplicate_exchange_keys: set[tuple[str, str, str, str, str]] = set()
+        for key in exchange_keys:
+            if key in seen_exchange_keys:
+                duplicate_exchange_keys.add(key)
+            seen_exchange_keys.add(key)
+        for key in exchange_keys:
+            if key not in duplicate_exchange_keys:
+                continue
+            diagnostics.append(
+                Diagnostic(
+                    f"$.required_functions[{index}].required_exchanges",
+                    "duplicate required exchange rule "
+                    f"kind={key[0]!r}, message={key[1]!r}, direction={key[2]!r}, "
+                    f"mandate={key[3]!r}, timing_kind={key[4]!r}",
+                )
+            )
+            duplicate_exchange_keys.remove(key)
     return diagnostics
 
 
@@ -279,6 +316,26 @@ def profile_diagnostics(document: Any, profile: Any) -> list[Diagnostic]:
                         f"{field} {requirement[field]!r} for {kind}",
                     )
                 )
+        for exchange_requirement in requirement.get("required_exchanges", []):
+            if any(
+                exchange.get("kind") == exchange_requirement["kind"]
+                and exchange.get("message") == exchange_requirement["message"]
+                and exchange.get("direction") == exchange_requirement["direction"]
+                and exchange.get("mandate") == exchange_requirement["mandate"]
+                and exchange.get("timing", {}).get("kind") == exchange_requirement["timing_kind"]
+                for exchange in function.get("exchanges", [])
+            ):
+                continue
+            diagnostics.append(
+                Diagnostic(
+                    f"$.functions[{index}].exchanges",
+                    f"OMS profile {profile_id!r} requires {requirement['name']!r} exchange "
+                    f"{exchange_requirement['message']!r} with direction "
+                    f"{exchange_requirement['direction']!r}, mandate "
+                    f"{exchange_requirement['mandate']!r}, and timing kind "
+                    f"{exchange_requirement['timing_kind']!r} for {kind}",
+                )
+            )
     return diagnostics
 
 

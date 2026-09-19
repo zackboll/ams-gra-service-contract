@@ -84,6 +84,15 @@ validation runs before profile application, so invalid portable documents yield
 | `CA_DUPLICATE_DECISION_TARGET` | More than one author decision names the same worksheet target. |
 | `CA_UNKNOWN_CANDIDATE` | A decision selects a candidate ID not present in the completion input. |
 | `CA_DECISION_TARGET_MISMATCH` | A decision target differs from its selected candidate target. |
+| `CA_MAPPING_SCHEMA` | Completion mapping schema or input parsing failure. |
+| `CA_DUPLICATE_MAPPING_TARGET` | More than one binding uses a completion target. |
+| `CA_DUPLICATE_MAPPING_DESTINATION` | More than one binding names a typed destination. |
+| `CA_UNKNOWN_MAPPING_TARGET` | A mapping target is absent from candidates and decisions. |
+| `CA_UNKNOWN_PROFILE_FUNCTION` | A mapping names no uniquely applicable profile required function. |
+| `CA_UNKNOWN_PROFILE_EXCHANGE` | A mapping names no uniquely resolved required exchange in its profile function. |
+| `CA_MAPPING_FIELD_INCOMPATIBLE` | A mapping field cannot be owned by the selected profile destination. |
+| `CA_MAPPING_VALUE_TYPE` | An explicit mapped decision value has the wrong scalar type. |
+| `CA_CONTEXT_ASSERTION_MISMATCH` | A context assertion decision disagrees with explicit completion target context. |
 
 `CA_*` applies only to the non-normative completion workspace. It is never a
 portable Service Contract validation result.

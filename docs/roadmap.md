@@ -37,10 +37,12 @@ Potential goals driven by real implementation experience:
   non-normative worksheet displays unconfirmed evidence candidates,
   profile-derived requirements, and an explicit author-decision overlay without
   changing core schema semantics or acting as an independent downstream
-  consumer. Candidate-to-contract field mapping, safe contract
-  scaffold/application, contract generation/apply, Capability declaration
-  completion, candidate-to-profile satisfaction analysis, source extraction, and
-  broader independent consumers remain pending;
+   consumer. Typed candidate/decision-to-destination mapping, profile-derived
+   required-function authoring scaffold, and structural missing-field reporting
+   are implemented. Specific-function authoring, Capability declaration
+   completion, portable contract materialization, safe apply/write workflow,
+   SC validation of materialized output, candidate-to-profile satisfaction
+   analysis, source extraction, and broader independent consumers remain pending;
 - explicit namespace-qualified contract syntax only if real integrations require it;
 - OMS-version-specific profile validation hooks (OMS 2.5 Required Service
   Function inventory, minimum Service Initialization and Service Status exchange

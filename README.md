@@ -74,8 +74,15 @@ exchange requirements. State Command Processing has a fixed minimum
 Its complete Table 3.2-3 rows are mixed, but all command fields matched by the
 profile are fixed and workflow receipt corroborates input. The status direction
 is intentionally not profile-enforced because fixed table-input and workflow-
-response evidence conflicts. The only remaining unclassified Section 3.2
-exchange surface is Subsystem Startup. Table 3.2-4 BIT rows
+response evidence conflicts. Table 3.2-1 Subsystem Startup rows
+(`FileMetadata`, `FileLocation`, `Subsystem_OFP`, `SubsystemConfigFile`, and
+`MDF`) are all green, removable DOCX guidance for every matcher-owned field, so
+Startup has no profile exchange minimum. Its NFS/FTP wording, three MDF
+acquisition examples, and the keep-one/remove-others instruction are green too:
+they establish neither a universal row nor a fixed alternative-set requirement.
+`QueryDataRequest`/`QueryDataRequestStatus` appear only in green Example 3.
+Optional LoM is not row-presence logic, and `FileMetadata`/`FileLocation` are
+not inherited from the distinct Service Initialization table. Table 3.2-4 BIT rows
 (`SubsystemBIT_Status`, `SubsystemBIT_Configuration`, the State Command and
 BIT Command pairs, and `Log_File`) are all green, removable DOCX guidance, so
 BIT has no profile exchange minimum; its green workflow prose and informative
@@ -94,7 +101,8 @@ Calibration has no profile exchange minimum; an applicable fixture has zero
 source-backed exchanges, while a permitted N/A fixture still needs rationale and
 zero exchanges. Its Optional LoM values do not decide row presence, and 1 Hz,
 0.5-second, and 3-second values remain informative rather than profile keys.
-The profile does not claim full OMS Subsystem compliance.
+All Section 3.2 exchange surfaces now have an explicit classification outcome,
+but the profile does not claim full OMS Subsystem compliance.
 Normal `--all` validation remains profile-free because examples can be valid
 source-backed function fragments rather than complete Service Contracts. See
 [docs/profiles.md](docs/profiles.md).

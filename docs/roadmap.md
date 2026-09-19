@@ -43,11 +43,13 @@ Potential goals driven by real implementation experience:
    classification completed (fixed command minimum implemented; status direction
    conflict documented); Subsystem BIT Table 3.2-4 source classification
    completed (all seven substantive rows are removable green guidance, so no BIT
-   exchange minimum); Subsystem Calibration Table 3.2-5 source classification
+   Calibration Table 3.2-5 source classification
    completed (all seven substantive rows are removable green guidance, so no
-   Calibration exchange minimum); Subsystem Startup source
-   classification/exchanges, Required Capability-related Functions, and broader
-   profile coverage remain);
+   Calibration exchange minimum); Subsystem Startup Table 3.2-1 source
+   classification completed (all five substantive rows and all three MDF
+   acquisition examples are removable green guidance, so no Startup exchange
+   minimum or fixed alternative-set rule); Required Capability-related Functions,
+   broader profile coverage, and real Service Contract exercises remain);
 - richer Data Transfer metadata if required by real contracts;
 - generated Inputs/Outputs table projection (initial non-normative reference
   projection implemented; DOCX/template adaptation remains later work);

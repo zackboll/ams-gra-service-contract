@@ -1,0 +1,3 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:inline">
+  <xs:element name="InlineOnly"><xs:complexType><xs:annotation><xs:documentation>UCI_PRIMITIVE: Data-1.</xs:documentation></xs:annotation></xs:complexType></xs:element>
+</xs:schema>

@@ -8,7 +8,7 @@ The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**
 
-The format deliberately does **not** copy UCI message layouts or message primitive metadata. A resolver or code generator verifies its selected external UCI schema source and resolves the message names declared by the contract.
+The format deliberately does **not** copy UCI message layouts or message primitive metadata. The included offline resolver verifies selected external UCI schema bytes and derives message QNames and UCI primitives for the message names declared by the contract.
 
 ## Schema-source manifests
 
@@ -169,7 +169,7 @@ Version 0.1 focuses on the parts of the OMS Service Contract Inputs and Outputs 
 - informative nominal/max timing values where present; and
 - traceability back to source artifacts.
 
-The upstream Service Contract instructions state that the Message Primitive column corresponds to the UCI schema's `PRIMITIVE_TYPE` annotation. Therefore **v0.1 intentionally does not store message primitive in the contract**. It is resolved from UCI.
+The OMS Service Contract material treats Message Primitive as UCI-owned metadata. In the pinned public UCI 2.5 XSD it is serialized in `xs:documentation` as `UCI_PRIMITIVE: <value>.`; therefore **v0.1 intentionally does not store message primitive in the contract**.
 
 The v0.1 `data_transfer` exchange models the Data Transfer information carried by a function Inputs/Outputs row. It does not yet attempt to model the complete Section 1.6 Data Transfer inventory.
 
@@ -215,7 +215,7 @@ Validate a specific contract:
 python tools/validate.py examples/service-status.yaml
 ```
 
-This performs **local contract validation only**. It validates the JSON Schema and repository-level semantic rules. It does not yet load an external UCI XSD. UCI resolution is a downstream resolver/code-generator responsibility in v0.1.
+This performs **local contract validation only**. To resolve OMS Messages from verified local XSD bytes, use `python tools/uci_resolver.py resolve`; it never fetches external sources.
 
 ## Reference examples
 
@@ -323,7 +323,7 @@ schema set and verify:
 
 - every `oms_message.message` exists;
 - the message is resolved against the intended baseline/extension schema set;
-- `PRIMITIVE_TYPE` is available where required by the downstream generator;
+- the UCI primitive is available from `UCI_PRIMITIVE:` documentation metadata;
 - generated type information comes from UCI rather than the contract file; and
 - ambiguities across extension schemas are diagnosed rather than guessed.
 

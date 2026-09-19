@@ -10,7 +10,9 @@ All notable changes to this experimental specification and tooling project are d
 - Automated repository text-hygiene enforcement.
 - UCI 2.5 schema-source manifest with immutable source revision and SHA-256 verification.
 - Deterministic schema-source set composition for one UCI baseline plus explicitly declared extension manifests, including exact extension-ID mapping, baseline compatibility checks, and contract-declaration ordering.
-- Fail-closed message-resolution ambiguity semantics for future UCI XSD resolvers: zero candidates are unknown, one resolves, and multiple candidates are ambiguous.
+- Offline UCI message resolution against verified schema-source bytes, including expanded-name identity, fail-closed ambiguity detection, and primitive extraction from public UCI XSD metadata.
+- Immutable verified schema-source snapshots: XSD parsing consumes the exact single-read bytes whose SHA-256 digests were checked.
+- Fail-closed message-resolution ambiguity semantics: zero candidates are unknown, one resolves, and multiple candidates are ambiguous.
 
 ## [0.1.0] - 2026-09-18
 

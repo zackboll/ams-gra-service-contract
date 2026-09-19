@@ -41,7 +41,7 @@ Contract Model -- uci_schema_version --> toolchain schema-source selection
                                   UCI XSD set --> UCI parser
                                                        |
                                                        v
-                                                  UCI Schema IR
+                           Message identity/QName/primitive resolver
                                              |
        Contract Model + UCI Schema Model
                      |
@@ -65,7 +65,7 @@ ResolvedExchange
   topic
   message_name
   message_qname
-  primitive          <- derived from UCI PRIMITIVE_TYPE
+  primitive          <- derived from UCI `UCI_PRIMITIVE:` documentation
   generated_type     <- backend mapping
   timing
   source_locations
@@ -81,16 +81,16 @@ For each contract:
 4. Select one baseline manifest matching `standards.uci_schema_version`.
 5. Map only declared extension IDs by exact equality to supplied extension-manifest IDs.
 6. Validate extension baseline compatibility and compose the deterministic set in contract declaration order.
-7. Verify supplied local schema files against each selected manifest's SHA-256 values.
-8. Load roots from those verified bytes and parse the XSD set.
+7. Read each selected manifest-declared local schema file once, verify its SHA-256 value, and retain its verified bytes in an immutable snapshot.
+8. Parse only that snapshot's manifest-declared XSD bytes; resolve global message identity, expanded QName, and primitive metadata without reopening source files.
 9. For every `kind: oms_message` exchange:
    1. resolve `message` uniquely;
    2. find its UCI definition;
-   3. derive `PRIMITIVE_TYPE` and any other generator-required schema metadata;
+   3. derive `UCI_PRIMITIVE:` metadata and any other generator-required schema metadata;
    4. preserve the contract's direction/mandate/topic/timing metadata;
    5. produce one resolved exchange entry.
 10. Apply OMS-version-specific profile checks, if the tool supports them.
-11. Lower the resolved model into the target backend.
+11. Lower the resolved model into the target backend. Complete nested UCI type IR parsing remains future work.
 
 ### Fail-closed behavior
 
@@ -110,7 +110,7 @@ At minimum, do not duplicate these in the contract when UCI is authoritative:
 - nested UCI types;
 - enumeration definitions;
 - numeric/string restrictions;
-- message primitive / `PRIMITIVE_TYPE`;
+- message primitive / `UCI_PRIMITIVE:` metadata;
 - namespaces/QNames; and
 - schema inheritance/composition.
 

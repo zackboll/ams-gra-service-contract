@@ -16,8 +16,9 @@ For example, a contract declaring `standards.uci_schema_version: "2.5"` can be
 mapped by a toolchain to
 `schema-sources/uci/2.5/manifest.yaml`. The manifest specifies the immutable
 upstream Git revision, root XSD, required local XSD subset, and SHA-256 digest
-for each raw file. A tool must validate the manifest and verify a supplied local
-source tree before loading `root_schema`.
+for each raw file. A tool must validate the manifest, read each supplied local
+file once, verify its digest, retain the verified bytes in an immutable snapshot,
+and parse that snapshot rather than reopening `root_schema` from the filesystem.
 
 The manifest is a separately versioned toolchain artifact, not part of the
 portable Service Contract grammar. It does not duplicate XSD-owned message
@@ -125,9 +126,10 @@ python tools/schema_sources.py verify schema-sources/uci/2.5/manifest.yaml \
   --source-root /path/to/uci
 ```
 
-This additionally verifies raw bytes of the manifest-declared local files
-against their SHA-256 values. It remains offline and requires an already
-obtained local checkout/tree.
+This additionally reads and verifies raw bytes of the manifest-declared local
+files against their SHA-256 values. It remains offline and requires an already
+obtained local checkout/tree. Resolver use retains those same verified bytes in
+a snapshot for parsing; it does not verify a path and later trust a second read.
 
 ### Set composition
 

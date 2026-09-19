@@ -40,6 +40,31 @@ class SchemaSourceSet:
     extensions: tuple[dict[str, Any], ...]
 
 
+@dataclass(frozen=True)
+class VerifiedSchemaFile:
+    """One manifest-declared file, retained as the bytes whose digest was verified."""
+
+    path: str
+    data: bytes
+
+
+@dataclass(frozen=True)
+class VerifiedSchemaSource:
+    """Immutable verified snapshot of one selected schema source."""
+
+    manifest_id: str
+    root_schema: str
+    files: tuple[VerifiedSchemaFile, ...]
+
+
+@dataclass(frozen=True)
+class VerifiedSchemaSourceSet:
+    """Immutable verified snapshots in deterministic SchemaSourceSet order."""
+
+    baseline: VerifiedSchemaSource
+    extensions: tuple[VerifiedSchemaSource, ...]
+
+
 def load_schema() -> dict[str, Any]:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
@@ -121,10 +146,17 @@ def validate_manifest_path(path: Path) -> tuple[Any | None, list[Diagnostic]]:
 
 def verify_manifest(manifest: Any, source_root: Path) -> list[Diagnostic]:
     """Verify raw local bytes after manifest validation has succeeded."""
+    _, diagnostics = load_verified_schema_source(manifest, source_root)
+    return diagnostics
+
+
+def load_verified_schema_source(manifest: Any, source_root: Path) -> tuple[VerifiedSchemaSource | None, list[Diagnostic]]:
+    """Read each declared file once and retain precisely the digest-verified bytes."""
     diagnostics = validate_manifest(manifest)
     if diagnostics:
-        return diagnostics
+        return None, diagnostics
     root = source_root.resolve()
+    files: list[VerifiedSchemaFile] = []
     for entry in manifest["files"]:
         relative_path = entry["path"]
         path = root / PurePosixPath(relative_path)
@@ -135,12 +167,50 @@ def verify_manifest(manifest: Any, source_root: Path) -> list[Diagnostic]:
         if not resolved_path.is_file():
             diagnostics.append(Diagnostic(relative_path, "file listed by manifest is missing"))
             continue
-        actual = hashlib.sha256(resolved_path.read_bytes()).hexdigest()
+        try:
+            data = resolved_path.read_bytes()
+        except OSError as exc:
+            diagnostics.append(Diagnostic(relative_path, f"could not read file listed by manifest: {exc}"))
+            continue
+        actual = hashlib.sha256(data).hexdigest()
         if actual != entry["sha256"]:
             diagnostics.append(
                 Diagnostic(relative_path, f"expected sha256 {entry['sha256']}\n  actual   sha256 {actual}")
             )
-    return diagnostics
+            continue
+        files.append(VerifiedSchemaFile(relative_path, data))
+    if diagnostics:
+        return None, diagnostics
+    return VerifiedSchemaSource(manifest["id"], manifest["root_schema"], tuple(files)), []
+
+
+def load_verified_schema_source_set(
+    schema_source_set: SchemaSourceSet, source_roots_by_manifest_id: dict[str, Path]
+) -> tuple[VerifiedSchemaSourceSet | None, list[Diagnostic]]:
+    """Load all and only a composed source set, preserving extension order."""
+    manifests = (schema_source_set.baseline, *schema_source_set.extensions)
+    manifest_ids = [manifest["id"] for manifest in manifests]
+    diagnostics: list[Diagnostic] = []
+    if len(manifest_ids) != len(set(manifest_ids)):
+        diagnostics.append(Diagnostic("$.schema_source_set", "baseline and extension manifest ids must be unique"))
+    expected_ids = set(manifest_ids)
+    supplied_ids = set(source_roots_by_manifest_id)
+    for manifest_id in sorted(expected_ids - supplied_ids):
+        diagnostics.append(Diagnostic("$.source_roots", f"missing source root for manifest {manifest_id!r}"))
+    for manifest_id in sorted(supplied_ids - expected_ids):
+        diagnostics.append(Diagnostic("$.source_roots", f"source root supplied for unselected manifest {manifest_id!r}"))
+    if diagnostics:
+        return None, diagnostics
+
+    verified_sources: list[VerifiedSchemaSource] = []
+    for manifest in manifests:
+        verified_source, source_diagnostics = load_verified_schema_source(manifest, source_roots_by_manifest_id[manifest["id"]])
+        diagnostics.extend(Diagnostic(f"{manifest['id']}:{diagnostic.path}", diagnostic.message) for diagnostic in source_diagnostics)
+        if verified_source is not None:
+            verified_sources.append(verified_source)
+    if diagnostics:
+        return None, diagnostics
+    return VerifiedSchemaSourceSet(verified_sources[0], tuple(verified_sources[1:])), []
 
 
 def compose_schema_source_set(
@@ -178,6 +248,8 @@ def compose_schema_source_set(
     manifests_by_id: dict[str, dict[str, Any]] = {}
     for index, manifest in enumerate(extension_manifests):
         manifest_id = manifest["id"]
+        if manifest_id == baseline_manifest["id"]:
+            diagnostics.append(Diagnostic(f"$.extension_manifests[{index}].id", f"extension manifest id {manifest_id!r} collides with baseline manifest id"))
         if manifest_id in manifests_by_id:
             diagnostics.append(Diagnostic(f"$.extension_manifests[{index}].id", f"duplicate supplied manifest id {manifest_id!r}"))
         else:

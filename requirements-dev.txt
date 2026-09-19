@@ -1,3 +1,4 @@
+defusedxml>=0.7,<1
 jsonschema>=4.21,<5
 PyYAML>=6,<7
 pytest>=8,<9

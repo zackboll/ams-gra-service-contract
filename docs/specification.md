@@ -33,11 +33,11 @@ The format is based on a deliberate separation of responsibility:
 | OMS message name/topic | Machine-readable service contract | Yes |
 | Periodicity class and informative values | Machine-readable service contract | Yes |
 | UCI message structure | Selected UCI schema | No |
-| UCI message primitive (`PRIMITIVE_TYPE`) | Selected UCI schema | No |
+| UCI message primitive | Selected UCI schema | No |
 | Language-specific types | Generator/backend | No |
 | Runtime CAL implementation details | Deployment/runtime configuration | No, except topic/configuration metadata represented by the Service Contract |
 
-The upstream OMS Service Contract instructions state that the Service Contract Message Primitive column corresponds to the `PRIMITIVE_TYPE` annotation in the UCI schema. A conforming v0.1 producer therefore **MUST NOT require authors to duplicate the message primitive** in this file format.
+The OMS Service Contract material describes the Message Primitive as UCI-owned metadata. In the public UCI 2.5 XSD pinned by this repository, message declarations expose that value through `xs:documentation` entries of the form `UCI_PRIMITIVE: Status-1.`. A conforming v0.1 producer therefore **MUST NOT require authors to duplicate the message primitive** in this file format.
 
 ## 3. Document root
 
@@ -468,7 +468,11 @@ A future version may add a separate, explicitly normative timing-requirement mod
 
 ## 16. Message primitive resolution
 
-v0.1 has no `primitive` field for an OMS Message.
+v0.1 has no `primitive` field for an OMS Message. The resolver validates the
+contract, composes its baseline and declared extension manifests, reads and
+verifies the local bytes of every selected manifest file, then retains that
+verified byte snapshot for XSD parsing. Only files explicitly listed by those
+manifests contribute definitions; parsing MUST NOT trust a later filesystem read.
 
 A resolver performs conceptually:
 
@@ -480,7 +484,7 @@ selected UCI schema set
         |
         +--> resolve message definition
         |
-        +--> read PRIMITIVE_TYPE annotation
+        +--> read UCI_PRIMITIVE: documentation metadata
         |
         v
 ResolvedExchange
@@ -488,15 +492,26 @@ ResolvedExchange
   primitive = ...
 ```
 
-For an unqualified contract message name, a future resolver MUST find all global
-message declarations whose local name equals `exchange.message` in the selected
-schema-source set. The candidate count has fail-closed semantics: zero candidates
+The implemented resolver indexes only direct `xs:element` children of an
+`xs:schema` document with a `targetNamespace`. A global element is a UCI message
+declaration for this slice only when its own direct `xs:annotation` has exactly
+one direct `xs:documentation` item beginning `UCI_PRIMITIVE:`. Its non-empty
+value is trimmed, one final prose period is removed, and the resulting value
+must remain non-empty. Nested elements, inline type annotations, and global
+elements without that marker are not indexed. This is message identity and
+primitive extraction, not full XSD type-system resolution.
+
+For an unqualified contract message name, the resolver MUST find all indexed
+global message declarations whose local name equals `exchange.message` in the
+selected schema-source set. The candidate count has fail-closed semantics: zero candidates
 MUST fail as unknown, one candidate resolves, and more than one candidate MUST
 fail as ambiguous. It MUST NOT select a candidate based on baseline versus
 extension role, extension declaration order, manifest input order, file order,
 or filesystem order.
 
-XSD declarations are fundamentally identified by XML Schema expanded names. v0.1
+XSD declarations are fundamentally identified by XML Schema expanded names. The
+derived primitive and expanded name are resolver output, not persisted into the
+contract. v0.1
 contract message references remain local names only. Therefore
 `{namespace-A}ExampleMessage` and `{namespace-B}ExampleMessage` make
 `message: ExampleMessage` ambiguous. v0.1 does not add namespace-qualified

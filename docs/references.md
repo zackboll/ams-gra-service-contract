@@ -87,7 +87,7 @@ This is the principal source for v0.1 Service Contract field semantics. In parti
 - Level of Mandate (`M`, `O`);
 - periodicity (`A`, `OD`, `P`);
 - informative nominal/max timing columns;
-- the relationship between Message Primitive and UCI `PRIMITIVE_TYPE`; and
+- the relationship between Message Primitive and UCI-owned message metadata (serialized as `UCI_PRIMITIVE:` documentation in public UCI 2.5); and
 - the rule that a message used as both input and output appears as two unique rows.
 
 The upstream repository also contains an **unofficial Markdown conversion** for search/navigation:

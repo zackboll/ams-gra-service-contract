@@ -50,7 +50,10 @@ def test_invalid_contracts(path: Path) -> None:
 
 
 def test_capability_enable_disable_reference_example() -> None:
-    document = load_document(ROOT / "examples" / "capability-enable-disable.yaml")
+    path = ROOT / "examples" / "capability-enable-disable.yaml"
+    assert validate_path(path) == []
+
+    document = load_document(path)
     function = document["functions"][0]
 
     assert function["category"] == "required"
@@ -138,6 +141,23 @@ def test_oms_25_profile_manifest() -> None:
 def test_oms_25_profile_valid_contracts(path: Path) -> None:
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
+    assert validate_path(path, profile) == []
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "service-required-functions.yaml",
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "subsystem-required-functions-all-applicable.yaml",
+        ROOT / "tests" / "profiles" / "oms-2.5" / "valid" / "isolator-required-functions.yaml",
+    ],
+)
+def test_oms_25_profile_does_not_infer_capability_inventory_from_missing_functions(path: Path) -> None:
+    profile, diagnostics = validate_profile_path(PROFILE_PATH)
+    assert diagnostics == []
+
+    document = load_document(path)
+    assert all(function.get("required_group") != "capability" for function in document["functions"])
+    assert all(function.get("name") != "Position Information Processing" for function in document["functions"])
     assert validate_path(path, profile) == []
 
 

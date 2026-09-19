@@ -299,7 +299,9 @@ generated OMS Service Contracts:
 - [`examples/service-status.yaml`](examples/service-status.yaml): Required
   Service Function / status example.
 - [`examples/capability-enable-disable.yaml`](examples/capability-enable-disable.yaml):
-  Required Capability-related Command / Command Status example.
+  portable Required Capability-related Enable/Disable fragment using the
+  upstream ESM replacement example; it is not evidence of a complete or
+  universally named Capability inventory.
 - [`examples/service-initialization.yaml`](examples/service-initialization.yaml):
   Required Service Function containing both OMS Message and Data Transfer inputs.
 - [`examples/subsystem-status.yaml`](examples/subsystem-status.yaml): Required

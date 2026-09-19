@@ -16,8 +16,8 @@ upstream OMS commit `726272bd0390982a759c91a9cf4e13b81c2b510b`.
 Current OMS 2.5 coverage includes the Required Service Function inventory,
 Service Initialization exchange surface, Service Status exchange surface,
 Required Subsystem Function inventory, Subsystem Status exchange surface, and
-the completed Startup, State Command Processing, BIT, Calibration, and Shutdown
-source classifications.
+the completed Startup, State Command Processing, BIT, Calibration, Shutdown,
+and Required Capability-related Function source classifications.
 
 Section 3.1 says every OMS Service must provide the Required Service Functions
 and that the section also applies to Isolators. Sections 3.1.1 and 3.1.2 say
@@ -171,10 +171,21 @@ Function exchange surfaces now have an explicit source-classification outcome:
 Startup, BIT, Calibration, and Shutdown have no fixed minimum; Subsystem Status
 has its three fixed shapes; and State Command Processing has a fixed command
 minimum plus a documented status-direction conflict.
-The profile also does not validate Required Capability-related Function
-inventory, conditional Section 3.1 Service Functions for Platform-hosted
-Adapters, or other OMS-version profiles. It does not claim full OMS Subsystem
-compliance.
+Required Capability-related Function source semantics are classified, but exact
+per-Capability inventory validation is deferred because v0.1 has no explicit
+Capability identity/presence model. Section 3.3 applies to Capability-providing
+Services and Subsystems, excludes Isolators, and makes Position Information
+Processing conditional on a Capability's position dependency. The profile has
+no independent facts for any of those conditions, cannot associate arbitrary
+function names with a Capability, and deliberately does not infer them from
+names or existing capability-group functions. The source's `[CapabilityName]`
+replacement and copy-for-each-Capability instructions are green template
+guidance; no literal placeholder or name-pattern rule is encoded. See
+[Task 026 evidence](task-026-oms25-capability-function-inventory.md).
+
+The profile also does not validate conditional Section 3.1 Service Functions for
+Platform-hosted Adapters or other OMS-version profiles. It does not claim full
+OMS Subsystem compliance.
 
 ## Partial reference examples
 

@@ -6,6 +6,15 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- OMS 2.5 Required Capability-related Function (Section 3.3) OOXML inventory
+  classification. The parent Capability-provider statement is fixed black, while
+  Table 3.0-1 capability rows, applicability/N/A directions, Position
+  Information conditionality, `[CapabilityName]` replacement, and copy-per-
+  Capability directions are green template content. Exact per-Capability
+  validation is deliberately deferred: v0.1 has no independent Capability
+  identity/presence, ownership, or position-dependency model. No capability
+  name heuristics, schema/profile rules, diagnostics, or exchange requirements
+  were added.
 - OMS 2.5 Subsystem Startup Table 3.2-1 and workflow OOXML source
   classification: `FileMetadata`, `FileLocation`, `Subsystem_OFP`,
   `SubsystemConfigFile`, and `MDF` have green removable guidance for every

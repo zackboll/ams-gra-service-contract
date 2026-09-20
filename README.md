@@ -4,6 +4,23 @@
 
 This repository defines a small, language-neutral, machine-readable representation of the **service interface information that is otherwise captured in an OMS Service Contract**. Its primary purpose is to make that information usable as an input to code generators, validators, test generators, deployment tooling, and documentation tooling. It also includes non-normative reference tooling needed to exercise the specification against real upstream material while keeping the portable format language-neutral.
 
+## Current compatibility surface
+
+| Surface | Supported |
+| --- | --- |
+| Repository/tooling release | prospective 0.2.0 |
+| Portable contract language | 0.1 |
+| OMS profile | 2.5 |
+| UCI resolver evidence | 2.5, 2.6 |
+
+The portable format is a project-defined experimental companion representation;
+the OMS profile is source-backed reference validation; completion tooling and UCI
+resolver/projection are non-normative reference tooling; and code generation is
+a separate consumer repository. Start with [versioning](docs/versioning.md),
+[consumer handoff](docs/consumer-handoff.md), [portable conformance](docs/portable-v01-conformance.md),
+[release readiness](docs/release-readiness-v0.2.0.md), or the
+[completion tutorial](docs/tutorials/completion-assistant-walkthrough.md).
+
 Completion tooling supports explicit Capability inventories. Omitted inventory
 means unknown, an empty inventory means explicitly zero, and declared portable
 Capability values remain explicit author decisions; no Capability is inferred

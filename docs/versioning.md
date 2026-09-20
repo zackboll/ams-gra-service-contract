@@ -4,6 +4,18 @@ This project intentionally separates several independently versioned domains
 that are easy to conflate: contract version, profile version, manifest version,
 OMS version, UCI version, service version, and generator version.
 
+## Repository/tooling release version
+
+A Git tag such as `v0.2.0` versions this repository's schemas, reference
+tooling, profiles, conformance pack, examples, and documentation as a bundle.
+It does **not** imply `contract_version: "0.2"`. The prospective repository/
+tooling release is `0.2.0`; the portable contract language remains `0.1`.
+
+Release metadata is repository tooling, not portable Service Contract syntax.
+The support manifest records the compatibility bundle. Consumers should prefer a
+release tag plus its support manifest; during active development they should pin
+an exact commit SHA rather than mutable `main`.
+
 ## 1. Contract-language version
 
 Example:
@@ -151,7 +163,13 @@ Profile support, UCI parser support, and OMS-version compatibility are separate
 claims. Supporting UCI 2.6 does not mean the `oms-2.5` profile applies to OMS
 2.6; compatibility claims require explicit validation.
 
-## 11. Source pinning
+## 11. Canonical schema fingerprint and source pinning
+
+The canonical portable-schema fingerprint is a semantic compatibility guard: it
+parses JSON, sorts keys, uses compact separators and `ensure_ascii=False`, then
+SHA-256 hashes UTF-8 bytes. For portable `0.1` it is
+`427fc250909ec40d82d1adc2daf236be2afe78a14f2b6ec80355b0105fe9e2e0`.
+It is not a raw file SHA-256, which would change for whitespace-only edits.
 
 Examples/documentation may link to moving `main` branches for discoverability. Production build inputs should prefer:
 

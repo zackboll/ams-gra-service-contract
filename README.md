@@ -11,7 +11,7 @@ This repository defines a small, language-neutral, machine-readable representati
 | Repository/tooling release | prospective 0.2.0 |
 | Portable contract language | 0.1 |
 | OMS profile | 2.5 |
-| UCI resolver evidence | 2.5, 2.6 |
+| UCI schema-source baselines | 2.5, 2.6 |
 
 The portable format is a project-defined experimental companion representation;
 the OMS profile is source-backed reference validation; completion tooling and UCI
@@ -20,6 +20,11 @@ a separate consumer repository. Start with [versioning](docs/versioning.md),
 [consumer handoff](docs/consumer-handoff.md), [portable conformance](docs/portable-v01-conformance.md),
 [release readiness](docs/release-readiness-v0.2.0.md), or the
 [completion tutorial](docs/tutorials/completion-assistant-walkthrough.md).
+
+The release support manifest machine-checks repository-local UCI schema-source
+baseline metadata. Cross-version UCI resolver regression is separate evidence:
+it requires the pinned UCI source bytes to reproduce and does not imply OMS 2.6
+support.
 
 Completion tooling supports explicit Capability inventories. Omitted inventory
 means unknown, an empty inventory means explicitly zero, and declared portable

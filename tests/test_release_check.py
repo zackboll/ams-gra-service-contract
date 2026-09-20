@@ -1,4 +1,5 @@
 from copy import deepcopy
+import json
 from pathlib import Path
 
 from tools import release_check
@@ -87,7 +88,7 @@ def test_rejects_profile_id_version_and_contract_support_mismatches(monkeypatch)
 
 def test_rejects_missing_uci_manifest() -> None:
     value = manifest()
-    value["uci"]["baseline_manifests"][1] = "schema-sources/uci/2.6/missing.yaml"
+    value["uci"]["baseline_manifests"][1]["path"] = "schema-sources/uci/2.6/missing.yaml"
     assert release_check.RC_PATH in codes(value)
     assert release_check.RC_SCHEMA_SOURCE in codes(value)
 
@@ -104,6 +105,69 @@ def test_rejects_uci_version_mismatch(monkeypatch) -> None:
 
     monkeypatch.setattr(release_check, "validate_manifest_path", modified_source)
     assert release_check.RC_SCHEMA_SOURCE in codes(value)
+
+
+def test_checked_in_uci_baselines_match_declared_identity_and_semantics() -> None:
+    value = manifest()
+    assert value["uci"]["baseline_versions"] == ["2.5", "2.6"]
+    for entry in value["uci"]["baseline_manifests"]:
+        source, diagnostics = release_check.validate_manifest_path(ROOT / entry["path"])
+        assert diagnostics == []
+        assert source["id"] == entry["id"]
+        assert source["schema_version"] == entry["schema_version"]
+        assert source["schema_family"] == "uci"
+        assert source["role"] == "baseline"
+    assert release_check.check_manifest(value) == []
+
+
+def test_rejects_extension_manifest_as_uci_baseline(monkeypatch) -> None:
+    value = manifest()
+    original = release_check.validate_manifest_path
+
+    def extension_source(path: Path):
+        source, diagnostics = original(path)
+        source = deepcopy(source)
+        if source["schema_version"] == "2.5":
+            source["role"] = "extension"
+        return source, diagnostics
+
+    monkeypatch.setattr(release_check, "validate_manifest_path", extension_source)
+    assert release_check.RC_SCHEMA_SOURCE in codes(value)
+
+
+def test_rejects_extra_observed_baseline_version() -> None:
+    value = manifest()
+    value["uci"]["baseline_versions"] = ["2.5"]
+    assert release_check.RC_SCHEMA_SOURCE in codes(value)
+
+
+def test_rejects_missing_observed_baseline_version() -> None:
+    value = manifest()
+    value["uci"]["baseline_manifests"] = [value["uci"]["baseline_manifests"][0]]
+    assert release_check.RC_SCHEMA_SOURCE in codes(value)
+
+
+def test_rejects_unexpected_observed_baseline_version(monkeypatch) -> None:
+    value = manifest()
+    original = release_check.validate_manifest_path
+
+    def unexpected_source(path: Path):
+        source, diagnostics = original(path)
+        source = deepcopy(source)
+        if source["schema_version"] == "2.6":
+            source["schema_version"] = "9.9"
+        return source, diagnostics
+
+    monkeypatch.setattr(release_check, "validate_manifest_path", unexpected_source)
+    assert release_check.RC_SCHEMA_SOURCE in codes(value)
+
+
+def test_rejects_old_resolver_evidence_field(tmp_path: Path) -> None:
+    value = manifest()
+    value["uci"]["resolver_evidence"] = value["uci"].pop("baseline_versions")
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(value), encoding="utf-8")
+    assert release_check.RC_SCHEMA in [diagnostic.code for diagnostic in release_check.check_path(path)]
 
 
 def test_rejects_duplicate_unreleased_and_missing_prospective_section(tmp_path: Path) -> None:

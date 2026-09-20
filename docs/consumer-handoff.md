@@ -40,7 +40,10 @@ canonical JSON semantics, not a raw file digest.
 OMS profile validation is an additional layer. A consumer can parse portable
 `0.1` without implementing it. If implemented, `oms_version: "2.5"` maps to
 `profiles/oms/2.5/profile.yaml`; it is never inferred from contract language.
-UCI 2.6 resolver evidence does not establish an OMS 2.6 Service Contract profile.
+UCI schema-source baselines 2.5 and 2.6 do not establish an OMS 2.6 Service
+Contract profile. The real cross-version resolver regression is separate evidence
+that requires pinned UCI source bytes; `release_check.py` validates only the
+repository-local baseline metadata.
 
 ## Code-generation handoff
 

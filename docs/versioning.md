@@ -14,7 +14,14 @@ tooling release is `0.2.0`; the portable contract language remains `0.1`.
 Release metadata is repository tooling, not portable Service Contract syntax.
 The support manifest records the compatibility bundle. Consumers should prefer a
 release tag plus its support manifest; during active development they should pin
-an exact commit SHA rather than mutable `main`.
+an exact commit SHA rather than mutable `main`. The support manifest promises
+repository-local compatibility surfaces that `release_check.py` validates offline;
+it does not assert that every external evidence operation was re-executed.
+
+For example, UCI schema-source baselines 2.5 and 2.6 are local manifest metadata.
+The real cross-version resolver regression separately parses pinned UCI source
+bytes with `tools/uci_version_regression.py`; it is not replayed by the release
+checker.
 
 ## 1. Contract-language version
 

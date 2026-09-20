@@ -30,10 +30,21 @@
     },
     "uci": {
       "type": "object", "additionalProperties": false,
-      "required": ["resolver_evidence", "baseline_manifests"],
+      "required": ["baseline_versions", "baseline_manifests"],
       "properties": {
-        "resolver_evidence": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
-        "baseline_manifests": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}
+        "baseline_versions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+        "baseline_manifests": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "schema_version", "path"],
+            "properties": {
+              "id": {"type": "string"},
+              "schema_version": {"type": "string"},
+              "path": {"type": "string"}
+            }
+          }
+        }
       }
     }
   }

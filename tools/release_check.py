@@ -107,17 +107,21 @@ def check_manifest(manifest: dict[str, Any], root: Path = ROOT, changelog_path: 
             diagnostics.append(Diagnostic(RC_PROFILE, f"$.oms_profiles[{index}]", "profile does not support every declared portable contract version"))
     uci = manifest["uci"]
     observed_versions: list[str] = []
-    for index, value in enumerate(uci["baseline_manifests"]):
-        path = _repository_file(root, value, f"$.uci.baseline_manifests[{index}]", diagnostics)
+    for index, entry in enumerate(uci["baseline_manifests"]):
+        entry_path = f"$.uci.baseline_manifests[{index}]"
+        path = _repository_file(root, entry["path"], f"{entry_path}.path", diagnostics)
         if not path:
             continue
         source_manifest, source_diagnostics = validate_manifest_path(path)
         if source_diagnostics:
-            diagnostics.append(Diagnostic(RC_SCHEMA_SOURCE, f"$.uci.baseline_manifests[{index}]", "schema-source manifest does not validate"))
+            diagnostics.append(Diagnostic(RC_SCHEMA_SOURCE, entry_path, "schema-source manifest does not validate"))
         else:
+            for key, expected in (("id", entry["id"]), ("schema_version", entry["schema_version"]), ("schema_family", "uci"), ("role", "baseline")):
+                if source_manifest.get(key) != expected:
+                    diagnostics.append(Diagnostic(RC_SCHEMA_SOURCE, f"{entry_path}.{key}", f"schema-source manifest {key} does not match required baseline metadata"))
             observed_versions.append(source_manifest["schema_version"])
-    if sorted(observed_versions) != sorted(uci["resolver_evidence"]):
-        diagnostics.append(Diagnostic(RC_SCHEMA_SOURCE, "$.uci", "baseline manifest versions must exactly match resolver evidence"))
+    if len(observed_versions) != len(set(observed_versions)) or set(observed_versions) != set(uci["baseline_versions"]):
+        diagnostics.append(Diagnostic(RC_SCHEMA_SOURCE, "$.uci", "baseline manifest versions must exactly match declared baseline_versions"))
     changelog = changelog_path or root / "CHANGELOG.md"
     if not changelog.is_file():
         diagnostics.append(Diagnostic(RC_CHANGELOG, "CHANGELOG.md", "CHANGELOG.md is missing"))

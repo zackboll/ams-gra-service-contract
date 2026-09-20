@@ -15,14 +15,17 @@ remains `0.1`. No tag or publication is created by this preparation work.
 | OMS profile format | 0.1 |
 | OMS profile content | OMS 2.5 |
 | Schema-source manifest | 0.1 |
-| UCI baseline resolver | 2.5, 2.6 |
+| UCI schema-source baselines | 2.5, 2.6 |
 | Portable conformance cases | 64 |
 
 ## Validated evidence
 
 The support manifest binds the portable schema fingerprint, conformance manifest,
 OMS 2.5 profile, and UCI 2.5/2.6 baseline manifests. `release_check.py` is
-offline and read-only; conformance corpus execution remains authoritative.
+offline and read-only: it validates repository metadata, not external UCI bytes.
+Real UCI 2.5/2.6 resolver regression has been exercised separately using the
+pinned source revisions; reproduce it with `tools/uci_version_regression.py` and
+the matching local source roots. Conformance corpus execution remains authoritative.
 
 ## Known limitations
 

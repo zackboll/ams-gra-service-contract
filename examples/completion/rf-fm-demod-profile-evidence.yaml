@@ -1,0 +1,8 @@
+profile_evidence_version: "0.1"
+links:
+  - target: "exchange[ServiceStatus].selector"
+    profile_fact: {kind: required_exchange_fact, profile_function: Service Status, selector: ServiceStatus, field: selector}
+  - target: "exchange[ServiceStatus].direction"
+    profile_fact: {kind: required_exchange_fact, profile_function: Service Status, selector: ServiceStatus, field: direction}
+  - target: "exchange[ServiceStatus].timing.kind"
+    profile_fact: {kind: required_exchange_fact, profile_function: Service Status, selector: ServiceStatus, field: timing_kind}

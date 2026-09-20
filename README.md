@@ -14,6 +14,10 @@ function/exchange traceability without changing portable v0.1 grammar. Candidate
 provenance and profile citations are never converted automatically; see
 [docs/completion-traceability.md](docs/completion-traceability.md).
 
+Explicit [OMS profile-evidence comparison](docs/completion-profile-evidence.md)
+reports observed alignment with fixed OMS facts before materialization. It does
+not establish conformance; `OP_*` validation of a materialized contract remains authoritative.
+
 Choose the authoring front door that fits what you know: hand-author `contract.yaml`
 when you know the contract; start a completion workspace/worksheet when you know
 the evidence candidates; or use a hash-pinned [extraction recipe](docs/completion-extraction.md)

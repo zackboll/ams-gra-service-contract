@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add tooling-only OMS profile-evidence comparison with explicit links, exact
+  observed/decision alignment reporting, and RF FM Demod ServiceStatus examples.
+
 All notable changes to this experimental specification and tooling project are documented here.
 
 ## [Unreleased]

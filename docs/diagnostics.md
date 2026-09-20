@@ -52,6 +52,12 @@ Extraction adds `CA_EXTRACTION_SCHEMA`, `CA_EXTRACTION_DUPLICATE_SOURCE`,
 `CA_EXTRACTION_SERIALIZATION`. They identify recipe, verified-local-byte, exact
 selector, scalar, or output-round-trip failures; no completion document is emitted.
 
+Profile-evidence links add `CA_PROFILE_EVIDENCE_SCHEMA`,
+`CA_PROFILE_EVIDENCE_DUPLICATE_TARGET`, `CA_PROFILE_EVIDENCE_DUPLICATE_FACT`,
+`CA_PROFILE_EVIDENCE_UNKNOWN_TARGET`, `CA_PROFILE_EVIDENCE_UNKNOWN_FUNCTION`,
+`CA_PROFILE_EVIDENCE_UNKNOWN_EXCHANGE`, `CA_PROFILE_EVIDENCE_FIELD`, and
+`CA_PROFILE_EVIDENCE_NONFIXED`. Evidence disagreement is report data, not a diagnostic.
+
 ## Portable conformance pack (`CF_*`)
 
 `CF_*` diagnoses the conformance manifest or corpus rather than a portable

@@ -68,7 +68,20 @@ Capability question:
 - Confirm Capability inventory: Capability facts not supplied / unknown; ...
 ```
 
-## 4. Read profile contribution and scaffold
+## 4. Compare fixed OMS facts, then scaffold
+
+```bash
+python tools/completion.py profile-evidence examples/completion/rf-fm-demod-workspace.yaml
+```
+
+For ServiceStatus direction, RF primary evidence is `output`, supporting evidence
+is `output`, and the OMS profile is `output`: observed alignment is
+`all_aligned`. This does not mean Service Status is satisfied. It means these
+observed evidence records agree with this one OMS-fixed fact. In contrast,
+`topic = mission.service-status` is author-owned and remains outside this
+comparison. Likewise OMS fixes periodic timing, not the `1.0 Hz` rate.
+
+## 5. Read profile contribution and scaffold
 
 OMS 2.5 independently supplies Service Initialization and Service Status topology.
 For Service Status, it fixes the function/category/group/applicability and fixed

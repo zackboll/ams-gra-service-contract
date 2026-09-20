@@ -27,8 +27,9 @@ STAGE_REQUIREMENTS = {
     "scaffold": ("input", "profile", "decisions", "mapping"),
     "check": ("input", "profile", "decisions", "mapping"),
     "materialize": ("input", "profile", "decisions", "mapping"),
+    "profile-evidence": ("input", "profile", "profile_evidence"),
 }
-PATH_FIELDS = ("input", "decisions", "specific_functions", "capabilities", "profile", "mapping", "traceability")
+PATH_FIELDS = ("input", "decisions", "specific_functions", "capabilities", "profile", "mapping", "traceability", "profile_evidence")
 
 
 def _json_path(parts: Iterable[Any]) -> str:

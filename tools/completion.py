@@ -10,6 +10,7 @@ try:
     from tools.completion_assistant import build_worksheet, load_completion_path, load_decisions_path, render_json as render_worksheet_json, render_markdown, worksheet_diagnostics
     from tools.completion_materialize import _serialization_diagnostics, materialize_contract, render_json, render_yaml
     from tools.completion_extract import build_completion_input, extract_candidates, load_extraction_recipe, render as render_extraction, verify_sources
+    from tools.completion_profile_evidence import build_profile_evidence_report, load_profile_evidence_path, render_json as render_profile_evidence_json, render_markdown as render_profile_evidence_markdown, validate_profile_evidence
     from tools.output_support import write_output
     from tools.completion_scaffold import build_scaffold, load_capabilities_path, load_mapping_path, load_specific_functions_path, load_traceability_path, render_json as render_scaffold_json, render_markdown as render_scaffold_markdown
     from tools.completion_workspace import resolve_workspace
@@ -19,6 +20,7 @@ except ModuleNotFoundError:
     from completion_assistant import build_worksheet, load_completion_path, load_decisions_path, render_json as render_worksheet_json, render_markdown, worksheet_diagnostics
     from completion_materialize import _serialization_diagnostics, materialize_contract, render_json, render_yaml
     from completion_extract import build_completion_input, extract_candidates, load_extraction_recipe, render as render_extraction, verify_sources
+    from completion_profile_evidence import build_profile_evidence_report, load_profile_evidence_path, render_json as render_profile_evidence_json, render_markdown as render_profile_evidence_markdown, validate_profile_evidence
     from output_support import write_output
     from completion_scaffold import build_scaffold, load_capabilities_path, load_mapping_path, load_specific_functions_path, load_traceability_path, render_json as render_scaffold_json, render_markdown as render_scaffold_markdown
     from completion_workspace import resolve_workspace
@@ -31,7 +33,7 @@ def _prepare(stage: str, workspace_path: Path):
     if diagnostics:
         return None, diagnostics
     completion, diagnostics = load_completion_path(paths["input"])
-    decisions = specific = capabilities = traceability = mapping = profile = None
+    decisions = specific = capabilities = traceability = mapping = profile = profile_evidence = None
     if not diagnostics and "decisions" in paths:
         decisions, diagnostics = load_decisions_path(paths["decisions"], completion)
     if not diagnostics and "specific_functions" in paths:
@@ -40,13 +42,15 @@ def _prepare(stage: str, workspace_path: Path):
         capabilities, diagnostics = load_capabilities_path(paths["capabilities"])
     if not diagnostics:
         profile, diagnostics = validate_profile_path(paths["profile"])
+    if not diagnostics and "profile_evidence" in paths:
+        profile_evidence, diagnostics = load_profile_evidence_path(paths["profile_evidence"])
     if not diagnostics and "mapping" in paths:
         mapping, diagnostics = load_mapping_path(paths["mapping"], completion, decisions, profile, specific, capabilities)
     if not diagnostics and "traceability" in paths:
         traceability, diagnostics = load_traceability_path(paths["traceability"], completion)
     if diagnostics:
         return None, diagnostics
-    return (completion, decisions, specific, capabilities, profile, mapping, traceability), []
+    return (completion, decisions, specific, capabilities, profile, mapping, traceability, profile_evidence), []
 
 
 def _print_failures(diagnostics: list[Diagnostic]) -> int:
@@ -64,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     extract.add_argument("--format", choices=("json", "yaml"), default="yaml")
     extract.add_argument("--output", type=Path)
     extract.add_argument("--force", action="store_true")
-    for name, help_text in (("worksheet", "review evidence and author decisions"), ("scaffold", "inspect resolved and missing contract fields")):
+    for name, help_text in (("worksheet", "review evidence and author decisions"), ("profile-evidence", "compare evidence with fixed OMS profile facts"), ("scaffold", "inspect resolved and missing contract fields")):
         command = subparsers.add_parser(name, help=help_text)
         command.add_argument("workspace", type=Path)
         command.add_argument("--format", choices=("markdown", "json"), default="markdown")
@@ -97,13 +101,20 @@ def main(argv: list[str] | None = None) -> int:
     prepared, diagnostics = _prepare(args.command, args.workspace)
     if diagnostics:
         return _print_failures(diagnostics)
-    completion, decisions, specific, capabilities, profile, mapping, traceability = prepared
+    completion, decisions, specific, capabilities, profile, mapping, traceability, profile_evidence = prepared
     if args.command == "worksheet":
         diagnostics = worksheet_diagnostics(completion, profile)
         if diagnostics:
             return _print_failures(diagnostics)
         worksheet = build_worksheet(completion, profile, decisions)
         print(render_markdown(worksheet) if args.format == "markdown" else render_worksheet_json(worksheet), end="")
+        return 0
+    if args.command == "profile-evidence":
+        diagnostics = validate_profile_evidence(profile_evidence, completion, profile)
+        if diagnostics:
+            return _print_failures(diagnostics)
+        report = build_profile_evidence_report(profile_evidence, completion, profile, decisions)
+        print(render_profile_evidence_markdown(report) if args.format == "markdown" else render_profile_evidence_json(report), end="")
         return 0
     scaffold = build_scaffold(completion, decisions, mapping, profile, specific, capabilities, traceability)
     if args.command == "scaffold":

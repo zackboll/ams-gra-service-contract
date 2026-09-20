@@ -58,11 +58,15 @@ Potential goals driven by real implementation experience:
      Capability-owned optional/domain-specific exchanges, Capability-owned
       Specific Functions if needed, deterministic YAML serialization — implemented,
       safe complete-contract file emission — implemented, semantic apply/edit
-     workflow, candidate-to-profile
-   satisfaction analysis, source extraction, consumer feedback reconciliation,
+      workflow, candidate-to-profile
+    satisfaction analysis, consumer feedback reconciliation,
    a second independent consumer, and broader independent consumers
     remain pending;
 - explicit namespace-qualified contract syntax only if real integrations require it;
+- deterministic local source extraction assistance, raw-byte verification, regex
+  capture/assertion, JSON/YAML pointers, and RF FM Demod recipe — implemented
+  first slice; richer structured selectors remain evidence-driven pending and
+  optional AI-assisted extraction is future evaluation only;
 - OMS-version-specific profile validation hooks (OMS 2.5 Required Service
   Function inventory, minimum Service Initialization and Service Status exchange
   shapes, Required Subsystem Function inventory, and minimum Subsystem Status
@@ -179,5 +183,5 @@ Consider 1.0 only after:
 `ams-gra-codegen-oms` is being developed as an independent consumer and has a
 portable v0.1 handoff corpus. That work does not itself complete the two
 independent-consumer criterion; feedback reconciliation and a second independent
-consumer remain pending, as do semantic apply/edit workflow, source extraction,
+consumer remain pending, as do semantic apply/edit workflow,
 and candidate-to-profile evidence satisfaction analysis.

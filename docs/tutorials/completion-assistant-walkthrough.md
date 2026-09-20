@@ -48,7 +48,7 @@ The IR Search & Track snippets below teach the mechanics. For a full real-world
 exercise showing why materialization can correctly remain blocked, see the
 [RF FM Demod completion exercise](rf-fm-demod-completion-exercise.md).
 
-There are two good workflows.
+There are three good workflows.
 
 ### I already know the contract
 
@@ -81,6 +81,18 @@ materialize contract -> validate -> OMS-codegen
 The completion assistant is primarily an evidence-backed migration,
 reconstruction, and authoring aid. It helps when sources contain useful facts but
 no source is a complete machine-readable contract.
+
+### I have source files and want transcription assistance
+
+Write a hash-pinned, source-specific extraction recipe, then start at extract:
+
+```bash
+python tools/completion.py extract recipe.yaml --source-root local-checkout --format yaml
+```
+
+This optional stage produces the same unconfirmed completion input that can also
+be hand-authored. Continue at `worksheet`; extraction never makes decisions or
+portable semantics. See the [source extraction walkthrough](source-extraction-walkthrough.md).
 
 ## Mental model
 
@@ -430,8 +442,8 @@ them. This repository does not invoke or depend on OMS-codegen.
 
 ### Existing or incompletely documented service
 
-1. Register source documents.
-2. Record candidate facts.
+1. Optionally extract candidates from verified local sources, or register them by hand.
+2. Record/review candidate facts.
 3. Render the worksheet.
 4. Resolve conflicts.
 5. Record author decisions.

@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -15,18 +13,17 @@ try:
     from tools.completion_scaffold import build_scaffold, load_capabilities_path, load_mapping_path, load_specific_functions_path
     from tools.validate import Diagnostic, profile_diagnostics, validate_document, validate_profile_path
     from tools.yaml_support import YamlInputError, dump_text, load_text
+    from tools.output_support import CA_OUTPUT_EXISTS, CA_OUTPUT_PATH, CA_OUTPUT_WRITE, write_output
 except ModuleNotFoundError:  # Support direct execution as ``python tools/completion_materialize.py``.
     from completion_assistant import load_completion_path, load_decisions_path
     from completion_scaffold import build_scaffold, load_capabilities_path, load_mapping_path, load_specific_functions_path
     from validate import Diagnostic, profile_diagnostics, validate_document, validate_profile_path
     from yaml_support import YamlInputError, dump_text, load_text
+    from output_support import CA_OUTPUT_EXISTS, CA_OUTPUT_PATH, CA_OUTPUT_WRITE, write_output
 
 CA_MATERIALIZATION_INCOMPLETE = "CA_MATERIALIZATION_INCOMPLETE"
 CA_UNMAPPED_AUTHOR_DECISION = "CA_UNMAPPED_AUTHOR_DECISION"
 CA_SERIALIZATION_ROUNDTRIP = "CA_SERIALIZATION_ROUNDTRIP"
-CA_OUTPUT_EXISTS = "CA_OUTPUT_EXISTS"
-CA_OUTPUT_PATH = "CA_OUTPUT_PATH"
-CA_OUTPUT_WRITE = "CA_OUTPUT_WRITE"
 
 
 def _resolved(value: dict[str, Any]) -> Any:
@@ -142,52 +139,7 @@ def _serialization_diagnostics(serialized: str, format_name: str, contract: dict
     return diagnostics if diagnostics else profile_diagnostics(parsed, profile)
 
 
-def _output_path_diagnostic(path: Path, force: bool) -> Diagnostic | None:
-    parent = path.parent
-    if not parent.exists() or not parent.is_dir():
-        return Diagnostic(CA_OUTPUT_PATH, str(path), "parent directory must already exist")
-    if path.is_symlink():
-        return Diagnostic(CA_OUTPUT_PATH, str(path), "destination must not be a symlink")
-    if path.exists() and path.is_dir():
-        return Diagnostic(CA_OUTPUT_PATH, str(path), "destination must not be a directory")
-    if path.exists() and not path.is_file():
-        return Diagnostic(CA_OUTPUT_PATH, str(path), "destination must be a regular file")
-    if path.exists() and not force:
-        return Diagnostic(CA_OUTPUT_EXISTS, str(path), "destination already exists; use --force to replace a regular file")
-    return None
-
-
-def _write_output(path: Path, serialized: str, force: bool) -> Diagnostic | None:
-    path_error = _output_path_diagnostic(path, force)
-    if path_error:
-        return path_error
-    replace_existing = path.exists()
-    try:
-        if not replace_existing:
-            created = False
-            try:
-                with path.open("x", encoding="utf-8", newline="\n") as stream:
-                    created = True
-                    stream.write(serialized)
-            except Exception:
-                if created and path.exists() and not path.is_symlink():
-                    path.unlink()
-                raise
-            return None
-        descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent, text=True)
-        temporary = Path(temporary_name)
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
-                stream.write(serialized)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.replace(temporary, path)
-        except Exception:
-            temporary.unlink(missing_ok=True)
-            raise
-        return None
-    except OSError as exc:
-        return Diagnostic(CA_OUTPUT_WRITE, str(path), str(exc))
+_write_output = write_output  # Backward-compatible private alias for Task 045 callers.
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -236,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     if not diagnostics:
         diagnostics = _serialization_diagnostics(serialized, args.format, contract, profile)
     if not diagnostics and args.output:
-        output_diagnostic = _write_output(args.output, serialized, args.force)
+        output_diagnostic = write_output(args.output, serialized, args.force)
         if output_diagnostic:
             diagnostics = [output_diagnostic]
     if diagnostics:

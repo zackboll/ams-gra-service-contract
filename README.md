@@ -14,6 +14,11 @@ function/exchange traceability without changing portable v0.1 grammar. Candidate
 provenance and profile citations are never converted automatically; see
 [docs/completion-traceability.md](docs/completion-traceability.md).
 
+Choose the authoring front door that fits what you know: hand-author `contract.yaml`
+when you know the contract; start a completion workspace/worksheet when you know
+the evidence candidates; or use a hash-pinned [extraction recipe](docs/completion-extraction.md)
+to transcribe verified local source files into candidates before the workspace.
+
 The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**

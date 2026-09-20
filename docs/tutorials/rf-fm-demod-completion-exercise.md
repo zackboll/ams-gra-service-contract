@@ -31,7 +31,20 @@ variables, RF MEL/MEL IQ interfaces, raw PCM TCP output, logs, and test fixtures
 Those are not added as OMS exchanges: this assistant constructs an OMS Service
 Contract, not an inventory of every software interface.
 
-## 2. Review the completion files
+## 2. Regenerate evidence candidates from the pinned source checkout
+
+Extraction is optional, offline transcription assistance. After manually cloning
+the pinned revision into `/tmp/rf-fm-demod`, regenerate the same candidate input:
+
+```bash
+python tools/completion.py extract examples/completion/rf-fm-demod-extraction.yaml \
+  --source-root /tmp/rf-fm-demod --format yaml --output /tmp/rf-fm-demod.yaml
+```
+
+The recipe verifies raw source bytes and emits candidates only; it does not alter
+decisions, mappings, Capability inventory, or function structure.
+
+## 3. Review the completion files
 
 `examples/completion/rf-fm-demod.yaml` records 23 candidates and their source
 locators. Matching facts from different source/provenance records are retained.
@@ -55,7 +68,7 @@ Capability question:
 - Confirm Capability inventory: Capability facts not supplied / unknown; ...
 ```
 
-## 3. Read profile contribution and scaffold
+## 4. Read profile contribution and scaffold
 
 OMS 2.5 independently supplies Service Initialization and Service Status topology.
 For Service Status, it fixes the function/category/group/applicability and fixed
@@ -89,7 +102,7 @@ unconfirmed, not inferred.
 Translate these fields into the concrete owner questions in
 [RF FM Demod author questions](../examples/rf-fm-demod-author-questions.md).
 
-## 4. Fail closed until the owner answers
+## 5. Fail closed until the owner answers
 
 ```bash
 python tools/completion.py check examples/completion/rf-fm-demod-workspace.yaml

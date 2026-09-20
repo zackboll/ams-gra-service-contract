@@ -45,6 +45,13 @@ Task 041 adds `CA_TRACEABILITY_SCHEMA`, `CA_DUPLICATE_SOURCE_KEY`,
 `CA_UNKNOWN_TRACE_SOURCE`, `CA_UNKNOWN_TRACE_TARGET`,
 `CA_INACTIVE_TRACE_TARGET`, and `CA_DUPLICATE_TRACEABILITY`.
 
+Extraction adds `CA_EXTRACTION_SCHEMA`, `CA_EXTRACTION_DUPLICATE_SOURCE`,
+`CA_EXTRACTION_DUPLICATE_RULE`, `CA_EXTRACTION_UNKNOWN_SOURCE`,
+`CA_EXTRACTION_PATH`, `CA_EXTRACTION_HASH`, `CA_EXTRACTION_MATCH`,
+`CA_EXTRACTION_VALUE`, `CA_EXTRACTION_POINTER`, and
+`CA_EXTRACTION_SERIALIZATION`. They identify recipe, verified-local-byte, exact
+selector, scalar, or output-round-trip failures; no completion document is emitted.
+
 ## Portable conformance pack (`CF_*`)
 
 `CF_*` diagnoses the conformance manifest or corpus rather than a portable

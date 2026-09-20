@@ -105,6 +105,10 @@ Use the [Completion Assistant walkthrough](docs/tutorials/completion-assistant-w
 and [workspace reference](docs/completion-workspace.md). `completion.py` is the
 normal workflow; `completion_assistant.py`, `completion_scaffold.py`, and
 `completion_materialize.py` remain advanced/reference lower-level tools.
+Real-world example: [RF FM Demod published-service completion
+exercise](docs/tutorials/rf-fm-demod-completion-exercise.md). The synthetic
+example demonstrates complete-pipeline materialization; RF FM Demod demonstrates
+realistic incomplete evidence and the author-question workflow.
 It explains evidence candidates, explicit author decisions, mapping, scaffold
 `MISSING` fields, materialization, validation, and OMS-codegen handoff.
 

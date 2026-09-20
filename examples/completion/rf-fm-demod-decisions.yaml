@@ -1,0 +1,9 @@
+decision_version: "0.1"
+decisions:
+  - {target: service.name, select_candidate: service-name, note: Exercise author adopts the published primary-contract identity.}
+  - {target: service.version, select_candidate: service-version, note: Exercise author adopts the published primary-contract identity.}
+  - {target: service.kind, select_candidate: service-kind, note: "Exercise author selects portable service: Data Processor is descriptive class information, not a portable kind."}
+  - {target: standards.oms_version, select_candidate: oms-version, note: Exercise author adopts the published primary-contract standard version.}
+  - {target: standards.uci_schema_version, select_candidate: uci-version, note: Exercise author adopts the published primary-contract standard version.}
+  - {target: "exchange[ServiceStatus].topic", select_candidate: status-topic, note: Exercise author selects a supporting-document candidate; the primary published Service Contract itself did not contain this value.}
+  - {target: "exchange[ServiceStatus].timing.nominal_rate_hz", select_candidate: status-rate, note: Exercise author selects a supporting-document candidate; the primary published Service Contract itself did not contain this value.}

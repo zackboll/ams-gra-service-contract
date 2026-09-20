@@ -1,0 +1,46 @@
+completion_version: "0.1"
+target:
+  contract_version: "0.1"
+  oms_version: "2.5"
+  service_kind: service
+  name: RF FM Demod
+sources:
+  - id: primary-contract
+    provenance: published_contract
+    title: OMS Service Contract - RF FM Demod
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-skills-rf-fm-demod/blob/af13bd2926b15253e795920c91320733a29927ea/docs/compliance/oms-service-contract.md
+    revision: af13bd2926b15253e795920c91320733a29927ea
+  - id: configuration-doc
+    provenance: published_supporting_doc
+    title: RF FM Demod Configuration
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-skills-rf-fm-demod/blob/af13bd2926b15253e795920c91320733a29927ea/docs/configuration.md
+    revision: af13bd2926b15253e795920c91320733a29927ea
+  - id: contracts-doc
+    provenance: published_supporting_doc
+    title: RF FM Demod External Interface Contracts
+    uri: https://github.com/open-arsenal/ams-gra-hello-world-sk-skills-rf-fm-demod/blob/af13bd2926b15253e795920c91320733a29927ea/docs/contracts.md
+    revision: af13bd2926b15253e795920c91320733a29927ea
+candidates:
+  - {id: service-name, target: service.name, value: RF FM Demod, source: primary-contract, locator: Section 1}
+  - {id: service-version, target: service.version, value: 1.0.0, source: primary-contract, locator: Section 1}
+  - {id: service-kind, target: service.kind, value: service, source: primary-contract, locator: Sections 1 and 3}
+  - {id: oms-version, target: standards.oms_version, value: "2.5", source: primary-contract, locator: Section 1}
+  - {id: uci-version, target: standards.uci_schema_version, value: "2.5", source: primary-contract, locator: Section 2}
+  - {id: ams-gra-version, target: standards.ams_gra_version, value: "2026.01", source: primary-contract, locator: Section 2}
+  - {id: position-selector, target: "exchange[PositionReport].selector", value: PositionReport, source: primary-contract, locator: Section 4.2}
+  - {id: position-direction, target: "exchange[PositionReport].direction", value: input, source: primary-contract, locator: Section 4.2}
+  - {id: status-selector, target: "exchange[ServiceStatus].selector", value: ServiceStatus, source: primary-contract, locator: Section 4.3}
+  - {id: status-direction, target: "exchange[ServiceStatus].direction", value: output, source: primary-contract, locator: Section 4.3}
+  - {id: status-timing, target: "exchange[ServiceStatus].timing.kind", value: periodic, source: primary-contract, locator: Section 4.3}
+  - {id: signal-selector, target: "exchange[SignalReport].selector", value: SignalReport, source: primary-contract, locator: Section 4.3}
+  - {id: signal-direction, target: "exchange[SignalReport].direction", value: output, source: primary-contract, locator: Section 4.3}
+  - {id: signal-energy-trigger, target: "observation[SignalReport].publication_trigger", value: FM audio energy exceeds configured threshold, source: primary-contract, locator: Section 4.3}
+  - {id: position-topic, target: "exchange[PositionReport].topic", value: mission.position-report, source: configuration-doc, locator: position_topic}
+  - {id: status-topic, target: "exchange[ServiceStatus].topic", value: mission.service-status, source: configuration-doc, locator: service_status_topic}
+  - {id: signal-topic, target: "exchange[SignalReport].topic", value: mission.signal-report, source: configuration-doc, locator: signal_topic}
+  - {id: status-rate, target: "exchange[ServiceStatus].timing.nominal_rate_hz", value: 1.0, source: configuration-doc, locator: service_status_rate_hz}
+  - {id: signal-rate-limit, target: "observation[SignalReport].report_rate_limit_hz", value: 2.0, source: configuration-doc, locator: report_rate_limit_hz}
+  - {id: position-direction-corroboration, target: "exchange[PositionReport].direction", value: input, source: contracts-doc, locator: UCI PositionReport subscription}
+  - {id: status-direction-corroboration, target: "exchange[ServiceStatus].direction", value: output, source: contracts-doc, locator: UCI ServiceStatus publication}
+  - {id: status-timing-corroboration, target: "exchange[ServiceStatus].timing.kind", value: periodic, source: contracts-doc, locator: UCI ServiceStatus publication / Reliability semantics}
+  - {id: signal-direction-corroboration, target: "exchange[SignalReport].direction", value: output, source: contracts-doc, locator: UCI SignalReport publication}

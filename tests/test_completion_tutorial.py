@@ -12,6 +12,8 @@ COMPLETE = ROOT / "examples/completion/complete-service.yaml"
 COMPLETE_DECISIONS = ROOT / "examples/completion/complete-service-decisions.yaml"
 COMPLETE_MAPPING = ROOT / "examples/completion/complete-service-mapping.yaml"
 PROFILE = ROOT / "profiles/oms/2.5/profile.yaml"
+RF_WORKSPACE = ROOT / "examples/completion/rf-fm-demod-workspace.yaml"
+RF_TUTORIAL = ROOT / "docs/tutorials/rf-fm-demod-completion-exercise.md"
 
 
 def test_completion_walkthrough_paths_and_commands(tmp_path: Path) -> None:
@@ -30,3 +32,13 @@ def test_completion_walkthrough_paths_and_commands(tmp_path: Path) -> None:
     assert materialize.returncode == 0 and materialize.stdout == materialize.stderr == ""
     validate = subprocess.run([sys.executable, "tools/validate.py", "--profile", str(PROFILE), str(output)], cwd=ROOT, capture_output=True, text=True, check=False)
     assert validate.returncode == 0 and "OK" in validate.stdout
+
+
+def test_rf_fm_demod_tutorial_commands_fail_closed_as_documented() -> None:
+    assert RF_TUTORIAL.is_file() and RF_WORKSPACE.is_file()
+    worksheet = subprocess.run([sys.executable, "tools/completion.py", "worksheet", str(RF_WORKSPACE)], cwd=ROOT, capture_output=True, text=True, check=False)
+    scaffold = subprocess.run([sys.executable, "tools/completion.py", "scaffold", str(RF_WORKSPACE)], cwd=ROOT, capture_output=True, text=True, check=False)
+    check = subprocess.run([sys.executable, "tools/completion.py", "check", str(RF_WORKSPACE)], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert worksheet.returncode == scaffold.returncode == 0
+    assert "Capability inventory" in worksheet.stdout and "functions[Service Initialization].id" in scaffold.stdout
+    assert check.returncode != 0 and "CA_MATERIALIZATION_INCOMPLETE" in check.stderr and "Traceback" not in check.stderr

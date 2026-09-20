@@ -44,6 +44,10 @@ sections explain each underlying file individually.
 
 ## Do I need the completion assistant?
 
+The IR Search & Track snippets below teach the mechanics. For a full real-world
+exercise showing why materialization can correctly remain blocked, see the
+[RF FM Demod completion exercise](rf-fm-demod-completion-exercise.md).
+
 There are two good workflows.
 
 ### I already know the contract

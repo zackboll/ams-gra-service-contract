@@ -6,6 +6,11 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- RF FM Demod real published-service completion exercise with pinned evidence
+  provenance, explicit profile-vs-evidence-vs-author distinction, concrete owner
+  questions, and intentional fail-closed non-materialization. It records what is
+  not demonstrated or requires author confirmation without a compliance verdict.
+
 - Tooling-only completion workspaces and one `completion.py`
   worksheet/scaffold/check/materialize front door. References resolve relative
   to the workspace; this changes no portable v0.1 semantics or schema.

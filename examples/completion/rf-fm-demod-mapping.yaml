@@ -1,0 +1,9 @@
+mapping_version: "0.1"
+bindings:
+  - {target: service.name, destination: {kind: service_field, field: name}}
+  - {target: service.version, destination: {kind: service_field, field: version}}
+  - {target: service.kind, destination: {kind: context_assertion, field: service_kind}}
+  - {target: standards.oms_version, destination: {kind: context_assertion, field: oms_version}}
+  - {target: standards.uci_schema_version, destination: {kind: standards_field, field: uci_schema_version}}
+  - {target: "exchange[ServiceStatus].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: topic}}
+  - {target: "exchange[ServiceStatus].timing.nominal_rate_hz", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: nominal_rate_hz}}

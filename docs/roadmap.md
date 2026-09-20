@@ -39,6 +39,10 @@ Potential goals driven by real implementation experience:
 - completion workspace manifest, unified completion CLI, workspace-relative
   artifact resolution, and materialization-readiness check implemented; no
   portable semantics added.
+- first end-to-end real published-service completion workspace exercise
+  implemented: RF FM Demod is exercised through pinned evidence, decisions,
+  mapping, workspace, scaffold, and fail-closed readiness. It is intentionally
+  not materialized because unresolved author semantics remain.
 - completion-assistant foundation implemented: a provenance-preserving,
   non-normative worksheet displays unconfirmed evidence candidates,
   profile-derived requirements, and an explicit author-decision overlay without

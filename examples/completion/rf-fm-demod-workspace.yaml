@@ -1,0 +1,5 @@
+workspace_version: "0.1"
+input: rf-fm-demod.yaml
+decisions: rf-fm-demod-decisions.yaml
+mapping: rf-fm-demod-mapping.yaml
+profile: ../../profiles/oms/2.5/profile.yaml

@@ -12,9 +12,11 @@ python tools/completion_materialize.py \
   --profile profiles/oms/2.5/profile.yaml
 ```
 
-It produces deterministic JSON only on stdout. It has no output, write, apply,
-or in-place option and never mutates files. Failures print `FAIL <diagnostic>` to
-stderr and produce no stdout.
+It defaults to deterministic JSON and also supports `--format yaml`. Without
+`--output`, the complete serialized contract goes to stdout. `--output PATH`
+writes only the complete validated contract file; existing files are refused
+unless `--force` is supplied. See [contract-serialization.md](contract-serialization.md).
+Failures print `FAIL <diagnostic>` to stderr and produce no stdout.
 
 After existing completion, decision, mapping, and profile validation, it checks
 unresolved required scaffold paths, then unmapped explicit decisions. It then

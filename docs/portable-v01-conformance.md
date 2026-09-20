@@ -6,6 +6,10 @@ Portable v0.1 compatibility is defined by the schema at
 its acceptance expectation, optional reference-validator `SC_*` codes, and
 YAML/JSON semantic equivalence groups.
 
+The `materialized-complete-service` equivalence group is also the deterministic
+portable serialization golden for completion materialization: its YAML and JSON
+members must parse to the same contract model.
+
 `schema_canonical_sha256` is SHA-256 over parsed schema JSON serialized with
 sorted keys, compact separators, UTF-8, and `ensure_ascii=False`. It detects
 accidental changes to the v0.1 compatibility surface; it is not semantic proof.
@@ -30,3 +34,5 @@ corpus, and report compatibility results independently. Portable acceptance does
 not imply OMS 2.5 profile conformance, UCI message existence, extension mapping,
 or code-generation readiness. Extension identifiers remain logical portable
 strings until a schema-source/codegen integration resolves them.
+
+For a concrete handoff, see [Task 044](task-044-yaml-safe-contract-output.md).

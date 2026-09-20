@@ -6,6 +6,11 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Deterministic portable v0.1 YAML materialization and safe complete-contract
+  `--output` emission. JSON remains the default; YAML/JSON serialize the same
+  validated model. Existing files require explicit `--force` atomic replacement;
+  this adds no semantic apply/edit behavior.
+
 - Portable v0.1 machine-readable conformance pack with valid/invalid
   expectations, canonical schema fingerprint guard, and YAML/JSON equivalence
   cases. This locks the pre-1.0 compatibility surface without claiming 1.0

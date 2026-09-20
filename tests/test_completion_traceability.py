@@ -5,12 +5,12 @@ import subprocess
 import sys
 
 from tools.completion_assistant import load_completion_path, load_decisions_path
-from tools.completion_materialize import materialize_contract
+from tools.completion_materialize import materialize_contract, render_yaml
 from tools.completion_scaffold import (CA_DUPLICATE_SOURCE_KEY, CA_DUPLICATE_TRACEABILITY,
     CA_INACTIVE_TRACE_TARGET, CA_SOURCE_REVISION_MISMATCH, CA_UNKNOWN_EVIDENCE_SOURCE, CA_UNKNOWN_TRACE_SOURCE,
     CA_UNKNOWN_TRACE_TARGET, build_scaffold, load_mapping_path, validate_traceability)
 from tools.validate import profile_diagnostics, validate_document, validate_profile_path
-from tools.yaml_support import load_path
+from tools.yaml_support import load_path, load_text
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "examples/completion/complete-service-with-traceability.yaml"
@@ -40,6 +40,9 @@ def test_explicit_adoption_and_required_trace_materialize_in_order() -> None:
     assert status["traceability"] == [{"source":"synthetic-contract-source", "locator":"Section 4.1"}]
     assert status["exchanges"][0]["traceability"] == [{"source":"synthetic-contract-source", "locator":"Table 4-1"}]
     assert "source_key" not in json.dumps(contract)
+    rendered = render_yaml(contract)
+    assert load_text(rendered) == contract
+    assert all(field not in rendered for field in ("source_key", "provenance", "candidate_id", "origin", "state"))
 
 def test_traceability_semantic_diagnostics_and_revision_rules() -> None:
     completion, _, _, _, trace = _base()
@@ -78,8 +81,8 @@ def test_capability_function_and_inactive_component_target() -> None:
     scaffold = build_scaffold(completion, decisions, mapping, profile, capabilities=capabilities, traceability=trace)
     assert CA_INACTIVE_TRACE_TARGET in {x.code for x in scaffold["traceability_diagnostics"]}
 
-def test_cli_traceability_is_json_only_and_optional() -> None:
+def test_cli_traceability_is_optional() -> None:
     command = [sys.executable, "tools/completion_materialize.py", "--input", str(INPUT), "--decisions", str(ROOT / "examples/completion/complete-service-decisions.yaml"), "--mapping", str(ROOT / "examples/completion/complete-service-mapping.yaml"), "--traceability", str(TRACE), "--profile", str(PROFILE)]
     result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
     assert result.returncode == 0 and result.stderr == "" and json.loads(result.stdout)["sources"][0]["id"] == "synthetic-contract-source"
-    assert {"--output", "--write", "--apply", "--in-place"}.isdisjoint(subprocess.run([sys.executable, "tools/completion_materialize.py", "--help"], cwd=ROOT, capture_output=True, text=True).stdout)
+    assert {"--write", "--apply", "--in-place"}.isdisjoint(subprocess.run([sys.executable, "tools/completion_materialize.py", "--help"], cwd=ROOT, capture_output=True, text=True).stdout)

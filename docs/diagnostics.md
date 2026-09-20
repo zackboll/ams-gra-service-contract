@@ -124,6 +124,10 @@ validation runs before profile application, so invalid portable documents yield
 | `CA_CONTEXT_ASSERTION_MISMATCH` | A context assertion decision disagrees with explicit completion target context. |
 | `CA_MATERIALIZATION_INCOMPLETE` | A required scaffold field remains unresolved, so no contract is emitted. |
 | `CA_UNMAPPED_AUTHOR_DECISION` | An explicit author decision lacks a typed mapping, so no contract is emitted. |
+| `CA_SERIALIZATION_ROUNDTRIP` | Rendered JSON/YAML cannot be parsed back to the validated materialized model. |
+| `CA_OUTPUT_EXISTS` | Output destination exists and `--force` was not supplied. |
+| `CA_OUTPUT_PATH` | Output parent or destination violates the safe path policy. |
+| `CA_OUTPUT_WRITE` | Exclusive creation or safe replacement write failed. |
 
 `CA_*` applies only to the completion workspace. Materialization preconditions
 use `CA_*`; materialized-contract validation surfaces `SC_*` and selected OMS

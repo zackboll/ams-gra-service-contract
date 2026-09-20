@@ -3,13 +3,14 @@ import json
 from pathlib import Path
 
 from tools.completion_assistant import load_completion_path, load_decisions_path
-from tools.completion_materialize import materialize_contract, render_json
+from tools.completion_materialize import materialize_contract, render_json, render_yaml
 from tools.completion_scaffold import (CA_DUPLICATE_CAPABILITY_KEY,
     CA_INACTIVE_CAPABILITY_FUNCTION, CA_MAPPING_VALUE_TYPE,
     CA_UNKNOWN_CAPABILITY_KEY, CA_UNKNOWN_CAPABILITY_ROLE, build_scaffold,
     load_capabilities_path, load_mapping_path, validate_capabilities,
     validate_mapping_document)
 from tools.validate import profile_diagnostics, validate_document, validate_profile_path
+from tools.yaml_support import load_text
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "examples/completion/complete-capability-service.yaml"
@@ -35,6 +36,7 @@ def test_two_capability_fixture_is_explicit_and_profile_valid() -> None:
     assert [x["function_origin"] for x in scaffold["functions"][-7:]] == ["capability"] * 6 + ["component_capability"]
     contract, diagnostics = materialize_contract(scaffold)
     assert not diagnostics and render_json(contract) == EXPECTED.read_text()
+    assert load_text(render_yaml(contract)) == contract
     assert validate_document(contract) == [] and profile_diagnostics(contract, profile) == []
     assert len(contract["capabilities"]) == 2
     position = next(x for x in contract["functions"] if x.get("standard_role") == "position_information_processing")
@@ -43,13 +45,16 @@ def test_two_capability_fixture_is_explicit_and_profile_valid() -> None:
 def test_omitted_empty_and_position_conditions_are_distinct() -> None:
     completion, decisions, mapping, profile, capabilities = _all()
     omitted = build_scaffold(completion, decisions, mapping, profile)
-    assert omitted["capability_inventory_state"] == "unknown" and "capabilities" not in omitted
+    omitted_contract, diagnostics = materialize_contract(omitted)
+    assert not diagnostics and omitted["capability_inventory_state"] == "unknown" and "capabilities" not in omitted_contract
+    assert "capabilities:" not in render_yaml(omitted_contract) and load_text(render_yaml(omitted_contract)) == omitted_contract
     empty = {"capabilities_version":"0.1", "capabilities":[]}
     ordinary_decisions = deepcopy(decisions); ordinary_decisions["decisions"] = [x for x in ordinary_decisions["decisions"] if not (x["target"].startswith("capability.") or x["target"].startswith("esm.") or x["target"].startswith("radar.") or x["target"].startswith("position."))]
     ordinary_mapping = deepcopy(mapping); ordinary_mapping["bindings"] = [x for x in ordinary_mapping["bindings"] if not x["destination"]["kind"].endswith("capability_field") and x["destination"]["kind"] != "capability_field"]
     scaffold = build_scaffold(completion, ordinary_decisions, ordinary_mapping, profile, capabilities=empty)
     contract, diagnostics = materialize_contract(scaffold)
     assert not diagnostics and contract["capabilities"] == [] and not any(x.get("standard_role") for x in contract["functions"])
+    assert "capabilities: []" in render_yaml(contract) and load_text(render_yaml(contract)) == contract
     all_false = deepcopy(decisions)
     for x in all_false["decisions"]:
         if x["target"].endswith(".position"): x["value"] = False

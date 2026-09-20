@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from tools.completion_assistant import load_completion_path, load_decisions_path
-from tools.completion_materialize import CA_MATERIALIZATION_INCOMPLETE, CA_UNMAPPED_AUTHOR_DECISION, materialize_contract, render_json
+from tools.completion_materialize import CA_MATERIALIZATION_INCOMPLETE, CA_UNMAPPED_AUTHOR_DECISION, materialize_contract, render_json, render_yaml
 from tools.completion_scaffold import build_scaffold, load_mapping_path
 from tools.validate import profile_diagnostics, validate_document, validate_profile_path
 
@@ -18,6 +18,7 @@ IR_DECISIONS = ROOT / "examples/completion/ir-search-and-track-decisions.yaml"
 IR_MAPPING = ROOT / "examples/completion/ir-search-and-track-mapping.yaml"
 PROFILE = ROOT / "profiles/oms/2.5/profile.yaml"
 EXPECTED = ROOT / "conformance/v0.1/valid/materialized-complete-service.json"
+EXPECTED_YAML = ROOT / "conformance/v0.1/valid/materialized-complete-service.yaml"
 
 
 def _scaffold(input_path=COMPLETE, decisions_path=COMPLETE_DECISIONS, mapping_path=COMPLETE_MAPPING):
@@ -33,6 +34,7 @@ def test_complete_materialization_matches_fixture_and_validates() -> None:
     contract, diagnostics = materialize_contract(scaffold)
     assert diagnostics == []
     assert render_json(contract) == EXPECTED.read_text(encoding="utf-8")
+    assert render_yaml(contract) == EXPECTED_YAML.read_text(encoding="utf-8")
     assert validate_document(contract) == []
     assert profile_diagnostics(contract, profile) == []
     assert "capabilities" not in contract and "sources" not in contract
@@ -74,11 +76,37 @@ def test_not_applicable_has_reason_and_no_exchanges() -> None:
     assert contract["functions"][1]["exchanges"] == []
 
 
-def test_cli_json_only_and_ir_search_and_track_fail_closed() -> None:
+def test_cli_formats_and_ir_search_and_track_fail_closed(tmp_path: Path) -> None:
     command = [sys.executable, "tools/completion_materialize.py", "--input", str(COMPLETE), "--decisions", str(COMPLETE_DECISIONS), "--mapping", str(COMPLETE_MAPPING), "--profile", str(PROFILE)]
     result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
     assert result.returncode == 0 and result.stderr == "" and result.stdout == EXPECTED.read_text(encoding="utf-8")
-    assert {"--output", "--write", "--apply", "--in-place"}.isdisjoint(subprocess.run([sys.executable, "tools/completion_materialize.py", "--help"], cwd=ROOT, capture_output=True, text=True).stdout)
+    result = subprocess.run(command + ["--format", "json"], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode == 0 and result.stderr == "" and result.stdout == EXPECTED.read_text(encoding="utf-8")
+    result = subprocess.run(command + ["--format", "yaml"], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode == 0 and result.stderr == "" and result.stdout == EXPECTED_YAML.read_text(encoding="utf-8")
+    result = subprocess.run(command + ["--format", "toml"], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode != 0 and result.stdout == ""
+    yaml_output, json_output = tmp_path / "contract.yaml", tmp_path / "contract.json"
+    result = subprocess.run(command + ["--format", "yaml", "--output", str(yaml_output)], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode == 0 and result.stderr == result.stdout == "" and yaml_output.read_text() == EXPECTED_YAML.read_text()
+    result = subprocess.run(command + ["--format", "json", "--output", str(json_output)], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode == 0 and result.stderr == result.stdout == "" and json_output.read_text() == EXPECTED.read_text()
+    result = subprocess.run(command + ["--output", str(json_output)], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode != 0 and "CA_OUTPUT_EXISTS" in result.stderr and json_output.read_text() == EXPECTED.read_text()
+    json_output.write_text("old\n")
+    result = subprocess.run(command + ["--output", str(json_output), "--force"], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode == 0 and result.stdout == "" and json_output.read_text() == EXPECTED.read_text()
+    result = subprocess.run(command + ["--force"], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode != 0 and "--force requires --output" in result.stderr
+    directory = tmp_path / "directory"; directory.mkdir()
+    result = subprocess.run(command + ["--output", str(directory)], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode != 0 and "CA_OUTPUT_PATH" in result.stderr
+    result = subprocess.run(command + ["--output", str(tmp_path / "missing" / "contract.json")], cwd=ROOT, capture_output=True, text=True, check=False)
+    assert result.returncode != 0 and "CA_OUTPUT_PATH" in result.stderr
+    symlink = tmp_path / "link.json"; symlink.symlink_to(json_output)
+    for extra in ([], ["--force"]):
+        result = subprocess.run(command + ["--output", str(symlink)] + extra, cwd=ROOT, capture_output=True, text=True, check=False)
+        assert result.returncode != 0 and "CA_OUTPUT_PATH" in result.stderr
     command[command.index(str(COMPLETE))] = str(IR)
     command[command.index(str(COMPLETE_DECISIONS))] = str(IR_DECISIONS)
     command[command.index(str(COMPLETE_MAPPING))] = str(IR_MAPPING)

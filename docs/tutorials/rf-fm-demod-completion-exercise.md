@@ -163,3 +163,6 @@ only when complete.
 
 The next real-world step is not to guess: obtain the answers above, record them
 as explicit decisions and structure, then rerun scaffold, check, and materialize.
+
+Want to see how the workflow closes once an owner answers these questions? See the
+[simulated owner answer-loop exercise](rf-fm-demod-owner-answer-loop.md).

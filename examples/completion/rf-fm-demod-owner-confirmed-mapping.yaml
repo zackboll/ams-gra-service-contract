@@ -1,0 +1,41 @@
+mapping_version: "0.1"
+bindings:
+  - {target: service.name, destination: {kind: service_field, field: name}}
+  - {target: service.version, destination: {kind: service_field, field: version}}
+  - {target: service.kind, destination: {kind: context_assertion, field: service_kind}}
+  - {target: standards.oms_version, destination: {kind: context_assertion, field: oms_version}}
+  - {target: standards.uci_schema_version, destination: {kind: standards_field, field: uci_schema_version}}
+  - {target: standards.ams_gra_version, destination: {kind: standards_field, field: ams_gra_version}}
+  - {target: "function[Service Initialization].id", destination: {kind: required_function_field, profile_function: Service Initialization, field: id}}
+  - {target: "exchange[FileMetadata].id", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileMetadata, field: id}}
+  - {target: "exchange[FileMetadata].topic", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileMetadata, field: topic}}
+  - {target: "exchange[FileLocation].id", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileLocation, field: id}}
+  - {target: "exchange[FileLocation].topic", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: FileLocation, field: topic}}
+  - {target: "exchange[ServiceConfigFile].id", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: id}}
+  - {target: "exchange[ServiceConfigFile].protocol", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: protocol}}
+  - {target: "exchange[ServiceConfigFile].data_type", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: data_type}}
+  - {target: "exchange[ServiceConfigFile].data_format", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: data_format}}
+  - {target: "exchange[ServiceConfigFile].sharing_pattern", destination: {kind: required_exchange_field, profile_function: Service Initialization, selector: ServiceConfigFile, field: sharing_pattern}}
+  - {target: "function[Service Status].id", destination: {kind: required_function_field, profile_function: Service Status, field: id}}
+  - {target: "exchange[ServiceStatus].id", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: id}}
+  - {target: "exchange[ServiceStatus].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: topic}}
+  - {target: "exchange[ServiceStatus].timing.nominal_rate_hz", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatus, field: nominal_rate_hz}}
+  - {target: "exchange[ServiceStatusDataRequest].id", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequest, field: id}}
+  - {target: "exchange[ServiceStatusDataRequest].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequest, field: topic}}
+  - {target: "exchange[ServiceStatusDataRequestStatus].id", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequestStatus, field: id}}
+  - {target: "exchange[ServiceStatusDataRequestStatus].topic", destination: {kind: required_exchange_field, profile_function: Service Status, selector: ServiceStatusDataRequestStatus, field: topic}}
+  - {target: "specific[fm-demod-processing].id", destination: {kind: specific_function_field, function_key: fm-demod-processing, field: id}}
+  - {target: "specific[fm-demod-processing].name", destination: {kind: specific_function_field, function_key: fm-demod-processing, field: name}}
+  - {target: "specific[fm-demod-processing].applicability", destination: {kind: specific_function_field, function_key: fm-demod-processing, field: applicability}}
+  - {target: "exchange[PositionReport].id", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: position-report, field: id}}
+  - {target: "exchange[PositionReport].selector", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: position-report, field: message}}
+  - {target: "exchange[PositionReport].direction", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: position-report, field: direction}}
+  - {target: "exchange[PositionReport].mandate", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: position-report, field: mandate}}
+  - {target: "exchange[PositionReport].topic", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: position-report, field: topic}}
+  - {target: "exchange[PositionReport].timing.kind", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: position-report, field: timing_kind}}
+  - {target: "exchange[SignalReport].id", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: signal-report, field: id}}
+  - {target: "exchange[SignalReport].selector", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: signal-report, field: message}}
+  - {target: "exchange[SignalReport].direction", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: signal-report, field: direction}}
+  - {target: "exchange[SignalReport].mandate", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: signal-report, field: mandate}}
+  - {target: "exchange[SignalReport].topic", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: signal-report, field: topic}}
+  - {target: "exchange[SignalReport].timing.kind", destination: {kind: specific_exchange_field, function_key: fm-demod-processing, exchange_key: signal-report, field: timing_kind}}

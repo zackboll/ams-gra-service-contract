@@ -43,6 +43,11 @@ Potential goals driven by real implementation experience:
   implemented: RF FM Demod is exercised through pinned evidence, decisions,
   mapping, workspace, scaffold, and fail-closed readiness. It is intentionally
   not materialized because unresolved author semantics remain.
+- real service-owner answer loop simulated end-to-end: the same RF published
+  evidence plus explicitly labelled simulated owner decisions, specific-function
+  topology, and explicit zero Capabilities materializes a valid portable,
+  OMS-profile-validated contract. This is not an official RF FM Demod contract;
+  actual service-owner confirmation remains future work.
 - completion-assistant foundation implemented: a provenance-preserving,
   non-normative worksheet displays unconfirmed evidence candidates,
   profile-derived requirements, and an explicit author-decision overlay without

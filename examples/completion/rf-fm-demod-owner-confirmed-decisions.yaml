@@ -1,0 +1,41 @@
+decision_version: "0.1"
+decisions:
+  - {target: service.name, select_candidate: service-name, note: Exercise author adopts published evidence.}
+  - {target: service.version, select_candidate: service-version, note: Exercise author adopts published evidence.}
+  - {target: service.kind, select_candidate: service-kind, note: Exercise author adopts published evidence.}
+  - {target: standards.oms_version, select_candidate: oms-version, note: Exercise author adopts published evidence.}
+  - {target: standards.uci_schema_version, select_candidate: uci-version, note: Exercise author adopts published evidence.}
+  - {target: standards.ams_gra_version, select_candidate: ams-gra-version, note: Exercise author adopts published evidence.}
+  - {target: "function[Service Initialization].id", value: service-initialization, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[FileMetadata].id", value: file-metadata, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[FileMetadata].topic", value: mission.file-metadata, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[FileLocation].id", value: file-location, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[FileLocation].topic", value: mission.file-location, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceConfigFile].id", value: service-config-file, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceConfigFile].protocol", value: https, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceConfigFile].data_type", value: ServiceConfigFile, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceConfigFile].data_format", value: application/json, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceConfigFile].sharing_pattern", value: request_response, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "function[Service Status].id", value: service-status, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceStatus].id", value: service-status-report, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceStatus].topic", select_candidate: status-topic, note: Exercise author adopts supporting published evidence.}
+  - {target: "exchange[ServiceStatus].timing.nominal_rate_hz", select_candidate: status-rate, note: Exercise author adopts supporting published evidence.}
+  - {target: "exchange[ServiceStatusDataRequest].id", value: service-status-request, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceStatusDataRequest].topic", value: mission.service-status-request, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceStatusDataRequestStatus].id", value: service-status-request-status, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[ServiceStatusDataRequestStatus].topic", value: mission.service-status-request-status, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "specific[fm-demod-processing].id", value: rf-fm-demod-processing, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "specific[fm-demod-processing].name", value: RF FM Demod Processing, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "specific[fm-demod-processing].applicability", value: applicable, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[PositionReport].id", value: position-report-input, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[PositionReport].selector", select_candidate: position-selector, note: Exercise author adopts published evidence.}
+  - {target: "exchange[PositionReport].direction", select_candidate: position-direction, note: Exercise author adopts published evidence.}
+  - {target: "exchange[PositionReport].mandate", value: optional, note: Simulated service-owner decision for workflow demonstration; not inferred from subscription behavior.}
+  - {target: "exchange[PositionReport].topic", select_candidate: position-topic, note: Exercise author adopts supporting published evidence.}
+  - {target: "exchange[PositionReport].timing.kind", value: asynchronous, note: Simulated service-owner decision for workflow demonstration; not inferred from subscription behavior.}
+  - {target: "exchange[SignalReport].id", value: signal-report-output, note: Simulated service-owner decision for workflow demonstration.}
+  - {target: "exchange[SignalReport].selector", select_candidate: signal-selector, note: Exercise author adopts published evidence.}
+  - {target: "exchange[SignalReport].direction", select_candidate: signal-direction, note: Exercise author adopts published evidence.}
+  - {target: "exchange[SignalReport].mandate", value: mandatory, note: Simulated service-owner decision for workflow demonstration; not inferred from threshold behavior or rate limit.}
+  - {target: "exchange[SignalReport].topic", select_candidate: signal-topic, note: Exercise author adopts supporting published evidence.}
+  - {target: "exchange[SignalReport].timing.kind", value: asynchronous, note: "Simulated service-owner decision for workflow demonstration; an explicit abstraction, not derived from threshold prose."}

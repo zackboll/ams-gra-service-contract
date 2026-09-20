@@ -18,6 +18,9 @@ Explicit [OMS profile-evidence comparison](docs/completion-profile-evidence.md)
 reports observed alignment with fixed OMS facts before materialization. It does
 not establish conformance; `OP_*` validation of a materialized contract remains authoritative.
 
+- [Real incomplete example: RF FM Demod evidence exercise](docs/tutorials/rf-fm-demod-completion-exercise.md)
+- [Full answer-loop demonstration: RF FM Demod simulated owner responses](docs/tutorials/rf-fm-demod-owner-answer-loop.md)
+
 Choose the authoring front door that fits what you know: hand-author `contract.yaml`
 when you know the contract; start a completion workspace/worksheet when you know
 the evidence candidates; or use a hash-pinned [extraction recipe](docs/completion-extraction.md)

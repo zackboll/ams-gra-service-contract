@@ -30,9 +30,17 @@ keyword.
 | `IP_*` | Inputs/Outputs projection join |
 | `CA_*` | Completion assistant tooling workspace |
 | `CF_*` | Portable conformance-pack tooling |
+| `RC_*` | Repository release-support metadata |
 
 A higher-level tool can surface a lower-layer code unchanged; it does not take
 ownership merely by orchestrating that layer.
+
+## Release support (`RC_*`)
+
+`RC_*` diagnoses repository release metadata, not Service Contracts. The
+offline, read-only release checker uses `RC_SCHEMA`, `RC_PATH`, `RC_VERSION`,
+`RC_FINGERPRINT`, `RC_CONFORMANCE`, `RC_PROFILE`, `RC_SCHEMA_SOURCE`, and
+`RC_CHANGELOG` for support-manifest, linkage, and changelog consistency failures.
 
 Completion authoring owns `CA_*`; materialized portable semantics retain `SC_*`.
 Workspace manifest parsing, path resolution, and command-stage requirements use

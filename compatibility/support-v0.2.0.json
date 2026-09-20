@@ -1,0 +1,20 @@
+{
+  "support_manifest_version": "0.1",
+  "project_release": "0.2.0",
+  "portable_contract": {
+    "versions": ["0.1"],
+    "schema": "schema/v0.1/service-contract.schema.json",
+    "canonical_schema_sha256": "427fc250909ec40d82d1adc2daf236be2afe78a14f2b6ec80355b0105fe9e2e0",
+    "conformance_manifest": "conformance/v0.1/manifest.json"
+  },
+  "oms_profiles": [
+    {"id": "oms-2.5", "oms_version": "2.5", "profile_format": "0.1", "path": "profiles/oms/2.5/profile.yaml"}
+  ],
+  "uci": {
+    "baseline_versions": ["2.5", "2.6"],
+    "baseline_manifests": [
+      {"id": "uci-2.5-baseline", "schema_version": "2.5", "path": "schema-sources/uci/2.5/manifest.yaml"},
+      {"id": "uci-2.6-baseline", "schema_version": "2.6", "path": "schema-sources/uci/2.6/manifest.yaml"}
+    ]
+  }
+}

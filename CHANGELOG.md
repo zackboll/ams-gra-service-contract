@@ -1,27 +1,31 @@
 # Changelog
 
-## Unreleased
-
-- Add tooling-only OMS profile-evidence comparison with explicit links, exact
-  observed/decision alignment reporting, and RF FM Demod ServiceStatus examples.
-
-- Add a simulated RF FM Demod service-owner answer-loop exercise showing the same
-  real published evidence progressing from fail-closed completion to a valid
-  portable/OMS-profile-validated contract after explicit owner decisions, specific
-  function structure, and an explicit zero-Capability declaration. Simulated
-  values remain clearly separated from source-backed candidates.
+## [Unreleased]
 
 All notable changes to this experimental specification and tooling project are documented here.
 
-## [Unreleased]
+This section is reserved for changes after the prospective release boundary.
 
-### Added
+## [0.2.0] - TBD
+
+This is a prospective repository/tooling release section, not a released tag.
+
+### Completion authoring
 
 - Deterministic, offline source-extraction recipes can produce unconfirmed
   completion candidates from hash-verified local source files using explicit
   regex and structured-pointer rules. Extraction does not create author
   decisions, mappings, function/Capability structure, or portable contract
   semantics.
+
+- Tooling-only OMS profile-evidence comparison with explicit links, exact
+  observed/decision alignment reporting, and RF FM Demod ServiceStatus examples.
+
+- A simulated RF FM Demod service-owner answer-loop exercise showing the same
+  real published evidence progressing from fail-closed completion to a valid
+  portable/OMS-profile-validated contract after explicit owner decisions,
+  specific-function structure, and an explicit zero-Capability declaration.
+  Simulated values remain clearly separated from source-backed candidates.
 
 - RF FM Demod real published-service completion exercise with pinned evidence
   provenance, explicit profile-vs-evidence-vs-author distinction, concrete owner
@@ -37,6 +41,8 @@ All notable changes to this experimental specification and tooling project are d
   validated model. Existing files require explicit `--force` atomic replacement;
   this adds no semantic apply/edit behavior.
 
+### Conformance and compatibility
+
 - Portable v0.1 machine-readable conformance pack with valid/invalid
   expectations, canonical schema fingerprint guard, and YAML/JSON equivalence
   cases. This locks the pre-1.0 compatibility surface without claiming 1.0
@@ -49,6 +55,8 @@ All notable changes to this experimental specification and tooling project are d
 
 - Explicit Capability completion artifacts, typed mappings, fail-closed
   materialization, and profile-derived OMS 2.5 Section 3.3 functions.
+
+### Documentation and examples
 
 - Explicit tooling-only specific-function structural authoring, typed mapping,
   scaffold, and fail-closed materialization. Structure never infers grouping or
@@ -90,6 +98,8 @@ All notable changes to this experimental specification and tooling project are d
   acceptance rules are unchanged. Regressions confirm omitted Capabilities are
   not inferred from RF message names and that Isolators never receive Section 3.3
   requirements from Capability-like terms.
+
+### OMS profile
 - OMS 2.5 Section 3.3 Capability function inventory profile: additive optional
   `functions[].standard_role` supplies bounded role identity independent of
   display names and IDs. Explicit non-empty Capability inventories trigger three
@@ -186,6 +196,8 @@ All notable changes to this experimental specification and tooling project are d
 - Stable symbolic `SS_*` diagnostics for schema-source manifest validation,
   composition, and local byte verification, preserving `SC_*` contract
   diagnostics during composition.
+
+### UCI/schema-source tooling
 - UCI 2.6 schema-source baseline with pinned extracted-XSD hashes, plus real
   UCI 2.5 -> 2.6 resolver regression evidence and continuity checks for
   repository-used message names.

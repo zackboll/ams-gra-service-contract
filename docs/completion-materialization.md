@@ -29,3 +29,7 @@ Capability values. Function order is ordinary profile requirements, Capability
 profile requirements, then declared specific functions. Capability Section 3.3
 functions have no generated exchanges. Completion candidate provenance is audit
 evidence, not automatically authored portable traceability.
+
+Optional `--traceability` consumes explicit source adoption and trace declarations;
+see [completion-traceability.md](completion-traceability.md). It emits only
+portable source IDs and trace references, never tooling keys or provenance.

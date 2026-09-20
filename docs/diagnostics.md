@@ -33,6 +33,12 @@ keyword.
 A higher-level tool can surface a lower-layer code unchanged; it does not take
 ownership merely by orchestrating that layer.
 
+Completion authoring owns `CA_*`; materialized portable semantics retain `SC_*`.
+Task 041 adds `CA_TRACEABILITY_SCHEMA`, `CA_DUPLICATE_SOURCE_KEY`,
+`CA_UNKNOWN_EVIDENCE_SOURCE`, `CA_SOURCE_REVISION_MISMATCH`,
+`CA_UNKNOWN_TRACE_SOURCE`, `CA_UNKNOWN_TRACE_TARGET`,
+`CA_INACTIVE_TRACE_TARGET`, and `CA_DUPLICATE_TRACEABILITY`.
+
 ## Portable Service Contract (`SC_*`)
 
 | Code | Meaning |

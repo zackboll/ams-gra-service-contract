@@ -16,7 +16,9 @@ ROOT=Path(__file__).resolve().parents[1]
 MAPPING_SCHEMA_PATH=ROOT/'schema/tooling/completion/v0.1/completion-mapping.schema.json'
 SPECIFIC_SCHEMA_PATH=ROOT/'schema/tooling/completion/v0.1/completion-specific-functions.schema.json'
 CAPABILITY_SCHEMA_PATH=ROOT/'schema/tooling/completion/v0.1/completion-capabilities.schema.json'
+TRACEABILITY_SCHEMA_PATH=ROOT/'schema/tooling/completion/v0.1/completion-traceability.schema.json'
 CA_MAPPING_SCHEMA='CA_MAPPING_SCHEMA';CA_SPECIFIC_SCHEMA='CA_SPECIFIC_SCHEMA';CA_CAPABILITY_SCHEMA='CA_CAPABILITY_SCHEMA';CA_DUPLICATE_MAPPING_TARGET='CA_DUPLICATE_MAPPING_TARGET';CA_DUPLICATE_MAPPING_DESTINATION='CA_DUPLICATE_MAPPING_DESTINATION';CA_DUPLICATE_SPECIFIC_FUNCTION='CA_DUPLICATE_SPECIFIC_FUNCTION';CA_DUPLICATE_SPECIFIC_EXCHANGE='CA_DUPLICATE_SPECIFIC_EXCHANGE';CA_DUPLICATE_CAPABILITY_KEY='CA_DUPLICATE_CAPABILITY_KEY';CA_UNKNOWN_MAPPING_TARGET='CA_UNKNOWN_MAPPING_TARGET';CA_UNKNOWN_PROFILE_FUNCTION='CA_UNKNOWN_PROFILE_FUNCTION';CA_UNKNOWN_PROFILE_EXCHANGE='CA_UNKNOWN_PROFILE_EXCHANGE';CA_UNKNOWN_SPECIFIC_FUNCTION='CA_UNKNOWN_SPECIFIC_FUNCTION';CA_UNKNOWN_SPECIFIC_EXCHANGE='CA_UNKNOWN_SPECIFIC_EXCHANGE';CA_UNKNOWN_CAPABILITY_KEY='CA_UNKNOWN_CAPABILITY_KEY';CA_UNKNOWN_CAPABILITY_ROLE='CA_UNKNOWN_CAPABILITY_ROLE';CA_INACTIVE_CAPABILITY_FUNCTION='CA_INACTIVE_CAPABILITY_FUNCTION';CA_MAPPING_FIELD_INCOMPATIBLE='CA_MAPPING_FIELD_INCOMPATIBLE';CA_MAPPING_VALUE_TYPE='CA_MAPPING_VALUE_TYPE';CA_CONTEXT_ASSERTION_MISMATCH='CA_CONTEXT_ASSERTION_MISMATCH'
+CA_TRACEABILITY_SCHEMA='CA_TRACEABILITY_SCHEMA';CA_DUPLICATE_SOURCE_KEY='CA_DUPLICATE_SOURCE_KEY';CA_UNKNOWN_EVIDENCE_SOURCE='CA_UNKNOWN_EVIDENCE_SOURCE';CA_SOURCE_REVISION_MISMATCH='CA_SOURCE_REVISION_MISMATCH';CA_UNKNOWN_TRACE_SOURCE='CA_UNKNOWN_TRACE_SOURCE';CA_UNKNOWN_TRACE_TARGET='CA_UNKNOWN_TRACE_TARGET';CA_INACTIVE_TRACE_TARGET='CA_INACTIVE_TRACE_TARGET';CA_DUPLICATE_TRACEABILITY='CA_DUPLICATE_TRACEABILITY'
 NUMERIC={'nominal_rate_hz','max_rate_hz','nominal_response_seconds','max_response_seconds'}
 FIELDS={'oms_message':{'id','direction','mandate','message','topic','timing_kind','operational_attribute','subscription_group','appendix_c_mapping'},'data_transfer':{'id','direction','mandate','name','protocol','data_type','data_format','sharing_pattern','timing_kind'},'special_signal':{'id','direction','mandate','name','details','reference','timing_kind'},'security_exchange':{'id','direction','mandate','name','details','reference','timing_kind'},'non_oms_message':{'id','direction','mandate','name','details','reference','timing_kind'}}
 def _path(p):return '$'+''.join(f'[{x}]' if isinstance(x,int) else f'.{x}' for x in p)
@@ -41,6 +43,25 @@ def _load(p,fn,code):
  return d,fn(d)
 def load_specific_functions_path(p):return _load(p,validate_specific_functions,CA_SPECIFIC_SCHEMA)
 def load_capabilities_path(p):return _load(p,validate_capabilities,CA_CAPABILITY_SCHEMA)
+def validate_traceability(d,completion):
+ r=_validate(d,TRACEABILITY_SCHEMA_PATH,CA_TRACEABILITY_SCHEMA)
+ if r:return r
+ r=[Diagnostic(CA_DUPLICATE_SOURCE_KEY,'$.sources',f'duplicate source key {x!r}') for x in sorted(_dupes([x['key'] for x in d['sources']]))]
+ evidence={x['id']:x for x in completion['sources']}
+ for i,x in enumerate(d['sources']):
+  e=evidence.get(x['from_completion_source'])
+  if not e:r.append(Diagnostic(CA_UNKNOWN_EVIDENCE_SOURCE,f'$.sources[{i}].from_completion_source',f'unknown completion evidence source {x["from_completion_source"]!r}'))
+  elif 'revision' in e and 'revision' in x and e['revision'] != x['revision']:r.append(Diagnostic(CA_SOURCE_REVISION_MISMATCH,f'$.sources[{i}].revision','authored revision differs from completion evidence revision'))
+ keys={x['key'] for x in d['sources']}
+ for i,x in enumerate(d['traces']):
+  if x['source_key'] not in keys:r.append(Diagnostic(CA_UNKNOWN_TRACE_SOURCE,f'$.traces[{i}].source_key',f'unknown authored source key {x["source_key"]!r}'))
+ seen=set()
+ for i,x in enumerate(d['traces']):
+  key=json.dumps({k:x.get(k) for k in ('destination','source_key','locator','note')},sort_keys=True)
+  if key in seen:r.append(Diagnostic(CA_DUPLICATE_TRACEABILITY,f'$.traces[{i}]','duplicate traceability declaration'))
+  seen.add(key)
+ return r
+def load_traceability_path(p,completion):return _load(p,lambda d:validate_traceability(d,completion),CA_TRACEABILITY_SCHEMA)
 def _values(c,d):
  if not d:return {}
  cs={x['id']:x for x in c['candidates']};ss={x['id']:x for x in c['sources']};r={}
@@ -97,7 +118,7 @@ def load_mapping_path(path,c,d,p,specific=None,capabilities=None):
  return m,validate_mapping_document(m,c,d,p,specific,capabilities)
 def _miss():return {'state':'missing'}
 def _res(v,o):return {'state':'resolved','value':v,'origin':o}
-def build_scaffold(c,d,m,p,specific=None,capabilities=None):
+def build_scaffold(c,d,m,p,specific=None,capabilities=None,traceability=None):
  v=_values(c,d);a={json.dumps(x['destination'],sort_keys=True):{'state':'resolved',**v[x['target']]} for x in m['bindings'] if x['target'] in v};get=lambda z,default=None:a.get(json.dumps(z,sort_keys=True),default or _miss());r={'scaffold_version':'0.1','service':{},'standards':{},'target':{},'functions':[],'unresolved_required_fields':[],'unmapped_author_decisions':[],'capability_inventory_state':'unknown'}
  for n in ('name','version','description'):r['service'][n]=get({'kind':'service_field','field':n})
  for n in ('uci_schema_version','ams_gra_version'):r['standards'][n]=get({'kind':'standards_field','field':n})
@@ -141,20 +162,60 @@ def build_scaffold(c,d,m,p,specific=None,capabilities=None):
   else:
    for e in f['exchanges']:e['active']=False
    if f['not_applicable_reason']['state']=='missing':r['unresolved_required_fields'].append(f'functions[{ident}].not_applicable_reason')
- r['unmapped_author_decisions']=[{'target':t,**x} for t,x in v.items() if t not in {q['target'] for q in m['bindings']}];return r
+ r['unmapped_author_decisions']=[{'target':t,**x} for t,x in v.items() if t not in {q['target'] for q in m['bindings']}]
+ if traceability is not None:_apply_traceability(r,c,traceability)
+ return r
+def _apply_traceability(scaffold,completion,traceability):
+ evidence={x['id']:x for x in completion['sources']};scaffold['contract_sources']=[]
+ for declaration in traceability['sources']:
+  source=evidence[declaration['from_completion_source']];item={'source_key':declaration['key'],'id':declaration['id'],'title':source['title'],'uri':source['uri']}
+  for field in ('document_number','date','note'):
+   if field in declaration:item[field]=declaration[field]
+  if 'revision' in source:item['revision']=source['revision']
+  elif 'revision' in declaration:item['revision']=declaration['revision']
+  scaffold['contract_sources'].append(item)
+ def function(destination):
+  kind=destination['kind']
+  for item in scaffold['functions']:
+   if kind=='required_function' and item['function_origin']=='oms_profile' and item.get('profile_function')==destination['profile_function']:return item
+   if kind=='specific_function' and item['function_origin']=='specific_function_structure' and item.get('function_key')==destination['function_key']:return item
+   if kind=='capability_function' and item['function_origin']=='capability' and item.get('capability_key')==destination['capability_key'] and item.get('standard_role',{}).get('value')==destination['role']:return item
+   if kind=='component_capability_function' and item['function_origin']=='component_capability' and item.get('standard_role',{}).get('value')==destination['role']:return item
+  return None
+ for i,trace in enumerate(traceability['traces']):
+  destination=trace['destination'];kind=destination['kind'];target=function(destination)
+  if kind=='required_exchange':target=function({'kind':'required_function','profile_function':destination['profile_function']})
+  if kind=='specific_exchange':target=function({'kind':'specific_function','function_key':destination['function_key']})
+  if not target:
+   code=CA_INACTIVE_TRACE_TARGET if kind=='component_capability_function' else CA_UNKNOWN_TRACE_TARGET
+   scaffold.setdefault('traceability_diagnostics',[]).append(Diagnostic(code,f'$.traces[{i}].destination','trace destination is not active in scaffold'));continue
+  entry={'source_key':trace['source_key'],'source':next(x['id'] for x in scaffold['contract_sources'] if x['source_key']==trace['source_key'])}
+  for field in ('locator','note'):
+   if field in trace:entry[field]=trace[field]
+  if kind.endswith('exchange'):
+   selector=destination['selector'] if kind=='required_exchange' else destination['exchange_key'];exchange=next((x for x in target['exchanges'] if x['exchange_key']==selector),None)
+   if not exchange:scaffold.setdefault('traceability_diagnostics',[]).append(Diagnostic(CA_UNKNOWN_TRACE_TARGET,f'$.traces[{i}].destination','unknown trace exchange target'))
+   elif not exchange['active']:scaffold.setdefault('traceability_diagnostics',[]).append(Diagnostic(CA_INACTIVE_TRACE_TARGET,f'$.traces[{i}].destination','trace exchange target is inactive'))
+   else:exchange.setdefault('traceability',[]).append(entry)
+  else:target.setdefault('traceability',[]).append(entry)
 def render_json(s):return json.dumps(s,indent=2,ensure_ascii=False)+'\n'
 def render_markdown(s):return '# Completion authoring scaffold\n\n'+'\n'.join(f'- `{x}`' for x in s['unresolved_required_fields'])+'\n'
 def main(argv=None):
  q=argparse.ArgumentParser(description=__doc__)
- for x,y in [(('--input',),{'type':Path,'required':True}),(('--decisions',),{'type':Path,'required':True}),(('--mapping',),{'type':Path,'required':True}),(('--specific-functions',),{'type':Path}),(('--capabilities',),{'type':Path}),(('--profile',),{'type':Path,'required':True}),(('--format',),{'choices':('markdown','json'),'required':True})]:q.add_argument(*x,**y)
- x=q.parse_args(argv);c,ds=load_completion_path(x.input.resolve());d=s=caps=None
+ for x,y in [(('--input',),{'type':Path,'required':True}),(('--decisions',),{'type':Path,'required':True}),(('--mapping',),{'type':Path,'required':True}),(('--specific-functions',),{'type':Path}),(('--capabilities',),{'type':Path}),(('--traceability',),{'type':Path}),(('--profile',),{'type':Path,'required':True}),(('--format',),{'choices':('markdown','json'),'required':True})]:q.add_argument(*x,**y)
+ x=q.parse_args(argv);c,ds=load_completion_path(x.input.resolve());d=s=caps=traces=None
  if not ds:d,ds=load_decisions_path(x.decisions.resolve(),c)
  if not ds and x.specific_functions:s,ds=load_specific_functions_path(x.specific_functions.resolve())
  if not ds and x.capabilities:caps,ds=load_capabilities_path(x.capabilities.resolve())
+ if not ds and x.traceability:traces,ds=load_traceability_path(x.traceability.resolve(),c)
  if not ds:p,ds=validate_profile_path(x.profile.resolve())
  if not ds:m,ds=load_mapping_path(x.mapping.resolve(),c,d,p,s,caps)
  if ds:
   for z in ds:print(f'FAIL {z}',file=sys.stderr)
   return 1
- print(render_json(build_scaffold(c,d,m,p,s,caps)) if x.format=='json' else render_markdown(build_scaffold(c,d,m,p,s,caps)),end='');return 0
+ scaffold=build_scaffold(c,d,m,p,s,caps,traces)
+ if scaffold.get('traceability_diagnostics'):
+  for z in scaffold['traceability_diagnostics']:print(f'FAIL {z}',file=sys.stderr)
+  return 1
+ print(render_json(scaffold) if x.format=='json' else render_markdown(scaffold),end='');return 0
 if __name__=='__main__':raise SystemExit(main())

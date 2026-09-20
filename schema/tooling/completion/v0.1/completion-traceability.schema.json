@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-traceability:0.1",
+  "title": "Completion Traceability Authoring",
+  "description": "Tooling-only explicit adoption of completion evidence as portable sources and explicit function/exchange traces.",
+  "type": "object", "additionalProperties": false,
+  "required": ["traceability_version", "sources", "traces"],
+  "properties": {"traceability_version": {"const": "0.1"}, "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}}, "traces": {"type": "array", "items": {"$ref": "#/$defs/trace"}}},
+  "$defs": {
+    "key": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$", "minLength": 1, "maxLength": 128},
+    "source": {"type": "object", "additionalProperties": false, "required": ["key", "id", "from_completion_source"], "properties": {"key": {"$ref": "#/$defs/key"}, "id": {"$ref": "#/$defs/key"}, "from_completion_source": {"type": "string", "minLength": 1}, "document_number": {"type": "string", "minLength": 1}, "revision": {"type": "string", "minLength": 1}, "date": {"type": "string", "format": "date"}, "note": {"type": "string", "minLength": 1}}},
+    "destination": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["kind", "profile_function"], "properties": {"kind": {"const": "required_function"}, "profile_function": {"type": "string", "minLength": 1}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "profile_function", "selector"], "properties": {"kind": {"const": "required_exchange"}, "profile_function": {"type": "string", "minLength": 1}, "selector": {"type": "string", "minLength": 1}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "function_key"], "properties": {"kind": {"const": "specific_function"}, "function_key": {"$ref": "#/$defs/key"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "function_key", "exchange_key"], "properties": {"kind": {"const": "specific_exchange"}, "function_key": {"$ref": "#/$defs/key"}, "exchange_key": {"$ref": "#/$defs/key"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "capability_key", "role"], "properties": {"kind": {"const": "capability_function"}, "capability_key": {"$ref": "#/$defs/key"}, "role": {"$ref": "#/$defs/key"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "role"], "properties": {"kind": {"const": "component_capability_function"}, "role": {"$ref": "#/$defs/key"}}}
+    ]},
+    "trace": {"type": "object", "additionalProperties": false, "required": ["destination", "source_key"], "properties": {"destination": {"$ref": "#/$defs/destination"}, "source_key": {"$ref": "#/$defs/key"}, "locator": {"type": "string", "minLength": 1}, "note": {"type": "string", "minLength": 1}}}
+  }
+}

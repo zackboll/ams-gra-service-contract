@@ -184,4 +184,6 @@ Consider 1.0 only after:
 portable v0.1 handoff corpus. That work does not itself complete the two
 independent-consumer criterion; feedback reconciliation and a second independent
 consumer remain pending, as do semantic apply/edit workflow,
-and candidate-to-profile evidence satisfaction analysis.
+and pre-materialization profile evidence comparison implemented; it reports exact
+alignment between candidates and fixed OMS profile facts without making
+profile-conformance claims. `OP_*` validation of a materialized contract remains authoritative.

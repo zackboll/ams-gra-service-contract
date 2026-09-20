@@ -14,6 +14,7 @@
     "mapping": {"type": "string", "minLength": 1},
     "specific_functions": {"type": "string", "minLength": 1},
     "capabilities": {"type": "string", "minLength": 1},
-    "traceability": {"type": "string", "minLength": 1}
+    "traceability": {"type": "string", "minLength": 1},
+    "profile_evidence": {"type": "string", "minLength": 1}
   }
 }

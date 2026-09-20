@@ -10,17 +10,19 @@ mapping: complete-service-mapping.yaml
 profile: ../../profiles/oms/2.5/profile.yaml
 ```
 
-The only fields are `workspace_version`, `input`, `profile`, `decisions`, `mapping`, `specific_functions`, `capabilities`, and `traceability`. Version, input, and profile are required. Every configured path is a nonempty relative literal resolved from the workspace's directory; absolute paths, `~`, environment expansion, and globbing are rejected. `..` is supported.
+The optional `profile_evidence` field names explicit evidence-to-fixed-profile-fact links. It is analysis-only.
 
 | Command | Required entries |
 | --- | --- |
 | `worksheet` | input, profile |
+| `profile-evidence` | input, profile, profile_evidence |
 | `scaffold`, `check`, `materialize` | input, profile, decisions, mapping |
 
 Specific functions, capabilities, and traceability are optional for later stages. `worksheet` works without decisions. `check` prepares and validates the same in-memory contract as materialization but never serializes or writes. `materialize --format {yaml,json}` reuses safe `--output`/`--force` behavior.
 
 ```bash
 python tools/completion.py worksheet service-workspace.yaml
+python tools/completion.py profile-evidence service-workspace.yaml
 python tools/completion.py scaffold service-workspace.yaml
 python tools/completion.py check service-workspace.yaml
 python tools/completion.py materialize service-workspace.yaml --format yaml --output contract.yaml

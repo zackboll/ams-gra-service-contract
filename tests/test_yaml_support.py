@@ -4,7 +4,7 @@ import pytest
 
 from tools.schema_sources import load_manifest
 from tools.validate import load_document
-from tools.yaml_support import YamlInputError, load_text
+from tools.yaml_support import YamlInputError, dump_text, load_text
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,3 +92,24 @@ def test_checked_in_profile_and_schema_source_manifest_parse() -> None:
     manifest = load_manifest(ROOT / "schema-sources" / "uci" / "2.5" / "manifest.yaml")
     assert profile["id"] == "oms-2.5"
     assert manifest["id"] == "uci-2.5-baseline"
+
+
+def test_dump_text_round_trips_ambiguous_strings_without_yaml_11_leakage() -> None:
+    value = {"a": "true", "b": "false", "c": "null", "d": "Null", "e": "001", "f": "+1", "g": "-1", "h": "1.0", "i": "1e3", "j": "0x10", "k": "0o10", "l": "yes", "m": "no", "n": "on", "o": "off", "p": "2026-01-22"}
+    rendered = dump_text(value)
+    assert load_text(rendered) == value
+    assert rendered.endswith("\n") and "\r" not in rendered
+
+
+def test_dump_text_preserves_order_and_suppresses_anchors_and_aliases() -> None:
+    shared = {"values": ["true", 1]}
+    value = {"first": shared, "second": shared}
+    rendered = dump_text(value)
+    assert rendered.index("first:") < rendered.index("second:")
+    assert "&id" not in rendered and "*id" not in rendered and "!!python" not in rendered
+    assert load_text(rendered) == value
+
+
+def test_dump_text_rejects_non_finite_float() -> None:
+    with pytest.raises(YamlInputError, match="non-finite"):
+        dump_text({"value": float("nan")})

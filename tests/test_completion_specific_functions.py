@@ -2,13 +2,13 @@ from copy import deepcopy
 from pathlib import Path
 
 from tools.completion_assistant import load_completion_path, load_decisions_path
-from tools.completion_materialize import materialize_contract
+from tools.completion_materialize import materialize_contract, render_yaml
 from tools.completion_scaffold import (CA_DUPLICATE_SPECIFIC_EXCHANGE,
     CA_DUPLICATE_SPECIFIC_FUNCTION, CA_MAPPING_FIELD_INCOMPATIBLE,
     CA_UNKNOWN_SPECIFIC_EXCHANGE, build_scaffold, load_mapping_path,
     validate_mapping_document, validate_specific_functions)
 from tools.validate import profile_diagnostics, validate_document, validate_profile_path
-from tools.yaml_support import load_path
+from tools.yaml_support import load_path, load_text
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = ROOT / "profiles/oms/2.5/profile.yaml"
@@ -42,6 +42,9 @@ def test_specific_structure_and_materialization_are_explicit() -> None:
     assert function["id"] == "synthetic-processing-id" and function["name"] == "Synthetic Processing"
     assert [x["id"] for x in function["exchanges"]] == ["synthetic-input-id","synthetic-output-id"]
     assert validate_document(contract) == [] and profile_diagnostics(contract,profile) == []
+    rendered = render_yaml(contract)
+    assert load_text(rendered) == contract
+    assert all(field not in rendered for field in ("function_key", "exchange_key", "function_origin"))
 
 def test_specific_duplicate_and_timing_diagnostics() -> None:
     structure=load_path(STRUCTURE); duplicate=deepcopy(structure); duplicate["functions"].append(deepcopy(duplicate["functions"][0]))

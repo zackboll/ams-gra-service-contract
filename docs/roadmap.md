@@ -49,8 +49,9 @@ Potential goals driven by real implementation experience:
      3.3 per-Capability required-function scaffold/materialization, and
      conditional component-level Position Information Processing are implemented.
      Capability-owned optional/domain-specific exchanges, Capability-owned
-      Specific Functions if needed, safe file
-     write/apply workflow, YAML serialization policy, candidate-to-profile
+      Specific Functions if needed, deterministic YAML serialization — implemented,
+      safe complete-contract file emission — implemented, semantic apply/edit
+     workflow, candidate-to-profile
    satisfaction analysis, source extraction, consumer feedback reconciliation,
    a second independent consumer, and broader independent consumers
     remain pending;

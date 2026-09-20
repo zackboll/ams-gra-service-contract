@@ -73,12 +73,14 @@ generation/apply path. See [docs/completion-assistant.md](docs/completion-assist
 [Task 036](docs/task-036-completion-author-decisions.md).
 
 Typed completion mappings and the profile-derived authoring scaffold are
-tooling-only. Task 038 adds a fail-closed JSON materializer: **candidate →
+tooling-only. The fail-closed materializer emits deterministic JSON or YAML: **candidate →
 decision → mapping → scaffold → portable contract**. Successful materializer
 stdout is a real portable Service Contract only after both `SC_*` validation and
 selected OMS `OP_*` profile validation. See
 [docs/completion-scaffold.md](docs/completion-scaffold.md) and
-[docs/completion-materialization.md](docs/completion-materialization.md).
+[docs/completion-materialization.md](docs/completion-materialization.md). JSON is
+machine-friendly and YAML is human-friendly; both encode the same portable
+contract. See [docs/contract-serialization.md](docs/contract-serialization.md).
 
 ## Published-contract exercises
 

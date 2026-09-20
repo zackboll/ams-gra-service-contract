@@ -1,4 +1,4 @@
-"""Load repository YAML/JSON inputs as YAML 1.2-compatible JSON data."""
+"""Load and deterministically dump repository YAML/JSON-compatible data."""
 
 from __future__ import annotations
 
@@ -16,6 +16,13 @@ class YamlInputError(ValueError):
 
 class JsonCompatibleYamlLoader(yaml.SafeLoader):
     """Private loader with controlled YAML 1.2 core-style scalar resolution."""
+
+
+class JsonCompatibleYamlDumper(yaml.SafeDumper):
+    """Safe deterministic YAML emitter for the repository JSON data model."""
+
+    def ignore_aliases(self, data: Any) -> bool:
+        return True
 
 
 # Do not inherit PyYAML's YAML 1.1 implicit resolver table.
@@ -36,6 +43,9 @@ JsonCompatibleYamlLoader.add_implicit_resolver(
     ),
     list("-+0123456789."),
 )
+# The dumper must make quoting decisions against precisely the resolver used for
+# reloads, rather than PyYAML's YAML 1.1 resolver table.
+JsonCompatibleYamlDumper.yaml_implicit_resolvers = JsonCompatibleYamlLoader.yaml_implicit_resolvers
 
 
 def _construct_yaml_int(loader: JsonCompatibleYamlLoader, node: yaml.Node) -> int:
@@ -110,3 +120,18 @@ def load_path(path: Path) -> Any:
         return load_text(path.read_text(encoding="utf-8"), str(path))
     except OSError as exc:
         raise YamlInputError(f"could not read {path}: {exc}") from exc
+
+
+def dump_text(value: Any) -> str:
+    """Render JSON-compatible data as stable, loader-compatible YAML text."""
+    _validate_json_compatible(value)
+    return yaml.dump(
+        value,
+        Dumper=JsonCompatibleYamlDumper,
+        allow_unicode=True,
+        default_flow_style=False,
+        indent=2,
+        sort_keys=False,
+        width=1000,
+        line_break="\n",
+    )

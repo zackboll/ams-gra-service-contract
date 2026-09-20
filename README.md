@@ -82,6 +82,20 @@ selected OMS `OP_*` profile validation. See
 machine-friendly and YAML is human-friendly; both encode the same portable
 contract. See [docs/contract-serialization.md](docs/contract-serialization.md).
 
+## How do I create a Service Contract?
+
+### I know the contract already
+
+Hand-author portable YAML, validate it with `tools/validate.py`, then provide it
+to OMS-codegen. This is usually the simplest workflow for a new service with a
+known design.
+
+### I am reconstructing an existing service
+
+Use the [Completion Assistant walkthrough](docs/tutorials/completion-assistant-walkthrough.md).
+It explains evidence candidates, explicit author decisions, mapping, scaffold
+`MISSING` fields, materialization, validation, and OMS-codegen handoff.
+
 ## Published-contract exercises
 
 Evidence-driven exercises against five published OMS 2.5 Markdown Service

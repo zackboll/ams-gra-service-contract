@@ -1,0 +1,53 @@
+contract_version: '0.1'
+service:
+  name: minimal
+  version: '0.1'
+  kind: service
+standards:
+  oms_version: '2.5'
+  uci_schema_version: '2.5'
+functions:
+- id: sensor-status
+  name: Status
+  category: required
+  required_group: capability
+  capability: sensor
+  standard_role: capability_status
+  applicability: applicable
+  exchanges: []
+- id: sensor-enable
+  name: Enable
+  category: required
+  required_group: capability
+  capability: sensor
+  standard_role: capability_enable_disable
+  applicability: applicable
+  exchanges: []
+- id: sensor-ops
+  name: Operations
+  category: required
+  required_group: capability
+  capability: sensor
+  standard_role: capability_operations
+  applicability: applicable
+  exchanges: []
+- id: position-processing
+  name: Position Processing
+  category: required
+  required_group: service
+  standard_role: position_information_processing
+  applicability: applicable
+  exchanges: []
+- id: subsystem-required
+  name: Subsystem Required
+  category: required
+  required_group: subsystem
+  applicability: applicable
+  exchanges: []
+capabilities:
+- id: sensor
+  name: Sensor
+  requires_position_information: true
+- id: display
+  name: Display
+  requires_position_information: false

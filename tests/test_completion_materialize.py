@@ -17,7 +17,7 @@ IR = ROOT / "examples/completion/ir-search-and-track.yaml"
 IR_DECISIONS = ROOT / "examples/completion/ir-search-and-track-decisions.yaml"
 IR_MAPPING = ROOT / "examples/completion/ir-search-and-track-mapping.yaml"
 PROFILE = ROOT / "profiles/oms/2.5/profile.yaml"
-EXPECTED = ROOT / "tests/materialization-complete-service.expected.json"
+EXPECTED = ROOT / "conformance/v0.1/valid/materialized-complete-service.json"
 
 
 def _scaffold(input_path=COMPLETE, decisions_path=COMPLETE_DECISIONS, mapping_path=COMPLETE_MAPPING):

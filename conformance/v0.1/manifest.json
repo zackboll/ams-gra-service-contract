@@ -1,0 +1,605 @@
+{
+  "conformance_version": "0.1",
+  "contract_version": "0.1",
+  "portable_schema": "schema/v0.1/service-contract.schema.json",
+  "schema_canonical_sha256": "427fc250909ec40d82d1adc2daf236be2afe78a14f2b6ec80355b0105fe9e2e0",
+  "cases": [
+    {
+      "id": "invalid-async-illegal-numeric",
+      "path": "invalid/async-illegal-numeric.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-bad-applicability",
+      "path": "invalid/bad-applicability.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-bad-direction",
+      "path": "invalid/bad-direction.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-bad-mandate",
+      "path": "invalid/bad-mandate.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-bad-standard-role",
+      "path": "invalid/bad-standard-role.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-capability-missing-name",
+      "path": "invalid/capability-missing-name.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-capability-missing-position",
+      "path": "invalid/capability-missing-position.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-capability-missing-position-dependency",
+      "path": "invalid/capability-missing-position-dependency.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-capability-nonboolean-position",
+      "path": "invalid/capability-nonboolean-position.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-capability-nonboolean-position-dependency",
+      "path": "invalid/capability-nonboolean-position-dependency.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-data-transfer-missing-required",
+      "path": "invalid/data-transfer-missing-required.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-data-transfer-missing-sharing-pattern",
+      "path": "invalid/data-transfer-missing-sharing-pattern.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-duplicate-capability-id",
+      "path": "invalid/duplicate-capability-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "reference_diagnostics": [
+        "SC_DUPLICATE_CAPABILITY"
+      ]
+    },
+    {
+      "id": "invalid-duplicate-exchange-id",
+      "path": "invalid/duplicate-exchange-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "reference_diagnostics": [
+        "SC_DUPLICATE_EXCHANGE"
+      ]
+    },
+    {
+      "id": "invalid-duplicate-extension",
+      "path": "invalid/duplicate-extension.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-duplicate-function-id",
+      "path": "invalid/duplicate-function-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "reference_diagnostics": [
+        "SC_DUPLICATE_FUNCTION"
+      ]
+    },
+    {
+      "id": "invalid-duplicate-source-id",
+      "path": "invalid/duplicate-source-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "reference_diagnostics": [
+        "SC_DUPLICATE_SOURCE"
+      ]
+    },
+    {
+      "id": "invalid-duplicate-yaml-key",
+      "path": "invalid/duplicate-yaml-key.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "input_format_safety": true
+    },
+    {
+      "id": "invalid-empty-required-string",
+      "path": "invalid/empty-required-string.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-invalid-source-date",
+      "path": "invalid/invalid-source-date.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-malformed-capability-id",
+      "path": "invalid/malformed-capability-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-malformed-function-id",
+      "path": "invalid/malformed-function-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-oms-direction",
+      "path": "invalid/missing-oms-direction.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-oms-id",
+      "path": "invalid/missing-oms-id.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-oms-mandate",
+      "path": "invalid/missing-oms-mandate.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-oms-message",
+      "path": "invalid/missing-oms-message.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-oms-timing",
+      "path": "invalid/missing-oms-timing.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-oms-topic",
+      "path": "invalid/missing-oms-topic.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-service-kind",
+      "path": "invalid/missing-service-kind.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-service-name",
+      "path": "invalid/missing-service-name.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-missing-service-version",
+      "path": "invalid/missing-service-version.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-non-oms-message-missing-required",
+      "path": "invalid/non-oms-message-missing-required.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-not-applicable-with-exchange",
+      "path": "invalid/not-applicable-with-exchange.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-not-applicable-without-reason",
+      "path": "invalid/not-applicable-without-reason.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-oms-message-duplicates-primitive",
+      "path": "invalid/oms-message-duplicates-primitive.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-on-demand-response-zero",
+      "path": "invalid/on-demand-response-zero.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-periodic-rate-zero",
+      "path": "invalid/periodic-rate-zero.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-security-exchange-missing-required",
+      "path": "invalid/security-exchange-missing-required.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-special-signal-missing-required",
+      "path": "invalid/special-signal-missing-required.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-specific-with-required-group",
+      "path": "invalid/specific-with-required-group.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-capability-reference",
+      "path": "invalid/unknown-capability-reference.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "reference_diagnostics": [
+        "SC_UNKNOWN_CAPABILITY"
+      ]
+    },
+    {
+      "id": "invalid-unknown-exchange-field",
+      "path": "invalid/unknown-exchange-field.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-function-field",
+      "path": "invalid/unknown-function-field.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-service-field",
+      "path": "invalid/unknown-service-field.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-source-ref",
+      "path": "invalid/unknown-source-ref.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-standards-field",
+      "path": "invalid/unknown-standards-field.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-timing-field",
+      "path": "invalid/unknown-timing-field.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-top-level",
+      "path": "invalid/unknown-top-level.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "invalid-unknown-traceability-source",
+      "path": "invalid/unknown-traceability-source.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ],
+      "reference_diagnostics": [
+        "SC_UNKNOWN_TRACE_SOURCE"
+      ]
+    },
+    {
+      "id": "invalid-unsupported-contract-version",
+      "path": "invalid/unsupported-contract-version.yaml",
+      "expect": "invalid",
+      "tags": [
+        "invalid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-all-exchanges-traceability",
+      "path": "valid/all-exchanges-traceability.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-capabilities-empty",
+      "path": "valid/capabilities-empty.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-capabilities-multiple",
+      "path": "valid/capabilities-multiple.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-capability-inventory",
+      "path": "valid/capability-inventory.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-extensions-and-descriptions",
+      "path": "valid/extensions-and-descriptions.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-extensions-empty",
+      "path": "valid/extensions-empty.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-isolator",
+      "path": "valid/isolator.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-materialized-complete-service",
+      "path": "valid/materialized-complete-service.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ],
+      "equivalence_group": "complete-service"
+    },
+    {
+      "id": "valid-materialized-complete-service-json",
+      "path": "valid/materialized-complete-service.json",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "json"
+      ],
+      "equivalence_group": "complete-service"
+    },
+    {
+      "id": "valid-minimal",
+      "path": "valid/minimal.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-non-oms-message",
+      "path": "valid/non-oms-message.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-not-applicable",
+      "path": "valid/not-applicable.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-service-status",
+      "path": "valid/service-status.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    },
+    {
+      "id": "valid-subsystem",
+      "path": "valid/subsystem.yaml",
+      "expect": "valid",
+      "tags": [
+        "valid",
+        "yaml"
+      ]
+    }
+  ]
+}

@@ -43,14 +43,14 @@ ROOT = Path(__file__).resolve().parents[1]
 PROFILE_PATH = ROOT / "profiles" / "oms" / "2.5" / "profile.yaml"
 
 
-@pytest.mark.parametrize("path", sorted((ROOT / "tests" / "valid").glob("*.yaml")))
+@pytest.mark.parametrize("path", sorted((ROOT / "conformance" / "v0.1" / "valid").glob("*.yaml")))
 def test_valid_contracts(path: Path) -> None:
     assert validate_path(path) == []
 
 
 def test_capabilities_preserve_omitted_and_explicit_empty_declarations() -> None:
-    omitted = load_document(ROOT / "tests" / "valid" / "non-oms-message.yaml")
-    explicitly_empty = load_document(ROOT / "tests" / "valid" / "capabilities-empty.yaml")
+    omitted = load_document(ROOT / "conformance" / "v0.1" / "valid" / "non-oms-message.yaml")
+    explicitly_empty = load_document(ROOT / "conformance" / "v0.1" / "valid" / "capabilities-empty.yaml")
 
     assert "capabilities" not in omitted
     assert explicitly_empty["capabilities"] == []
@@ -59,7 +59,7 @@ def test_capabilities_preserve_omitted_and_explicit_empty_declarations() -> None
 
 
 def test_multiple_capabilities_and_explicit_function_ownership() -> None:
-    document = load_document(ROOT / "tests" / "valid" / "capabilities-multiple.yaml")
+    document = load_document(ROOT / "conformance" / "v0.1" / "valid" / "capabilities-multiple.yaml")
 
     assert document["capabilities"] == [
         {"id": "esm", "name": "ESM", "requires_position_information": True},
@@ -76,7 +76,7 @@ def test_multiple_capabilities_and_explicit_function_ownership() -> None:
 
 
 def test_capability_name_is_not_used_to_infer_function_ownership() -> None:
-    document = load_document(ROOT / "tests" / "valid" / "capabilities-multiple.yaml")
+    document = load_document(ROOT / "conformance" / "v0.1" / "valid" / "capabilities-multiple.yaml")
     function = next(item for item in document["functions"] if item["id"] == "display-only-name")
 
     assert function["name"] == "ESM Capability Status"
@@ -85,24 +85,24 @@ def test_capability_name_is_not_used_to_infer_function_ownership() -> None:
 
 
 def test_duplicate_capability_id_has_deterministic_diagnostic() -> None:
-    document = load_document(ROOT / "tests" / "invalid" / "duplicate-capability-id.yaml")
+    document = load_document(ROOT / "conformance" / "v0.1" / "invalid" / "duplicate-capability-id.yaml")
 
     diagnostics = validate_document(document)
     assert [(diagnostic.code, diagnostic.path, diagnostic.message) for diagnostic in diagnostics] == [
-        (SC_DUPLICATE_CAPABILITY, "$.capabilities", "duplicate capability id 'esm'"),
+        (SC_DUPLICATE_CAPABILITY, "$.capabilities", "duplicate capability id 'c'"),
     ]
 
 
 def test_unknown_capability_reference_has_deterministic_diagnostic() -> None:
-    document = load_document(ROOT / "tests" / "invalid" / "unknown-capability-reference.yaml")
+    document = load_document(ROOT / "conformance" / "v0.1" / "invalid" / "unknown-capability-reference.yaml")
 
     diagnostics = validate_document(document)
     assert [(diagnostic.code, diagnostic.path, diagnostic.message) for diagnostic in diagnostics] == [
-        (SC_UNKNOWN_CAPABILITY, "$.functions[0].capability", "unknown capability id 'esm'"),
+        (SC_UNKNOWN_CAPABILITY, "$.functions[0].capability", "unknown capability id 'missing'"),
     ]
 
 
-@pytest.mark.parametrize("path", sorted((ROOT / "tests" / "invalid").glob("*.yaml")))
+@pytest.mark.parametrize("path", sorted((ROOT / "conformance" / "v0.1" / "invalid").glob("*.yaml")))
 def test_invalid_contracts(path: Path) -> None:
     assert validate_path(path), f"expected {path} to be rejected"
 
@@ -1366,7 +1366,7 @@ def test_validation_diagnostic_code_inventory_is_unique_and_well_formed() -> Non
 
 
 def test_contract_diagnostic_codes_and_order() -> None:
-    document = load_document(ROOT / "tests" / "valid" / "non-oms-message.yaml")
+    document = load_document(ROOT / "conformance" / "v0.1" / "valid" / "non-oms-message.yaml")
     document["sources"] = [{"id": "same"}, {"id": "same"}]
     document["functions"][0]["id"] = "same-function"
     document["functions"].append(deepcopy(document["functions"][0]))
@@ -1388,7 +1388,7 @@ def test_contract_diagnostic_codes_and_order() -> None:
 
 
 def test_schema_diagnostics_have_contract_and_profile_codes() -> None:
-    contract = load_document(ROOT / "tests" / "invalid" / "bad-direction.yaml")
+    contract = load_document(ROOT / "conformance" / "v0.1" / "invalid" / "bad-direction.yaml")
     profile, diagnostics = validate_profile_path(PROFILE_PATH)
     assert diagnostics == []
     profile["required_functions"][0]["required_exchanges"][0]["primitive"] = "D"
@@ -1460,11 +1460,31 @@ def test_profile_compatibility_codes_short_circuit() -> None:
 
 def test_validator_cli_renders_code_path_and_message() -> None:
     result = subprocess.run(
-        [sys.executable, "tools/validate.py", "tests/invalid/duplicate-function-id.yaml"],
+        [sys.executable, "tools/validate.py", "conformance/v0.1/invalid/duplicate-function-id.yaml"],
         cwd=ROOT,
         text=True,
         capture_output=True,
         check=False,
     )
     assert result.returncode == 1
-    assert "SC_DUPLICATE_FUNCTION $.functions: duplicate function id 'same'" in result.stdout
+    assert "SC_DUPLICATE_FUNCTION $.functions: duplicate function id 'local'" in result.stdout
+
+
+def test_portable_conformance_manifest_cases_are_exercised() -> None:
+    from tools.conformance import check, load_manifest
+
+    manifest_path = ROOT / "conformance" / "v0.1" / "manifest.json"
+    manifest, diagnostics = load_manifest(manifest_path)
+    assert diagnostics == []
+    assert manifest is not None
+    assert check(manifest_path) == []
+    for case in manifest["cases"]:
+        diagnostics = validate_path(manifest_path.parent / case["path"])
+        if case.get("input_format_safety"):
+            assert diagnostics and diagnostics[0].code == SC_SCHEMA
+        elif case["expect"] == "valid":
+            assert diagnostics == []
+        else:
+            assert diagnostics
+            if case.get("reference_diagnostics"):
+                assert {item.code for item in diagnostics} == set(case["reference_diagnostics"])

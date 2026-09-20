@@ -1,0 +1,7 @@
+traceability_version: "0.1"
+sources:
+  - {key: primary-contract, id: synthetic-contract-source, from_completion_source: synthetic-contract, document_number: SYN-001, date: "2026-09-19", note: Author-selected contract source.}
+  - {key: configuration-doc, id: synthetic-config-source, from_completion_source: synthetic-config, revision: "7"}
+traces:
+  - {destination: {kind: required_function, profile_function: Service Status}, source_key: primary-contract, locator: Section 4.1}
+  - {destination: {kind: required_exchange, profile_function: Service Status, selector: ServiceStatus}, source_key: primary-contract, locator: Table 4-1}

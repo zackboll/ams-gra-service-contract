@@ -9,6 +9,11 @@ means unknown, an empty inventory means explicitly zero, and declared portable
 Capability values remain explicit author decisions; no Capability is inferred
 from names or messages.
 
+Completion tooling also supports explicit adoption of evidence sources and explicit
+function/exchange traceability without changing portable v0.1 grammar. Candidate
+provenance and profile citations are never converted automatically; see
+[docs/completion-traceability.md](docs/completion-traceability.md).
+
 The central design rule is:
 
 > **UCI defines what an OMS message is. The machine-readable service contract defines which exchanges a particular service uses, in which direction, for which function, and with which Service Contract metadata.**

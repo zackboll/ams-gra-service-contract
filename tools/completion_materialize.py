@@ -43,6 +43,11 @@ def _timing(exchange: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _traceability(target: dict[str, Any], result: dict[str, Any]) -> None:
+    if target.get("traceability"):
+        result["traceability"] = [{key: item[key] for key in ("source", "locator", "note") if key in item} for item in target["traceability"]]
+
+
 def _exchange(exchange: dict[str, Any]) -> dict[str, Any]:
     kind = _resolved(exchange["kind"])
     result = {
@@ -64,6 +69,7 @@ def _exchange(exchange: dict[str, Any]) -> dict[str, Any]:
             for field in ("protocol", "data_type", "data_format", "sharing_pattern"):
                 result[field] = _resolved(exchange[field])
     result["timing"] = _timing(exchange)
+    _traceability(exchange, result)
     return result
 
 
@@ -78,6 +84,8 @@ def materialize_contract(scaffold: dict[str, Any]) -> tuple[dict[str, Any] | Non
         diagnostics.append(Diagnostic(CA_UNMAPPED_AUTHOR_DECISION, "", "unmapped author decisions:\n" + ",\n".join(unmapped)))
     if diagnostics:
         return None, diagnostics
+    if scaffold.get("traceability_diagnostics"):
+        return None, scaffold["traceability_diagnostics"]
 
     service = {"name": _resolved(scaffold["service"]["name"]), "version": _resolved(scaffold["service"]["version"]), "kind": _resolved(scaffold["target"]["service_kind"])}
     _optional(scaffold["service"], "description", service)
@@ -97,10 +105,13 @@ def materialize_contract(scaffold: dict[str, Any]) -> tuple[dict[str, Any] | Non
             item["exchanges"] = []
         else:
             item["exchanges"] = [_exchange(exchange) for exchange in function["exchanges"] if exchange["active"]]
+        _traceability(function, item)
         functions.append(item)
     contract = {"contract_version": _resolved(scaffold["target"]["contract_version"]), "service": service, "standards": standards, "functions": functions}
     if scaffold["capability_inventory_state"] != "unknown":
         contract["capabilities"] = [{field: _resolved(capability[field]) for field in ("id", "name", "requires_position_information")} for capability in scaffold["capabilities"]]
+    if scaffold.get("contract_sources"):
+        contract["sources"] = [{key: source[key] for key in ("id", "title", "uri", "document_number", "revision", "date", "note") if key in source} for source in scaffold["contract_sources"]]
     return contract, []
 
 
@@ -115,19 +126,27 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mapping", type=Path, required=True)
     parser.add_argument("--specific-functions", type=Path)
     parser.add_argument("--capabilities", type=Path)
+    parser.add_argument("--traceability", type=Path)
     parser.add_argument("--profile", type=Path, required=True)
     args = parser.parse_args(argv)
     completion, diagnostics = load_completion_path(args.input.resolve())
     if not diagnostics: decisions, diagnostics = load_decisions_path(args.decisions.resolve(), completion)
     specific = None
     capabilities = None
+    traceability = None
     if not diagnostics and args.specific_functions: specific, diagnostics = load_specific_functions_path(args.specific_functions.resolve())
     if not diagnostics and args.capabilities: capabilities, diagnostics = load_capabilities_path(args.capabilities.resolve())
+    if not diagnostics and args.traceability:
+        try:
+            from tools.completion_scaffold import load_traceability_path
+        except ModuleNotFoundError:
+            from completion_scaffold import load_traceability_path
+        traceability, diagnostics = load_traceability_path(args.traceability.resolve(), completion)
     if not diagnostics: profile, diagnostics = validate_profile_path(args.profile.resolve())
     if not diagnostics: mapping, diagnostics = load_mapping_path(args.mapping.resolve(), completion, decisions, profile, specific, capabilities)
     contract = None
     if not diagnostics:
-        contract, diagnostics = materialize_contract(build_scaffold(completion, decisions, mapping, profile, specific, capabilities))
+        contract, diagnostics = materialize_contract(build_scaffold(completion, decisions, mapping, profile, specific, capabilities, traceability))
     if not diagnostics:
         diagnostics = validate_document(contract)
     if not diagnostics:

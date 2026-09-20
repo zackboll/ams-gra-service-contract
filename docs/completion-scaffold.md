@@ -29,3 +29,7 @@ Optional `--capabilities` adds explicit Capability topology. Omission is
 `declared`; these states remain distinct. The validated OMS profile plus resolved
 Capability facts determines Section 3.3 function topology, never names or
 messages. Capability IDs/names and function IDs/names remain author decisions.
+
+Optional `--traceability` adds explicit adopted portable sources and trace lists to
+the tooling scaffold. It neither adopts candidate evidence nor copies profile
+traceability automatically.

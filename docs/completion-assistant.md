@@ -79,3 +79,7 @@ Isolators receive no Capability-inventory prompt or Section 3.3 requirements.
 This tool performs no source extraction, scraping, LLM inference, contract
 generation, contract editing, candidate-to-profile satisfaction analysis, or
 Capability inference.
+
+Task 041 adds a separate explicit traceability artifact. Candidate provenance and
+profile citations remain evidence/rule rationale, not portable traceability; see
+[completion-traceability.md](completion-traceability.md).

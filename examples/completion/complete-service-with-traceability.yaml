@@ -1,0 +1,6 @@
+completion_version: "0.1"
+target: {contract_version: "0.1", oms_version: "2.5", service_kind: service, name: Synthetic traceability exercise}
+sources:
+  - {id: synthetic-contract, provenance: published_contract, title: Synthetic Service Contract Source, uri: https://example.invalid/contracts/synthetic-service, revision: "A", note: Evidence-only note.}
+  - {id: synthetic-config, provenance: published_supporting_doc, title: Synthetic Configuration Source, uri: https://example.invalid/config/synthetic-service, revision: "7"}
+candidates: []

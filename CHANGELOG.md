@@ -6,6 +6,11 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Explicit tooling-only source adoption and function/exchange traceability
+  authoring/materialization. Source keys remain local, evidence provenance and
+  profile traceability are not copied automatically, and portable v0.1 grammar is
+  unchanged.
+
 - Explicit Capability completion artifacts, typed mappings, fail-closed
   materialization, and profile-derived OMS 2.5 Section 3.3 functions.
 

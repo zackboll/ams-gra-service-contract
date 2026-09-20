@@ -92,7 +92,19 @@ known design.
 
 ### I am reconstructing an existing service
 
-Use the [Completion Assistant walkthrough](docs/tutorials/completion-assistant-walkthrough.md).
+Recommended: use `tools/completion.py` with a checked-in completion workspace:
+
+```bash
+python tools/completion.py worksheet service-workspace.yaml
+python tools/completion.py scaffold service-workspace.yaml
+python tools/completion.py check service-workspace.yaml
+python tools/completion.py materialize service-workspace.yaml --format yaml --output contract.yaml
+```
+
+Use the [Completion Assistant walkthrough](docs/tutorials/completion-assistant-walkthrough.md)
+and [workspace reference](docs/completion-workspace.md). `completion.py` is the
+normal workflow; `completion_assistant.py`, `completion_scaffold.py`, and
+`completion_materialize.py` remain advanced/reference lower-level tools.
 It explains evidence candidates, explicit author decisions, mapping, scaffold
 `MISSING` fields, materialization, validation, and OMS-codegen handoff.
 

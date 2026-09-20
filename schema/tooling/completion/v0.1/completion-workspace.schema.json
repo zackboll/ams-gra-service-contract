@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-workspace:0.1",
+  "title": "Completion Workspace",
+  "description": "Tooling-only manifest identifying completion artifacts; not a Service Contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workspace_version", "input", "profile"],
+  "properties": {
+    "workspace_version": {"const": "0.1"},
+    "input": {"type": "string", "minLength": 1},
+    "profile": {"type": "string", "minLength": 1},
+    "decisions": {"type": "string", "minLength": 1},
+    "mapping": {"type": "string", "minLength": 1},
+    "specific_functions": {"type": "string", "minLength": 1},
+    "capabilities": {"type": "string", "minLength": 1},
+    "traceability": {"type": "string", "minLength": 1}
+  }
+}

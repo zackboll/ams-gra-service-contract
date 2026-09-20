@@ -1,0 +1,6 @@
+workspace_version: "0.1"
+input: ir-search-and-track.yaml
+decisions: ir-search-and-track-decisions.yaml
+mapping: ir-search-and-track-mapping.yaml
+specific_functions: ir-search-and-track-specific-functions.yaml
+profile: ../../profiles/oms/2.5/profile.yaml

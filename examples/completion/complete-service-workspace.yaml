@@ -1,0 +1,5 @@
+workspace_version: "0.1"
+input: complete-service.yaml
+decisions: complete-service-decisions.yaml
+mapping: complete-service-mapping.yaml
+profile: ../../profiles/oms/2.5/profile.yaml

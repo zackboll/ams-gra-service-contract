@@ -157,7 +157,7 @@ def build_scaffold(c,d,m,p,specific=None,capabilities=None,traceability=None):
     if f[n]['state']=='missing':r['unresolved_required_fields'].append(f'functions[{ident}].{n}')
    for e in f['exchanges']:
     req={'id','direction','mandate','timing_kind'}|({'message','topic'} if e['kind']['value']=='oms_message' else {'name'})|({'protocol','data_type','data_format','sharing_pattern'} if e['kind']['value']=='data_transfer' else set())
-    for n in req:
+    for n in sorted(req):
      if e[n]['state']=='missing':r['unresolved_required_fields'].append(f"functions[{ident}].exchanges[{e['exchange_key']}].{n}")
   else:
    for e in f['exchanges']:e['active']=False

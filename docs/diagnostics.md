@@ -35,6 +35,11 @@ A higher-level tool can surface a lower-layer code unchanged; it does not take
 ownership merely by orchestrating that layer.
 
 Completion authoring owns `CA_*`; materialized portable semantics retain `SC_*`.
+Workspace manifest parsing, path resolution, and command-stage requirements use
+`CA_WORKSPACE_SCHEMA`, `CA_WORKSPACE_PATH`, and
+`CA_WORKSPACE_STAGE_REQUIREMENT`. Workspace orchestration never relabels bad
+completion artifacts (`CA_*`), portable contracts (`SC_*`), or OMS profiles
+(`OP_*`).
 Task 041 adds `CA_TRACEABILITY_SCHEMA`, `CA_DUPLICATE_SOURCE_KEY`,
 `CA_UNKNOWN_EVIDENCE_SOURCE`, `CA_SOURCE_REVISION_MISMATCH`,
 `CA_UNKNOWN_TRACE_SOURCE`, `CA_UNKNOWN_TRACE_TARGET`,

@@ -1,0 +1,6 @@
+workspace_version: "0.1"
+input: complete-capability-service.yaml
+decisions: complete-capability-service-decisions.yaml
+mapping: complete-capability-service-mapping.yaml
+capabilities: complete-capability-service-capabilities.yaml
+profile: ../../profiles/oms/2.5/profile.yaml

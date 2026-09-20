@@ -1,5 +1,47 @@
 # Completion Assistant walkthrough
 
+## Recommended workspace workflow
+
+The recommended front door is `tools/completion.py`; the individual completion
+tools remain useful advanced/reference interfaces. A workspace keeps the files
+separate while avoiding repeated filenames:
+
+```yaml
+workspace_version: "0.1"
+input: ir-search-and-track.yaml
+decisions: ir-search-and-track-decisions.yaml
+mapping: ir-search-and-track-mapping.yaml
+specific_functions: ir-search-and-track-specific-functions.yaml
+profile: ../../profiles/oms/2.5/profile.yaml
+```
+
+```bash
+python tools/completion.py worksheet examples/completion/ir-search-and-track-workspace.yaml
+python tools/completion.py scaffold examples/completion/ir-search-and-track-workspace.yaml
+```
+
+The first reviews evidence; the second shows `MISSING` authoring fields. The
+workspace does not merge these concepts together. It only saves the user from
+repeatedly spelling out the filenames on every command. Consequently, this
+intentionally incomplete real example fails closed at readiness:
+
+```bash
+python tools/completion.py check examples/completion/ir-search-and-track-workspace.yaml
+```
+
+After resolving authoring semantics, the complete synthetic exercise passes and
+can emit the downstream artifact:
+
+```bash
+python tools/completion.py check examples/completion/complete-service-workspace.yaml
+python tools/completion.py materialize examples/completion/complete-service-workspace.yaml \
+  --format yaml --output contract.yaml
+```
+
+OMS-codegen consumes `contract.yaml` only, not the workspace, decisions,
+mapping, structure, capabilities, or traceability artifacts. The following
+sections explain each underlying file individually.
+
 ## Do I need the completion assistant?
 
 There are two good workflows.

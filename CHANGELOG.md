@@ -6,6 +6,10 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Tooling-only completion workspaces and one `completion.py`
+  worksheet/scaffold/check/materialize front door. References resolve relative
+  to the workspace; this changes no portable v0.1 semantics or schema.
+
 - Deterministic portable v0.1 YAML materialization and safe complete-contract
   `--output` emission. JSON remains the default; YAML/JSON serialize the same
   validated model. Existing files require explicit `--force` atomic replacement;

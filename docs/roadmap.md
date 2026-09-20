@@ -36,6 +36,9 @@ Explicitly out of scope:
 
 Potential goals driven by real implementation experience:
 
+- completion workspace manifest, unified completion CLI, workspace-relative
+  artifact resolution, and materialization-readiness check implemented; no
+  portable semantics added.
 - completion-assistant foundation implemented: a provenance-preserving,
   non-normative worksheet displays unconfirmed evidence candidates,
   profile-derived requirements, and an explicit author-decision overlay without

@@ -1,0 +1,18 @@
+contract_version: '0.1'
+service:
+  name: minimal
+  version: '0.1'
+  kind: service
+  description: Optional description
+standards:
+  oms_version: '2.5'
+  uci_schema_version: '2.5'
+  uci_extension_schemas:
+  - private-extension-1
+functions:
+- id: local
+  name: Local
+  category: specific
+  applicability: applicable
+  exchanges: []
+  description: Optional function description

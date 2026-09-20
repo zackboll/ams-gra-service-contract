@@ -529,7 +529,7 @@ def validate_path(path: Path, profile: Any | None = None) -> list[Diagnostic]:
 
 
 def _default_all_paths() -> list[Path]:
-    return sorted((ROOT / "examples").glob("*.yaml")) + sorted((ROOT / "tests" / "valid").glob("*.yaml"))
+    return sorted((ROOT / "examples").glob("*.yaml")) + sorted((ROOT / "conformance" / "v0.1" / "valid").glob("*.yaml"))
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -6,6 +6,11 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Portable v0.1 machine-readable conformance pack with valid/invalid
+  expectations, canonical schema fingerprint guard, and YAML/JSON equivalence
+  cases. This locks the pre-1.0 compatibility surface without claiming 1.0
+  format stability.
+
 - Explicit tooling-only source adoption and function/exchange traceability
   authoring/materialization. Source keys remain local, evidence provenance and
   profile traceability are not copied automatically, and portable v0.1 grammar is

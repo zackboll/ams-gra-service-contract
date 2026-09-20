@@ -1,0 +1,74 @@
+contract_version: '0.1'
+service:
+  name: Synthetic Completion Service
+  version: 1.0.0
+  kind: service
+standards:
+  oms_version: '2.5'
+  uci_schema_version: '2.5'
+functions:
+- id: service-initialization
+  name: Service Initialization
+  category: required
+  required_group: service
+  applicability: applicable
+  exchanges:
+  - id: file-metadata
+    kind: oms_message
+    direction: input
+    mandate: optional
+    message: FileMetadata
+    topic: mission.file-metadata
+    timing:
+      kind: asynchronous
+  - id: file-location
+    kind: oms_message
+    direction: input
+    mandate: optional
+    message: FileLocation
+    topic: mission.file-location
+    timing:
+      kind: asynchronous
+  - id: service-config-file
+    kind: data_transfer
+    direction: input
+    mandate: optional
+    name: ServiceConfigFile
+    protocol: https
+    data_type: ServiceConfigFile
+    data_format: application/json
+    sharing_pattern: request_response
+    timing:
+      kind: asynchronous
+- id: service-status
+  name: Service Status
+  category: required
+  required_group: service
+  applicability: applicable
+  exchanges:
+  - id: service-status-report
+    kind: oms_message
+    direction: output
+    mandate: mandatory
+    message: ServiceStatus
+    topic: mission.service-status
+    timing:
+      kind: periodic
+      nominal_rate_hz: 1.0
+  - id: service-status-request
+    kind: oms_message
+    direction: input
+    mandate: mandatory
+    message: ServiceStatusDataRequest
+    topic: mission.service-status-request
+    timing:
+      kind: asynchronous
+  - id: service-status-request-status
+    kind: oms_message
+    direction: output
+    mandate: mandatory
+    message: ServiceStatusDataRequestStatus
+    topic: mission.service-status-request-status
+    timing:
+      kind: on_demand
+      nominal_response_seconds: 0.5

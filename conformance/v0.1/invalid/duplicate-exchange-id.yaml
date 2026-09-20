@@ -1,0 +1,24 @@
+contract_version: '0.1'
+service:
+  name: minimal
+  version: '0.1'
+  kind: service
+standards:
+  oms_version: '2.5'
+  uci_schema_version: '2.5'
+functions:
+- id: local
+  name: Local
+  category: specific
+  applicability: applicable
+  exchanges:
+  - &id001
+    id: x
+    kind: oms_message
+    direction: input
+    mandate: optional
+    message: M
+    topic: T
+    timing:
+      kind: asynchronous
+  - *id001

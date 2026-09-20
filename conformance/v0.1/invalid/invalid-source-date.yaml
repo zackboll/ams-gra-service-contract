@@ -1,0 +1,99 @@
+contract_version: '0.1'
+service:
+  name: minimal
+  version: '0.1'
+  kind: service
+  description: Complete portable grammar
+standards:
+  oms_version: '2.5'
+  uci_schema_version: '2.5'
+functions:
+- id: all-exchanges
+  name: All Exchanges
+  category: specific
+  applicability: applicable
+  exchanges:
+  - id: oms-periodic
+    kind: oms_message
+    direction: output
+    mandate: mandatory
+    message: DoesNotExistInUCI
+    topic: ArbitraryTopic
+    operational_attribute: attribute
+    subscription_group: group
+    appendix_c_mapping: mapping
+    timing:
+      kind: periodic
+      nominal_rate_hz: 1.0
+      max_rate_hz: 2.0
+    traceability:
+    - source: source-one
+      locator: Exchange
+  - id: oms-demand
+    kind: oms_message
+    direction: input
+    mandate: optional
+    message: Demand
+    topic: Demand
+    timing:
+      kind: on_demand
+      nominal_response_seconds: 0.1
+      max_response_seconds: 1.0
+  - id: oms-async
+    kind: oms_message
+    direction: input
+    mandate: optional
+    message: Async
+    topic: Async
+    timing:
+      kind: asynchronous
+  - id: transfer
+    kind: data_transfer
+    direction: input
+    mandate: optional
+    name: File
+    protocol: https
+    data_type: text
+    data_format: text/plain
+    sharing_pattern: request_response
+    timing:
+      kind: asynchronous
+  - id: signal
+    kind: special_signal
+    direction: output
+    mandate: mandatory
+    name: Signal
+    details: Details
+    reference: Reference
+    timing:
+      kind: asynchronous
+  - id: security
+    kind: security_exchange
+    direction: input
+    mandate: mandatory
+    name: Security
+    details: Details
+    reference: Reference
+    timing:
+      kind: asynchronous
+  - id: legacy
+    kind: non_oms_message
+    direction: output
+    mandate: optional
+    name: Legacy
+    details: Details
+    reference: Reference
+    timing:
+      kind: asynchronous
+  traceability:
+  - source: source-one
+    locator: Function
+    note: Function trace
+sources:
+- id: source-one
+  title: Source One
+  document_number: DOC-1
+  revision: A
+  date: not-a-date
+  uri: https://example.test/source
+  note: Source note

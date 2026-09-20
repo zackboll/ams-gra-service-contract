@@ -29,6 +29,7 @@ keyword.
 | `UR_*` | UCI parsing and resolution |
 | `IP_*` | Inputs/Outputs projection join |
 | `CA_*` | Completion assistant tooling workspace |
+| `CF_*` | Portable conformance-pack tooling |
 
 A higher-level tool can surface a lower-layer code unchanged; it does not take
 ownership merely by orchestrating that layer.
@@ -38,6 +39,23 @@ Task 041 adds `CA_TRACEABILITY_SCHEMA`, `CA_DUPLICATE_SOURCE_KEY`,
 `CA_UNKNOWN_EVIDENCE_SOURCE`, `CA_SOURCE_REVISION_MISMATCH`,
 `CA_UNKNOWN_TRACE_SOURCE`, `CA_UNKNOWN_TRACE_TARGET`,
 `CA_INACTIVE_TRACE_TARGET`, and `CA_DUPLICATE_TRACEABILITY`.
+
+## Portable conformance pack (`CF_*`)
+
+`CF_*` diagnoses the conformance manifest or corpus rather than a portable
+contract. It is intentionally separate from `SC_*`: independent consumers must
+make the valid/invalid acceptance decision, but do not need to reproduce the
+Python reference validator's diagnostic wording or codes.
+
+| Code | Meaning |
+| --- | --- |
+| `CF_SCHEMA` | Manifest parsing or tooling-schema validation failure. |
+| `CF_DUPLICATE_CASE` | Case IDs or paths are not unique. |
+| `CF_CASE_PATH` | A case path is unsafe, escapes the pack, or has no file. |
+| `CF_SCHEMA_FINGERPRINT` | Canonical portable-schema SHA-256 differs from the manifest. |
+| `CF_EXPECTATION` | A reference acceptance result differs from the declared case expectation. |
+| `CF_REFERENCE_DIAGNOSTIC` | Declared reference `SC_*` identities differ from the reference result. |
+| `CF_EQUIVALENCE` | A YAML/JSON equivalence group is malformed or not semantically equal. |
 
 ## Portable Service Contract (`SC_*`)
 

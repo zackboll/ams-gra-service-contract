@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ams-gra-service-contract:tooling:completion-extraction:0.1",
+  "title": "Completion Evidence Extraction Recipe",
+  "type": "object", "additionalProperties": false,
+  "required": ["extraction_version", "target", "sources", "rules"],
+  "properties": {
+    "extraction_version": {"const": "0.1"},
+    "target": {"type": "object", "additionalProperties": false, "required": ["contract_version", "oms_version", "service_kind"], "properties": {"contract_version": {"type": "string", "minLength": 1}, "oms_version": {"type": "string", "minLength": 1}, "service_kind": {"enum": ["service", "subsystem", "isolator"]}, "name": {"type": "string", "minLength": 1}}},
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}}
+  },
+  "$defs": {
+    "source": {"type": "object", "additionalProperties": false, "required": ["id", "provenance", "title", "uri", "revision", "local_path", "sha256"], "properties": {"id": {"type": "string", "minLength": 1}, "provenance": {"enum": ["published_contract", "published_supporting_doc", "implementation", "oms_normative"]}, "title": {"type": "string", "minLength": 1}, "uri": {"type": "string", "format": "uri"}, "revision": {"type": "string", "minLength": 1}, "note": {"type": "string", "minLength": 1}, "local_path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+    "rule": {"type": "object", "additionalProperties": false, "required": ["id", "target", "source", "locator", "extractor"], "properties": {"id": {"type": "string", "minLength": 1}, "target": {"type": "string", "minLength": 1}, "source": {"type": "string", "minLength": 1}, "locator": {"type": "string", "minLength": 1}, "note": {"type": "string", "minLength": 1}, "extractor": {"oneOf": [{"$ref": "#/$defs/capture"}, {"$ref": "#/$defs/assert"}, {"$ref": "#/$defs/pointer"}]}}},
+    "flags": {"properties": {"multiline": {"type": "boolean"}, "dotall": {"type": "boolean"}}},
+    "capture": {"type": "object", "additionalProperties": false, "required": ["kind", "pattern", "group", "value_type"], "properties": {"kind": {"const": "text_regex_capture"}, "pattern": {"type": "string"}, "group": {"type": "string", "minLength": 1}, "value_type": {"enum": ["string", "number", "boolean"]}, "multiline": {"type": "boolean"}, "dotall": {"type": "boolean"}}},
+    "assert": {"type": "object", "additionalProperties": false, "required": ["kind", "pattern", "value"], "properties": {"kind": {"const": "text_regex_assert"}, "pattern": {"type": "string"}, "value": {"type": ["string", "number", "boolean"]}, "multiline": {"type": "boolean"}, "dotall": {"type": "boolean"}}},
+    "pointer": {"type": "object", "additionalProperties": false, "required": ["kind", "pointer"], "properties": {"kind": {"const": "structured_pointer"}, "pointer": {"type": "string", "pattern": "^(?:/.*)?$"}}}
+  }
+}

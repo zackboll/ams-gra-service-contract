@@ -6,6 +6,12 @@ All notable changes to this experimental specification and tooling project are d
 
 ### Added
 
+- Deterministic, offline source-extraction recipes can produce unconfirmed
+  completion candidates from hash-verified local source files using explicit
+  regex and structured-pointer rules. Extraction does not create author
+  decisions, mappings, function/Capability structure, or portable contract
+  semantics.
+
 - RF FM Demod real published-service completion exercise with pinned evidence
   provenance, explicit profile-vs-evidence-vs-author distinction, concrete owner
   questions, and intentional fail-closed non-materialization. It records what is

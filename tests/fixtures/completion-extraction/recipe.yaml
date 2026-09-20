@@ -1,0 +1,13 @@
+extraction_version: "0.1"
+target: {contract_version: "0.1", oms_version: "2.5", service_kind: service, name: Synthetic}
+sources:
+  - {id: text, provenance: implementation, title: Synthetic text, uri: https://example.test/primary, revision: test, local_path: primary.md, sha256: "a8a1955083dd23140f9788d2a430b2be1942762b9763c033efc3f6f8f3b9ce00"}
+  - {id: json, provenance: implementation, title: Synthetic JSON, uri: https://example.test/config.json, revision: test, local_path: config.json, sha256: "d72feecb441fb7cf19d6327b61cf24eb05e141a25aa9792d7a7fdf03845a0776"}
+  - {id: yaml, provenance: implementation, title: Synthetic YAML, uri: https://example.test/config.yaml, revision: test, local_path: config.yaml, sha256: "5ac8f8a98600a8d21ac827f0395ee8575a64f6258a088f21a30e6bf02f74ad21"}
+rules:
+  - {id: version, target: service.version, source: text, locator: Version, extractor: {kind: text_regex_capture, pattern: '^\* \*\*Version\*\*: (?P<value>[^\r\n]+)$', group: value, value_type: string, multiline: true}}
+  - {id: enabled, target: observation.enabled, source: text, locator: Enabled, extractor: {kind: text_regex_capture, pattern: '^\* \*\*Enabled\*\*: (?P<value>[^\r\n]+)$', group: value, value_type: boolean, multiline: true}}
+  - {id: periodic, target: observation.timing, source: text, locator: statement, note: Authored assertion, extractor: {kind: text_regex_assert, pattern: 'publishes `Status` periodically', value: periodic}}
+  - {id: topic, target: "exchange[Status].topic", source: json, locator: /topic, extractor: {kind: structured_pointer, pointer: /topic}}
+  - {id: item, target: observation.item, source: json, locator: /items/1/name, extractor: {kind: structured_pointer, pointer: /items/1/name}}
+  - {id: rate, target: observation.rate, source: yaml, locator: /rate, extractor: {kind: structured_pointer, pointer: /rate}}

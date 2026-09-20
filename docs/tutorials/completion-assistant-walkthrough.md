@@ -48,6 +48,11 @@ The IR Search & Track snippets below teach the mechanics. For a full real-world
 exercise showing why materialization can correctly remain blocked, see the
 [RF FM Demod completion exercise](rf-fm-demod-completion-exercise.md).
 
+The RF published-evidence example is incomplete and fail-closed. The companion
+[RF FM Demod simulated owner-answer example](rf-fm-demod-owner-answer-loop.md)
+uses the same evidence plus explicit labelled answers to materialize a valid
+contract; it is illustrative, not an upstream contract.
+
 There are three good workflows.
 
 ### I already know the contract

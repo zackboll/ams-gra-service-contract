@@ -1,0 +1,8 @@
+specific_functions_version: "0.1"
+functions:
+  - key: fm-demod-processing
+    exchanges:
+      - key: position-report
+        kind: oms_message
+      - key: signal-report
+        kind: oms_message

@@ -1,0 +1,8 @@
+workspace_version: "0.1"
+input: rf-fm-demod.yaml
+decisions: rf-fm-demod-owner-confirmed-decisions.yaml
+mapping: rf-fm-demod-owner-confirmed-mapping.yaml
+specific_functions: rf-fm-demod-owner-confirmed-specific-functions.yaml
+capabilities: rf-fm-demod-owner-confirmed-capabilities.yaml
+profile: ../../profiles/oms/2.5/profile.yaml
+profile_evidence: rf-fm-demod-profile-evidence.yaml

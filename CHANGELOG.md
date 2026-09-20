@@ -5,6 +5,12 @@
 - Add tooling-only OMS profile-evidence comparison with explicit links, exact
   observed/decision alignment reporting, and RF FM Demod ServiceStatus examples.
 
+- Add a simulated RF FM Demod service-owner answer-loop exercise showing the same
+  real published evidence progressing from fail-closed completion to a valid
+  portable/OMS-profile-validated contract after explicit owner decisions, specific
+  function structure, and an explicit zero-Capability declaration. Simulated
+  values remain clearly separated from source-backed candidates.
+
 All notable changes to this experimental specification and tooling project are documented here.
 
 ## [Unreleased]
